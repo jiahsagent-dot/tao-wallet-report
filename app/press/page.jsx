@@ -24,21 +24,23 @@ export const metadata = {
   },
 };
 
-const TWEET = `Built a free Bittensor wallet report tool. Paste a coldkey → get portfolio, PnL, yield, and rule-based flags in 5 seconds. Same formula as the Taostats tax-report. No signup. ${SITE_URL}`;
+const TWEET = `Built a free Bittensor wallet report tool. Paste a coldkey → get an AI-generated personalised analyst report (Summary, What Changed, Recommendations, Risk Flags) on top of ground-truth PnL, yield, and portfolio data. No signup, no API key. ${SITE_URL}`;
 
-const PARAGRAPH = `Tao Wallet Report is a free, instant Bittensor wallet report. Paste any coldkey and get a six-section breakdown: portfolio by subnet, ground-truth PnL using the same formula as the Taostats tax-report CSV, weighted APY across your stake, rule-based risk flags, recommendations, and the broader market view. No signup, no wallet connect, no API key — just public on-chain data, formatted. Optional ~$3 TAO subscription delivers the report to your inbox every Monday.`;
+const PARAGRAPH = `Tao Wallet Report is a free, instant Bittensor wallet report with an AI-generated analyst narrative on top. Paste any coldkey and the tool returns a personalised AI Insights write-up — Summary, What Changed, Recommendations, and Risk Flags written in plain English from your specific portfolio — sitting above a six-section breakdown: portfolio by subnet, ground-truth PnL using the same formula as the Taostats tax-report CSV, weighted APY across your stake, rule-based flags, recommendations, and the broader market view. No signup, no wallet connect, no API key required. Optional ~$3 TAO subscription delivers the full report (AI Insights + data) to your inbox every Monday.`;
 
-const SHORT_LONG = `Tao Wallet Report (${SITE_URL}) is a free web tool that turns any Bittensor coldkey into a personalised one-page report. Built because every Bittensor stakeholder I know was opening five tabs on Monday morning to figure out the same numbers — and most of them were getting it slightly wrong because naive trackers don't account for transfers in and out of the wallet.
+const SHORT_LONG = `Tao Wallet Report (${SITE_URL}) is a free web tool that turns any Bittensor coldkey into a personalised AI-generated analyst report. Built because every Bittensor stakeholder I know was opening five tabs on Monday morning to figure out the same numbers, then trying to interpret what the numbers meant for their next move — and most of them were getting both parts slightly wrong.
 
-The tool uses the canonical accounting formula:
+The AI Insights card opens every report: a plain-English Summary, What Changed since last view, concrete Recommendations sized to the wallet, and Risk Flags surfaced from the data. It runs on a multi-provider LLM chain — Pollinations.ai's anonymous GPT-OSS 20B Reasoning tier (via OVH) by default, with optional Groq, Gemini, and Anthropic fallbacks. Zero API key is required to ship the feature; the default tier costs $0 per report. Cached 1 hour per coldkey so refreshes are free.
+
+Underneath the AI write-up, the report uses the canonical accounting formula:
   profit = current_balance + transfers_out − transfers_in − starting_balance
   return_pct = profit / (starting_balance + transfers_in)
 
 This is the same formula the Taostats tax-report CSV uses — the one tax professionals trust to file actual returns. Data sources are entirely public: Taostats /api/accounting/tax/v1 for balances and transfers, /api/dtao/* for subnet prices and holdings, and the Taostats live TAO/USD feed.
 
-What the tool does NOT do: it doesn't store coldkey data (5-min in-memory cache, then gone), it doesn't ask for private keys (coldkeys are public addresses), and the recommendations section is rule-based — not financial advice.
+What the tool does NOT do: it doesn't store coldkey data (5-min in-memory cache for the data, 1h for the AI write-up, then gone), it doesn't ask for private keys (coldkeys are public addresses), and the AI Recommendations + rule-based flags are guidance — not financial advice.
 
-For ~0.01 τ (~$3 USD) you get 30 days of Monday morning emails with a fresh report. Open source on GitHub: https://github.com/jiahsagent-dot/tao-wallet-report`;
+For ~0.01 τ (~$3 USD) you get 30 days of Monday morning emails, each one including the AI Insights narrative inline. Open source on GitHub: https://github.com/jiahsagent-dot/tao-wallet-report`;
 
 const LOGO_SVG = `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <rect width="64" height="64" rx="14" fill="#f9a826"/>
@@ -49,9 +51,11 @@ const FACTS = [
   ['Live URL', SITE_URL],
   ['Source code', 'https://github.com/jiahsagent-dot/tao-wallet-report'],
   ['Cost to user', 'Free (one-time ~$3 TAO for weekly email subscription)'],
+  ['Headline feature', 'AI Insights — personalised analyst narrative (Summary, What Changed, Recommendations, Risk Flags) generated per coldkey'],
+  ['AI stack', 'GPT-OSS 20B Reasoning via Pollinations.ai anonymous tier (default $0/report, no key); optional Groq / Gemini / Anthropic fallbacks'],
   ['Data source', 'Taostats public APIs (same as the tax-report CSV)'],
   ['PnL formula', 'profit = current + transfers_out − transfers_in − starting'],
-  ['Storage policy', 'No coldkey storage; 5-min in-memory response cache only'],
+  ['Storage policy', 'No coldkey storage; 5-min in-memory data cache, 1h AI Insights cache, then gone'],
   ['License', 'MIT'],
   ['Built by', 'Jai (indie Bittensor stakeholder)'],
 ];
@@ -170,13 +174,18 @@ export default function PressPage() {
 
         <h2>Quotes you can use</h2>
         <CopyBlock
+          label="On AI Insights"
+          text={`"Every report now opens with an AI-generated analyst write-up — Summary, What Changed, Recommendations, and Risk Flags written in plain English from your specific portfolio. It runs on GPT-OSS 20B Reasoning via Pollinations.ai's anonymous tier, so it costs $0 per report and ships without any API key — but the architecture supports Groq, Gemini, and Anthropic fallbacks if the default tier ever degrades."`}
+          multiline
+        />
+        <CopyBlock
           label="On the formula"
           text={`"Most Bittensor PnL trackers just sum up alpha-token values and call that your profit. That number drifts 5–10% from your actual on-chain balance. This tool uses the same accounting formula the Taostats tax-report CSV uses — the one tax professionals trust to file actual returns."`}
           multiline
         />
         <CopyBlock
           label="On the why"
-          text={`"Every Bittensor stakeholder I know was opening five tabs on Monday morning to figure out the same numbers. Most of them were getting it slightly wrong. So I built the calculation as a free web tool."`}
+          text={`"Every Bittensor stakeholder I know was opening five tabs on Monday morning to figure out the same numbers, then trying to interpret what the numbers meant for their next move. Most of them were getting both parts slightly wrong. So I built the calculation as a free web tool, then layered an AI analyst write-up on top."`}
           multiline
         />
 
