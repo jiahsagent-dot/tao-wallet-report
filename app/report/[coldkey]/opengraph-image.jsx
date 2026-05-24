@@ -23,6 +23,8 @@ export default async function Image({ params }) {
   let pnlBig = 'Live report';
   let pnlPct = '';
   let portfolioLine = '';
+  let delta7dChip = null; // { text, up }
+  let topMoverChip = null; // { text, up }
   let positive = true;
   let neutral = true;
   let available = false;
@@ -32,6 +34,7 @@ export default async function Image({ params }) {
       const report = await getOrBuildReport(coldkey);
       const gt = report?.pnlGroundTruth;
       const p = report?.portfolio;
+      const pn = report?.pnl;
       if (gt?.available) {
         positive = gt.profitTao >= 0;
         neutral = false;
@@ -43,6 +46,29 @@ export default async function Image({ params }) {
       }
       if (p?.totalTao != null) {
         portfolioLine = `Portfolio: ${p.totalTao.toFixed(2)} τ · $${p.totalUsd.toFixed(0)} USD · ${p.positionCount} positions`;
+      }
+      // iter 41 parity: Δ 7d delta chip
+      const c7t = pn?.change7dTao;
+      if (c7t != null && isFinite(c7t) && Math.abs(c7t) >= 0.001) {
+        const up = c7t > 0;
+        delta7dChip = {
+          text: `Δ 7d ${up ? '↑ +' : '↓ '}${c7t.toFixed(2)} τ`,
+          up,
+        };
+      }
+      // iter 41 parity: top mover 7d
+      const top10 = p?.top10 || [];
+      const movers = top10
+        .filter((x) => x.pct7d != null && isFinite(x.pct7d))
+        .slice()
+        .sort((a, b) => Math.abs(b.pct7d) - Math.abs(a.pct7d));
+      if (movers.length && Math.abs(movers[0].pct7d) >= 0.5) {
+        const m = movers[0];
+        const up = m.pct7d > 0;
+        topMoverChip = {
+          text: `Top mover SN${m.netuid} ${up ? '↑ +' : '↓ '}${m.pct7d.toFixed(1)}%`,
+          up,
+        };
       }
     } catch {
       // fall back to generic — never throw inside OG handler
@@ -76,25 +102,43 @@ export default async function Image({ params }) {
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                background: '#f9a826',
+                color: '#1a1100',
+                fontSize: '28px',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              τ
+            </div>
+            <div style={{ display: 'flex', fontSize: '24px', color: '#8a93a3', letterSpacing: '0.02em' }}>
+              tao-wallet-report.vercel.app
+            </div>
+          </div>
           <div
             style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              background: '#f9a826',
-              color: '#1a1100',
-              fontSize: '28px',
-              fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '999px',
+              background: 'rgba(249,168,38,0.12)',
+              border: '1px solid rgba(249,168,38,0.4)',
+              fontSize: '18px',
+              color: '#f9a826',
+              fontWeight: 600,
             }}
           >
-            τ
-          </div>
-          <div style={{ display: 'flex', fontSize: '24px', color: '#8a93a3', letterSpacing: '0.02em' }}>
-            tao-wallet-report.vercel.app
+            📬 Weekly email ~$3 TAO
           </div>
         </div>
 
@@ -172,7 +216,7 @@ export default async function Image({ params }) {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {portfolioLine ? (
             <div
               style={{
@@ -202,6 +246,38 @@ export default async function Image({ params }) {
               }}
             >
               tao-wallet-report.vercel.app
+            </div>
+          )}
+          {delta7dChip && (
+            <div
+              style={{
+                display: 'flex',
+                background: delta7dChip.up ? 'rgba(74,222,128,0.10)' : 'rgba(248,113,113,0.10)',
+                border: `1px solid ${delta7dChip.up ? 'rgba(74,222,128,0.4)' : 'rgba(248,113,113,0.4)'}`,
+                borderRadius: '10px',
+                padding: '14px 18px',
+                fontSize: '20px',
+                color: delta7dChip.up ? '#4ade80' : '#f87171',
+                fontWeight: 600,
+              }}
+            >
+              {delta7dChip.text}
+            </div>
+          )}
+          {topMoverChip && (
+            <div
+              style={{
+                display: 'flex',
+                background: topMoverChip.up ? 'rgba(74,222,128,0.10)' : 'rgba(248,113,113,0.10)',
+                border: `1px solid ${topMoverChip.up ? 'rgba(74,222,128,0.4)' : 'rgba(248,113,113,0.4)'}`,
+                borderRadius: '10px',
+                padding: '14px 18px',
+                fontSize: '20px',
+                color: topMoverChip.up ? '#4ade80' : '#f87171',
+                fontWeight: 600,
+              }}
+            >
+              {topMoverChip.text}
             </div>
           )}
         </div>
