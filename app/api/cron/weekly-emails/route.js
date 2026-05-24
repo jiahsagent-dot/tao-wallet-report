@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { select, update } from '../../../../lib/supabase.js';
 import { buildReport } from '../../../../lib/report.js';
+import { buildInsights } from '../../../../lib/ai-insights.js';
 import { renderEmail } from '../../../../lib/report-email.js';
 import { sendEmail } from '../../../../lib/email.js';
 
@@ -29,13 +30,17 @@ export async function GET(req) {
   const sixDaysAgoIso = new Date(Date.now() - SIX_DAYS_MS).toISOString();
 
   // Pick active subscribers (not expired) who haven't been emailed in the
-  // last 6 days. Cap batch at 10 — Vercel function has 60s.
+  // last 6 days. Batch capped at 3 — ~5s report build + ~20s AI insights
+  // per subscriber stays under the 60s function budget. The cron fires
+  // every Monday 09:00 UTC so a single small batch suffices for now; if
+  // the subscriber count grows past ~20 we'll need to parallelize or
+  // shard across multiple cron schedules.
   const subscribers = await select('tao_subscribers', {
     filters: [
       `expires_at=gt.${nowIso}`,
       `or=(last_email_sent_at.is.null,last_email_sent_at.lt.${sixDaysAgoIso})`,
     ],
-    limit: 10,
+    limit: 3,
     order: 'paid_at.asc',
   });
 
@@ -48,7 +53,15 @@ export async function GET(req) {
     try {
       const report = await buildReport(sub.coldkey);
       report.subscriberExpiresAt = sub.expires_at;
-      const { html, text } = renderEmail(report);
+      // Best-effort AI narrative — soft-fail keeps the email going if the
+      // provider is down. ~20s on Pollinations cache miss, instant on hit.
+      let insights = null;
+      try {
+        insights = await buildInsights(report);
+      } catch (e) {
+        console.error('weekly-emails insights:', sub.email, e);
+      }
+      const { html, text } = renderEmail(report, insights);
       const profit = report.pnlGroundTruth?.available
         ? `${report.pnlGroundTruth.profitTao >= 0 ? '+' : ''}${report.pnlGroundTruth.profitTao.toFixed(3)} τ`
         : 'PnL';
@@ -57,7 +70,12 @@ export async function GET(req) {
       await update('tao_subscribers', [`email=eq.${encodeURIComponent(sub.email)}`], {
         last_email_sent_at: new Date().toISOString(),
       });
-      results.push({ email: sub.email, sent: true, messageId: info.messageId });
+      results.push({
+        email: sub.email,
+        sent: true,
+        messageId: info.messageId,
+        aiInsights: insights?.available ? insights.provider : 'unavailable',
+      });
     } catch (e) {
       console.error('weekly-emails:', sub.email, e);
       results.push({ email: sub.email, error: String(e?.message || e).slice(0, 200) });
