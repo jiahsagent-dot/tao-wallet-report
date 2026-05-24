@@ -8,6 +8,8 @@ import UsageBadge from './_components/UsageBadge.jsx';
 import Skeleton from './_components/Skeleton.jsx';
 import ShareButton from './_components/ShareButton.jsx';
 import RecentColdkeys, { addRecent } from './_components/RecentColdkeys.jsx';
+import PinnedColdkeys from './_components/PinnedColdkeys.jsx';
+import PinButton from './_components/PinButton.jsx';
 
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 const DEMO_COLDKEY = '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd';
@@ -102,6 +104,7 @@ export default function Page() {
         <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
       </div>
 
+      <PinnedColdkeys />
       <RecentColdkeys />
 
       {error && <div className="err">⚠ {error}</div>}
@@ -112,6 +115,7 @@ export default function Page() {
         <>
           <div className="share-row">
             <ShareButton coldkey={report.coldkey} />
+            <PinButton coldkey={report.coldkey} />
             <a className="share-permalink" href={`/report/${report.coldkey}`}>
               Open permalink page →
             </a>

@@ -911,6 +911,113 @@ pre.copy-block-body {
 }
 .share-permalink:hover { color: var(--accent); }
 
+.pin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.pin-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pin-btn.pinned {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(249, 168, 38, 0.08);
+}
+.pin-icon { font-size: 15px; line-height: 1; }
+
+.pinned {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 6px;
+  font-size: 13px;
+}
+.pinned-label {
+  color: var(--accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 4px;
+  padding-top: 4px;
+}
+.pinned-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.pinned-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg2);
+  border: 1px solid rgba(249, 168, 38, 0.35);
+  border-radius: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  transition: border-color 0.12s ease;
+}
+.pinned-chip:hover { border-color: var(--accent); }
+.pinned-chip-link {
+  display: inline-block;
+  padding: 4px 8px 4px 12px;
+  color: var(--fg);
+  border-bottom: none;
+}
+.pinned-chip-link:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+.pinned-chip-note {
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-family: inherit;
+  font-style: italic;
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-left: 1px solid var(--line);
+}
+.pinned-chip-note:hover { color: var(--accent); }
+.pinned-chip-note-add {
+  font-style: normal;
+  opacity: 0.6;
+  font-size: 11px;
+}
+.pinned-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1;
+  width: 22px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  border-left: 1px solid var(--line);
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.pinned-chip-x:hover {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.08);
+}
+
 .back-link {
   display: inline-block;
   color: var(--dim);
