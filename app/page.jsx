@@ -90,6 +90,8 @@ export default function Page() {
           Not financial advice.
         </p>
         <p>
+          <a href="/about">How it works</a>
+          {' · '}
           <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener">
             Open source on GitHub
           </a>

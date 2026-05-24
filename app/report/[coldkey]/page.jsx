@@ -104,6 +104,8 @@ export default async function ReportPermalinkPage({ params }) {
         <p>
           <Link href="/">← Generate your own report</Link>
           {' · '}
+          <Link href="/about">How it works</Link>
+          {' · '}
           <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener">
             Open source on GitHub
           </a>
