@@ -37,7 +37,16 @@ export default function Report({ data, showSubscribeNudge = true }) {
   return (
     <div className="report">
       <p className="meta">
-        Coldkey <code className="addr small">{data.coldkey}</code> · TAO ${fmt(data.taoPriceUsd, 2)} ·
+        Coldkey <code className="addr small">{data.coldkey}</code>{' '}
+        <a
+          className="taostats-link"
+          href={`https://taostats.io/account/${data.coldkey}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Verify this coldkey's holdings on Taostats"
+        >
+          verify on Taostats ↗
+        </a>{' '}· TAO ${fmt(data.taoPriceUsd, 2)} ·
         Generated {new Date(data.generatedAt).toUTCString()}
       </p>
 
@@ -77,7 +86,17 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 {p.top10.map((pos) => (
                   <tr key={pos.netuid}>
                     <td>{pos.netuid}</td>
-                    <td>{pos.name}</td>
+                    <td>
+                      <a
+                        className="subnet-link"
+                        href={`https://taostats.io/subnets/${pos.netuid}/metagraph`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open subnet ${pos.netuid} on Taostats`}
+                      >
+                        {pos.name}
+                      </a>
+                    </td>
                     <td className="num">{fmt(pos.alphaHeld)}</td>
                     <td className="num">{fmt(pos.alphaPriceTao, 6)}</td>
                     <td className="num">{fmt(pos.taoValue)}</td>
@@ -237,7 +256,17 @@ export default function Report({ data, showSubscribeNudge = true }) {
               {b.topMovers24h.map((m) => (
                 <tr key={m.netuid}>
                   <td>{m.netuid}</td>
-                  <td>{m.name}</td>
+                  <td>
+                    <a
+                      className="subnet-link"
+                      href={`https://taostats.io/subnets/${m.netuid}/metagraph`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Open subnet ${m.netuid} on Taostats`}
+                    >
+                      {m.name}
+                    </a>
+                  </td>
                   <td className="num">{fmt(m.priceTao, 6)}</td>
                   <td className={`num ${cls(m.pct1d)}`}>{fmtPct(m.pct1d)}</td>
                   <td className="num">{fmt(m.volumeTao24h, 0)}</td>
