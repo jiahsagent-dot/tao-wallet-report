@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Tiny markdown renderer: handles ## headings, bullet/numbered lists, bold
 // inline (rarely used by the prompt), and paragraphs. Avoids pulling react-
@@ -116,9 +116,21 @@ function formatTtl(ms) {
   return `${m}m ${String(s).padStart(2, '0')}s`;
 }
 
+function isTypingTarget(el) {
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (el.isContentEditable) return true;
+  return false;
+}
+
 export default function AIInsights({ coldkey }) {
   const [state, setState] = useState({ status: 'loading' });
   const [tick, setTick] = useState(0); // forces re-render every second for the TTL countdown
+  const sectionRef = useRef(null);
+  const inViewRef = useRef(false);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const fetchInsights = useCallback(
     (opts = {}) => {
@@ -162,6 +174,41 @@ export default function AIInsights({ coldkey }) {
     return () => clearInterval(id);
   }, [state.status, state.data?.generatedAt]);
 
+  // Track whether the AI Insights card is on-screen so the keyboard shortcut
+  // only fires when the user can actually see what it acts on.
+  useEffect(() => {
+    if (!sectionRef.current || typeof IntersectionObserver === 'undefined') {
+      inViewRef.current = true; // fail open — better than dead key
+      return undefined;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) inViewRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.1 },
+    );
+    obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  // Keyboard shortcut: single 'r' (no modifier) regenerates when the card is
+  // visible AND no input is focused. Intentionally NOT Cmd/Ctrl+R — that's
+  // sacred browser-reload territory and surprising to hijack.
+  useEffect(() => {
+    function onKey(e) {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (e.key !== 'r' && e.key !== 'R') return;
+      if (isTypingTarget(e.target) || isTypingTarget(document.activeElement)) return;
+      if (!inViewRef.current) return;
+      const s = stateRef.current.status;
+      if (s !== 'ready') return; // don't double-fire mid-regenerate
+      e.preventDefault();
+      fetchInsights({ force: true });
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [fetchInsights]);
+
   if (state.status === 'error') {
     // Soft-fail — never block the deterministic report on AI hiccups.
     return null;
@@ -178,20 +225,27 @@ export default function AIInsights({ coldkey }) {
   }
 
   return (
-    <section className="card ai-insights">
+    <section ref={sectionRef} className="card ai-insights">
       <h2>
         <span className="num">§0</span> AI Insights
         <span className="ai-beta">beta</span>
         {(state.status === 'ready' || isRegenerating) && (
-          <button
-            type="button"
-            className="ai-regenerate"
-            onClick={() => fetchInsights({ force: true })}
-            disabled={isRegenerating}
-            title="Bypass cache and generate a fresh analyst pass"
-          >
-            {isRegenerating ? '↻ Regenerating…' : '↻ Regenerate'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="ai-regenerate"
+              onClick={() => fetchInsights({ force: true })}
+              disabled={isRegenerating}
+              title="Bypass cache and generate a fresh analyst pass (or press R)"
+            >
+              {isRegenerating ? '↻ Regenerating…' : '↻ Regenerate'}
+            </button>
+            {state.status === 'ready' && !isRegenerating && (
+              <span className="ai-shortcut-hint" aria-hidden="true">
+                press <kbd>R</kbd>
+              </span>
+            )}
+          </>
         )}
       </h2>
       {showSkeleton && (

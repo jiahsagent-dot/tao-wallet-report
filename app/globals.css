@@ -961,10 +961,30 @@ pre.copy-block-body {
   opacity: 0.6;
   cursor: progress;
 }
+.ai-shortcut-hint {
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: 0.02em;
+  margin-left: -2px;
+}
+.ai-shortcut-hint kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: var(--fg);
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  line-height: 1;
+  vertical-align: baseline;
+}
 .ai-insights h2 {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .ai-ttl-countdown {
   font-variant-numeric: tabular-nums;
