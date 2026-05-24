@@ -46,6 +46,7 @@ export default async function Image() {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
+              display: 'flex',
               fontSize: '76px',
               fontWeight: 700,
               letterSpacing: '-0.03em',
@@ -53,14 +54,18 @@ export default async function Image() {
               marginBottom: '20px',
             }}
           >
-            Paste a Bittensor coldkey.
-            <br />
-            Get a personalised report.
+            Paste a Bittensor coldkey. Get a personalised report.
           </div>
-          <div style={{ fontSize: '28px', color: '#8a93a3', lineHeight: 1.4, maxWidth: '900px' }}>
-            Portfolio · PnL · yield · subnet flags · weekly email.
-            <br />
-            Free instant report. Public on-chain data only.
+          <div
+            style={{
+              display: 'flex',
+              fontSize: '28px',
+              color: '#8a93a3',
+              lineHeight: 1.4,
+              maxWidth: '900px',
+            }}
+          >
+            Portfolio · PnL · yield · subnet flags · weekly email. Free, instant, public on-chain data only.
           </div>
         </div>
 
