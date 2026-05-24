@@ -1,6 +1,7 @@
 'use client';
 
 import AIInsights from './AIInsights.jsx';
+import SubnetLink, { buildSubnetLookup } from './SubnetLink.jsx';
 
 const fmt = (n, d = 2) =>
   n == null || !isFinite(n)
@@ -51,6 +52,7 @@ function Stat({ label, value, cls: c }) {
 
 export default function Report({ data, showSubscribeNudge = true }) {
   const { portfolio: p, pnl, pnlGroundTruth: gt, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
       <p className="meta">
@@ -114,15 +116,12 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       <tr key={pos.netuid}>
                         <td>{pos.netuid}</td>
                         <td>
-                          <a
-                            className="subnet-link"
+                          <SubnetLink
+                            netuid={pos.netuid}
+                            name={pos.name}
+                            info={subnetLookup.get(pos.netuid)}
                             href={`https://taostats.io/subnets/${pos.netuid}/metagraph`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={`Open subnet ${pos.netuid} on Taostats`}
-                          >
-                            {pos.name}
-                          </a>
+                          />
                         </td>
                         <td className="num">{fmt(pos.alphaHeld)}</td>
                         <td className="num">{fmt(pos.alphaPriceTao, 6)}</td>
@@ -292,15 +291,12 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       <tr key={m.netuid}>
                         <td>{m.netuid}</td>
                         <td>
-                          <a
-                            className="subnet-link"
+                          <SubnetLink
+                            netuid={m.netuid}
+                            name={m.name}
+                            info={subnetLookup.get(m.netuid)}
                             href={`https://taostats.io/subnets/${m.netuid}/metagraph`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={`Open subnet ${m.netuid} on Taostats`}
-                          >
-                            {m.name}
-                          </a>
+                          />
                         </td>
                         <td className="num">{fmt(m.priceTao, 6)}</td>
                         <td className={`num heat ${cls(m.pct1d)}`} style={heatBg(m.pct1d, moversMaxAbs1d, rgb)}>{fmtPct(m.pct1d)}</td>
