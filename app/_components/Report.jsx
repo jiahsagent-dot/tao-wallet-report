@@ -444,8 +444,11 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   Australian financial year (Jul 1 → Jun 30). Same formula as the
                   headline above, applied per FY:{' '}
                   <code className="addr small">end + transfer_out − transfer_in − start</code>.
-                  Carry-in balance uses the last snapshot before FY start when available.
-                  {' '}{ty.pointCount} snapshots, {ty.transferCount} transfers across {ty.buckets.length} FY{ty.buckets.length === 1 ? '' : 's'}.
+                  End balances come from /api/account/history/v1 (full total including
+                  alpha staking). Transfers from /api/accounting/tax/v1, one fetch per FY.
+                  Wallets created mid-FY use start = 0 so initial fundings don't
+                  double-count.
+                  {' '}{ty.pointCount} balance snapshots, {ty.transferCount} transfers across {ty.buckets.length} FY{ty.buckets.length === 1 ? '' : 's'}.
                 </p>
               </div>
             )}
