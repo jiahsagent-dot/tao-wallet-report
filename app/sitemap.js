@@ -24,8 +24,20 @@ export default function sitemap() {
     {
       url: `${base}/changelog`,
       lastModified: now,
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
       priority: 0.5,
+    },
+    {
+      url: `${base}/changelog/feed.xml`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.4,
+    },
+    {
+      url: `${base}/changelog/feed.json`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.4,
     },
   ];
 }
