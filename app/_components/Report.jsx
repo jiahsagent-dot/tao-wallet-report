@@ -158,6 +158,25 @@ function buildBroaderMarketCsv(broader) {
   return lines.join('\r\n') + '\r\n';
 }
 
+function buildTaxYearCsv(buckets) {
+  const header = ['FY', 'Window', 'Start bal (τ)', 'End bal (τ)', 'In (τ)', 'Out (τ)', 'PnL τ', 'Return %', 'A$'];
+  const lines = [header.map(csvEscape).join(',')];
+  buckets.forEach((b) => {
+    lines.push([
+      b.isCurrentFy ? `${b.label} (in progress)` : b.label,
+      `${b.startDate} → ${b.endDate}`,
+      b.startBalanceTao != null ? Number(b.startBalanceTao).toFixed(6) : '',
+      b.endBalanceTao != null ? Number(b.endBalanceTao).toFixed(6) : '',
+      b.transferInTao != null ? Number(b.transferInTao).toFixed(6) : '',
+      b.transferOutTao != null ? Number(b.transferOutTao).toFixed(6) : '',
+      b.profitTao != null ? Number(b.profitTao).toFixed(6) : '',
+      b.returnPct != null ? (Number(b.returnPct) * 100).toFixed(4) : '',
+      b.profitAud != null ? Number(b.profitAud).toFixed(2) : '',
+    ].map(csvEscape).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+
 function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ariaLabel = 'Copy as CSV' }) {
   const [state, setState] = useState('idle'); // idle | copied | error
   const onClick = useCallback(async () => {
@@ -443,7 +462,15 @@ export default function Report({ data, showSubscribeNudge = true }) {
             )}
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">
-                <h3 className="sub-h">AU tax-year breakdown</h3>
+                <div className="tax-year-head">
+                  <h3 className="sub-h">AU tax-year breakdown</h3>
+                  <CopyCsvButton
+                    getCsv={() => buildTaxYearCsv(ty.buckets)}
+                    coldkey={data.coldkey}
+                    filenamePrefix="tax-year"
+                    ariaLabel="Copy tax-year breakdown as CSV"
+                  />
+                </div>
                 <table className="tax-year-table">
                   <thead>
                     <tr>

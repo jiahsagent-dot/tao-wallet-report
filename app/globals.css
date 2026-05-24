@@ -396,6 +396,19 @@ a:hover { text-decoration: underline; }
 .tax-year-panel .sub-h {
   margin-bottom: 8px;
 }
+.tax-year-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tax-year-head .sub-h {
+  margin-bottom: 0;
+}
+.tax-year-head .csv-toolbar {
+  margin: 0;
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;
