@@ -24,6 +24,12 @@ function save(list) {
   } catch {}
 }
 
+// Read-only helper for components that want the recent list without mounting
+// the chips UI (e.g. ColdkeySearch typeahead).
+export function loadRecent() {
+  return load();
+}
+
 // Pure helper exported for testability + so other components can call it
 // without dragging in the React UI.
 export function addRecent(coldkey) {

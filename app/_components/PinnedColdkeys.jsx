@@ -34,6 +34,12 @@ export function isPinned(coldkey) {
   return load().some((e) => e.coldkey === coldkey);
 }
 
+// Read-only helper for components that want the pinned list without mounting
+// the chips UI (e.g. ColdkeySearch typeahead).
+export function loadPinned() {
+  return load();
+}
+
 export function addPin(coldkey, note = '') {
   if (typeof window === 'undefined' || !coldkey) return;
   const list = load();

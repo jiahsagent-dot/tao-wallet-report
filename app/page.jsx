@@ -10,6 +10,7 @@ import ShareButton from './_components/ShareButton.jsx';
 import RecentColdkeys, { addRecent } from './_components/RecentColdkeys.jsx';
 import PinnedColdkeys from './_components/PinnedColdkeys.jsx';
 import PinButton from './_components/PinButton.jsx';
+import ColdkeySearch from './_components/ColdkeySearch.jsx';
 
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 const DEMO_COLDKEY = '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd';
@@ -77,14 +78,12 @@ export default function Page() {
       </header>
 
       <form onSubmit={onSubmit} className="form">
-        <input
-          className="input"
+        <ColdkeySearch
           value={coldkey}
-          onChange={(e) => setColdkey(e.target.value)}
+          onChange={setColdkey}
+          onPick={(k) => { setColdkey(k); runReport(k); }}
           placeholder={placeholder}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoCorrect="off"
+          disabled={loading}
         />
         <button className="btn" type="submit" disabled={loading || !coldkey.trim()}>
           {loading ? 'Building…' : 'Get report'}
