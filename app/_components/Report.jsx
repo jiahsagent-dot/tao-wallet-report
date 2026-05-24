@@ -30,6 +30,69 @@ const HEAT_ORANGE = '255, 140, 60';
 const HEAT_GREEN = '74, 222, 128';
 const HEAT_RED = '248, 113, 113';
 
+// Build 1–3 glance-readable "Δ vs last week" chips from existing report data.
+// Soft-omits chips whose underlying field is null/zero/non-finite, and returns
+// [] when nothing is computable so the strip renders nothing rather than empty.
+function computeDeltaChips(data) {
+  const chips = [];
+  const c7t = data?.pnl?.change7dTao;
+  if (c7t != null && isFinite(c7t) && Math.abs(c7t) >= 0.001) {
+    chips.push({
+      key: 'pnl-7d',
+      label: 'Δ 7d',
+      arrow: c7t > 0 ? '↑' : '↓',
+      value: `${c7t > 0 ? '+' : ''}${fmt(c7t, 2)} τ`,
+      hint: 'price action on current positions',
+      tone: c7t > 0 ? 'up' : 'down',
+    });
+  }
+  const top10 = data?.portfolio?.top10 || [];
+  const movers = top10
+    .filter((p) => p.pct7d != null && isFinite(p.pct7d))
+    .slice()
+    .sort((a, b) => Math.abs(b.pct7d) - Math.abs(a.pct7d));
+  if (movers.length && Math.abs(movers[0].pct7d) >= 0.5) {
+    const m = movers[0];
+    chips.push({
+      key: 'top-mover-7d',
+      label: 'Top mover 7d',
+      arrow: m.pct7d > 0 ? '↑' : '↓',
+      value: `SN${m.netuid} ${m.pct7d > 0 ? '+' : ''}${fmt(m.pct7d, 1)}%`,
+      hint: m.name,
+      tone: m.pct7d > 0 ? 'up' : 'down',
+    });
+  }
+  const c30t = data?.pnl?.change30dTao;
+  if (c30t != null && isFinite(c30t) && Math.abs(c30t) >= 0.001) {
+    chips.push({
+      key: 'pnl-30d',
+      label: 'Δ 30d',
+      arrow: c30t > 0 ? '↑' : '↓',
+      value: `${c30t > 0 ? '+' : ''}${fmt(c30t, 2)} τ`,
+      hint: '30-day price trajectory',
+      tone: c30t > 0 ? 'up' : 'down',
+    });
+  }
+  return chips;
+}
+
+function DeltaStrip({ data }) {
+  const chips = computeDeltaChips(data);
+  if (chips.length === 0) return null;
+  return (
+    <div className="delta-strip" aria-label="Period changes vs prior week">
+      {chips.map((c) => (
+        <span key={c.key} className={`delta-chip ${c.tone}`}>
+          <span className="delta-arrow" aria-hidden="true">{c.arrow}</span>
+          <span className="delta-lbl">{c.label}</span>
+          <strong className="delta-val">{c.value}</strong>
+          {c.hint && <span className="delta-hint">{c.hint}</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Section({ title, n, children }) {
   return (
     <section className="card">
@@ -68,6 +131,8 @@ export default function Report({ data, showSubscribeNudge = true }) {
         </a>{' '}· TAO ${fmt(data.taoPriceUsd, 2)} ·
         Generated {new Date(data.generatedAt).toUTCString()}
       </p>
+
+      <DeltaStrip data={data} />
 
       {showSubscribeNudge && (
         <a href="#subscribe" className="top-nudge">
