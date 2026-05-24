@@ -396,17 +396,20 @@ a:hover { text-decoration: underline; }
 .tax-year-panel .sub-h {
   margin-bottom: 8px;
 }
-.tax-year-head {
+.tax-year-head,
+.yield-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
 }
-.tax-year-head .sub-h {
+.tax-year-head .sub-h,
+.yield-head .sub-h {
   margin-bottom: 0;
 }
-.tax-year-head .csv-toolbar {
+.tax-year-head .csv-toolbar,
+.yield-head .csv-toolbar {
   margin: 0;
 }
 .tax-year-table {

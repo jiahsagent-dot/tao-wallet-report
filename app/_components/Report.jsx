@@ -158,6 +158,29 @@ function buildBroaderMarketCsv(broader) {
   return lines.join('\r\n') + '\r\n';
 }
 
+function buildYieldCsv(perPosition) {
+  const header = ['Netuid', 'Subnet', 'Validator', 'Hotkey', 'Alpha held', 'APY %', 'APY is fallback', 'Subnet best APY %', 'Δ to best (pp)', 'Subnet validator count'];
+  const lines = [header.map(csvEscape).join(',')];
+  perPosition
+    .slice()
+    .sort((a, b) => (b.alphaTokens || 0) - (a.alphaTokens || 0))
+    .forEach((p) => {
+      lines.push([
+        p.netuid,
+        p.subnetName || `Subnet ${p.netuid}`,
+        p.validatorName || '',
+        p.hotkey || '',
+        p.alphaTokens != null ? Number(p.alphaTokens).toFixed(6) : '',
+        p.apy != null ? (Number(p.apy) * 100).toFixed(4) : '',
+        p.apyIsFallback ? 'true' : 'false',
+        p.subnetBestApy != null ? (Number(p.subnetBestApy) * 100).toFixed(4) : '',
+        p.deltaToBest != null ? (Number(p.deltaToBest) * 100).toFixed(4) : '',
+        p.subnetValidatorCount != null ? p.subnetValidatorCount : '',
+      ].map(csvEscape).join(','));
+    });
+  return lines.join('\r\n') + '\r\n';
+}
+
 function buildTaxYearCsv(buckets) {
   const header = ['FY', 'Window', 'Start bal (τ)', 'End bal (τ)', 'In (τ)', 'Out (τ)', 'PnL τ', 'Return %', 'A$'];
   const lines = [header.map(csvEscape).join(',')];
@@ -689,7 +712,15 @@ export default function Report({ data, showSubscribeNudge = true }) {
 
         {Array.isArray(y.perPosition) && y.perPosition.length > 0 && (
           <>
-            <h3 className="sub-h">Per-validator breakdown</h3>
+            <div className="yield-head">
+              <h3 className="sub-h">Per-validator breakdown</h3>
+              <CopyCsvButton
+                getCsv={() => buildYieldCsv(y.perPosition)}
+                coldkey={data.coldkey}
+                filenamePrefix="yield"
+                ariaLabel="Copy per-validator yield as CSV"
+              />
+            </div>
             <table className="yield-table">
               <thead>
                 <tr>
