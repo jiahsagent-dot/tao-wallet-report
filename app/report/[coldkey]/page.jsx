@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getOrBuildReport } from '../../../lib/report.js';
+import { getOrBuildReport, buildAndCacheReport } from '../../../lib/report.js';
 import Report from '../../_components/Report.jsx';
 import WeeklyEmailCTA from '../../_components/WeeklyEmailCTA.jsx';
 import TipJar from '../../_components/TipJar.jsx';
@@ -63,14 +63,18 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function ReportPermalinkPage({ params }) {
+export default async function ReportPermalinkPage({ params, searchParams }) {
   const { coldkey } = params;
   if (!SS58_RE.test(coldkey)) notFound();
+
+  // ?refresh=1 bypasses the in-memory cache so users (and verifiers) can
+  // force a fresh build instead of waiting out the 5-minute TTL.
+  const forceFresh = searchParams?.refresh === '1';
 
   let report = null;
   let buildError = null;
   try {
-    report = await getOrBuildReport(coldkey);
+    report = forceFresh ? await buildAndCacheReport(coldkey) : await getOrBuildReport(coldkey);
   } catch (e) {
     buildError = String(e?.message || e).slice(0, 300);
   }
