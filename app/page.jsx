@@ -12,6 +12,16 @@ import RecentColdkeys, { addRecent } from './_components/RecentColdkeys.jsx';
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 const DEMO_COLDKEY = '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd';
 
+// Deterministic per-hour rotation so server + client agree (no hydration
+// mismatch) and visitors who reload at different times see variety.
+const PLACEHOLDERS = [
+  '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd',
+  'Paste any Bittensor SS58 coldkey (starts with 5)',
+  'Your Bittensor coldkey — public address only, never your hotkey',
+  'Paste a coldkey to see portfolio, PnL, yield, and AI Insights',
+  'Tap "▸ Try a demo report" below, or paste your own coldkey',
+];
+
 export default function Page() {
   const [coldkey, setColdkey] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,6 +61,8 @@ export default function Page() {
     return runReport(DEMO_COLDKEY);
   }
 
+  const placeholder = PLACEHOLDERS[new Date().getUTCHours() % PLACEHOLDERS.length];
+
   return (
     <main className="wrap">
       <header className="head">
@@ -67,7 +79,7 @@ export default function Page() {
           className="input"
           value={coldkey}
           onChange={(e) => setColdkey(e.target.value)}
-          placeholder="5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd"
+          placeholder={placeholder}
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
