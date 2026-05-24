@@ -422,6 +422,101 @@ export default function Report({ data, showSubscribeNudge = true }) {
             <Stat label="Worst" value={`sn${y.worst.netuid} @ ${fmt(y.worst.apy * 100, 2)}%`} />
           )}
         </div>
+
+        {y.liftIfOptimised != null && y.liftIfOptimised > 0.02 && (
+          <p className="yield-lift">
+            ↗ Re-delegating each position to the best validator on its subnet would lift weighted APY by{' '}
+            <strong>+{fmt(y.liftIfOptimised * 100, 2)}pp</strong>{' '}
+            (to {fmt(y.bestCaseWeightedApy * 100, 2)}%).
+          </p>
+        )}
+
+        {Array.isArray(y.perPosition) && y.perPosition.length > 0 && (
+          <>
+            <h3 className="sub-h">Per-validator breakdown</h3>
+            <table className="yield-table">
+              <thead>
+                <tr>
+                  <th>Subnet</th>
+                  <th>Validator</th>
+                  <th>α held</th>
+                  <th>APY</th>
+                  <th>Subnet best</th>
+                  <th>Δ to best</th>
+                </tr>
+              </thead>
+              <tbody>
+                {y.perPosition
+                  .slice()
+                  .sort((a, b) => b.alphaTokens - a.alphaTokens)
+                  .slice(0, 10)
+                  .map((p, i) => {
+                    const apyPct = p.apy != null ? `${fmt(p.apy * 100, 2)}%` : '—';
+                    const bestPct =
+                      p.subnetBestApy != null ? `${fmt(p.subnetBestApy * 100, 2)}%` : '—';
+                    const deltaPp =
+                      p.deltaToBest != null ? p.deltaToBest * 100 : null;
+                    const deltaStr =
+                      deltaPp != null
+                        ? `${deltaPp >= 0 ? '+' : ''}${fmt(deltaPp, 2)}pp`
+                        : '—';
+                    const deltaCls =
+                      deltaPp == null
+                        ? ''
+                        : deltaPp <= -5
+                        ? 'neg-strong'
+                        : deltaPp <= -1
+                        ? 'neg'
+                        : 'pos';
+                    const validatorShort = p.validatorName
+                      ? p.validatorName
+                      : p.hotkey
+                      ? `${p.hotkey.slice(0, 6)}…${p.hotkey.slice(-4)}`
+                      : '—';
+                    return (
+                      <tr key={`${p.netuid}-${p.hotkey || i}`}>
+                        <td>
+                          sn{p.netuid} {p.subnetName}
+                        </td>
+                        <td title={p.hotkey || ''}>{validatorShort}</td>
+                        <td>{fmt(p.alphaTokens, 2)}</td>
+                        <td>
+                          {apyPct}
+                          {p.apyIsFallback && (
+                            <span className="apy-fallback" title="Specific validator not in yield response — using subnet median">
+                              {' '}
+                              ~
+                            </span>
+                          )}
+                        </td>
+                        <td>{bestPct}</td>
+                        <td className={`yield-delta ${deltaCls}`}>{deltaStr}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+            <p className="hint">
+              Δ to best shows how far each validator is behind the best validator on the same subnet (in percentage points). Negative values are re-delegation opportunities.
+            </p>
+          </>
+        )}
+
+        {Array.isArray(y.delegationOpportunities) && y.delegationOpportunities.length > 0 && (
+          <>
+            <h3 className="sub-h">↻ Delegation opportunities ({y.delegationOpportunities.length})</h3>
+            <ul className="deleg-ops">
+              {y.delegationOpportunities.slice(0, 5).map((p, i) => (
+                <li key={i}>
+                  <strong>sn{p.netuid} {p.subnetName}</strong>: your validator yields{' '}
+                  {fmt(p.apy * 100, 2)}% vs subnet best {fmt(p.subnetBestApy * 100, 2)}%
+                  (Δ {fmt(p.deltaToBest * 100, 2)}pp). Re-delegating could add roughly{' '}
+                  {fmt(p.potentialLiftTaoPerYear, 4)} τ/yr at current alpha levels.
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </Section>
 
       <Section n="4" title={`Flags (${f.length})`}>

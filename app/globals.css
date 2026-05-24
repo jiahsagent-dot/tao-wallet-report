@@ -261,6 +261,57 @@ a:hover { text-decoration: underline; }
 .empty { color: var(--dim); font-style: italic; }
 .hint { color: var(--dim); font-size: 12px; margin-top: 10px; }
 
+.yield-lift {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--accent);
+}
+.yield-table {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+.yield-table th,
+.yield-table td {
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.yield-table th:first-child,
+.yield-table td:first-child,
+.yield-table th:nth-child(2),
+.yield-table td:nth-child(2) {
+  text-align: left;
+}
+.yield-table th {
+  color: var(--dim);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.yield-delta.pos { color: var(--green); }
+.yield-delta.neg { color: var(--accent); }
+.yield-delta.neg-strong { color: var(--red); font-weight: 600; }
+.apy-fallback { color: var(--dim); font-size: 11px; }
+.deleg-ops {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.deleg-ops li {
+  font-size: 13px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
 .cta {
   margin-top: 32px;
   background: var(--bg2);
