@@ -1,4 +1,5 @@
 import './globals.css';
+import { webApplicationSchema } from '../lib/structured-data.js';
 
 const TITLE = 'Tao Wallet Report — paste a coldkey, get a personalised Bittensor report';
 const DESCRIPTION =
@@ -32,7 +33,13 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationSchema()) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

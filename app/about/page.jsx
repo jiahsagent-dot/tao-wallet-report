@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { faqPageSchema, howToSchema } from '../../lib/structured-data.js';
 
 const TITLE = 'About Tao Wallet Report — methodology, data sources, FAQ';
 const DESCRIPTION =
@@ -25,6 +26,14 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <main className="wrap">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema()) }}
+      />
       <header className="head">
         <Link href="/" className="back-link">← Back to the report tool</Link>
         <h1>About Tao Wallet Report</h1>
