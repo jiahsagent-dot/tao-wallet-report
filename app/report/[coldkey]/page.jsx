@@ -4,6 +4,7 @@ import { getOrBuildReport } from '../../../lib/report.js';
 import Report from '../../_components/Report.jsx';
 import WeeklyEmailCTA from '../../_components/WeeklyEmailCTA.jsx';
 import TipJar from '../../_components/TipJar.jsx';
+import RecordView from '../../_components/RecordView.jsx';
 
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 const SS58_RE = /^5[a-km-zA-HJ-NP-Z1-9]{47}$/;
@@ -74,6 +75,7 @@ export default async function ReportPermalinkPage({ params }) {
 
   return (
     <main className="wrap">
+      <RecordView coldkey={coldkey} />
       <header className="head">
         <Link href="/" className="back-link">← Generate your own report</Link>
         <h1>Tao Wallet Report</h1>

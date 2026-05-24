@@ -7,6 +7,7 @@ import WeeklyEmailCTA from './_components/WeeklyEmailCTA.jsx';
 import UsageBadge from './_components/UsageBadge.jsx';
 import Skeleton from './_components/Skeleton.jsx';
 import ShareButton from './_components/ShareButton.jsx';
+import RecentColdkeys, { addRecent } from './_components/RecentColdkeys.jsx';
 
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 
@@ -30,6 +31,7 @@ export default function Page() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
       setReport(j);
+      addRecent(j.coldkey || coldkey.trim());
     } catch (e) {
       setError(e.message);
     } finally {
@@ -62,6 +64,8 @@ export default function Page() {
           {loading ? 'Building…' : 'Get report'}
         </button>
       </form>
+
+      <RecentColdkeys />
 
       {error && <div className="err">⚠ {error}</div>}
 
