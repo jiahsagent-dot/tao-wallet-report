@@ -232,8 +232,15 @@ function Stat({ label, value, cls: c }) {
   );
 }
 
+function formatShortDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
+}
+
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -346,6 +353,49 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 Over last {gt.windowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
               </div>
             </div>
+            {dd && dd.available && (
+              <div className="drawdown-panel">
+                <div className="dd-row">
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Peak balance</div>
+                    <div className="dd-val">{fmt(dd.allTimePeakTao, 2)} τ</div>
+                    <div className="dd-sub">{formatShortDate(dd.allTimePeakDate)}</div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Days since peak</div>
+                    <div className={`dd-val ${dd.isAtAllTimeHigh ? 'pos' : ''}`}>
+                      {dd.isAtAllTimeHigh ? 'at ATH' : `${dd.daysSincePeak}d`}
+                    </div>
+                    <div className="dd-sub">
+                      {dd.isAtAllTimeHigh
+                        ? 'all-time high'
+                        : `currently ${fmt(dd.currentDrawdownPct * 100, 1)}% off`}
+                    </div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Max drawdown</div>
+                    <div className={`dd-val ${dd.maxDrawdownPct >= 0.1 ? 'neg' : ''}`}>
+                      −{fmt(dd.maxDrawdownPct * 100, 1)}%
+                    </div>
+                    <div className="dd-sub">−{fmt(dd.maxDrawdownTao, 2)} τ peak-to-trough</div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Worst dip window</div>
+                    <div className="dd-val dd-window">
+                      {formatShortDate(dd.maxDrawdownPeakDate)} → {formatShortDate(dd.maxDrawdownTroughDate)}
+                    </div>
+                    <div className="dd-sub">
+                      {fmt(dd.maxDrawdownPeakTao, 2)} τ → {fmt(dd.maxDrawdownTroughTao, 2)} τ
+                    </div>
+                  </div>
+                </div>
+                <p className="hint">
+                  Drawdown stats from {dd.pointCount} daily balance snapshots
+                  ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
+                  Source: Taostats /api/account/history/v1.
+                </p>
+              </div>
+            )}
             <div className="stats">
               <Stat label="Starting balance" value={`${fmt(gt.startingBalanceTao, 6)} τ`} />
               <Stat label="Transfers in" value={`${fmt(gt.transferInTao, 6)} τ`} />
