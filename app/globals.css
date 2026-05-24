@@ -164,6 +164,17 @@ a:hover { text-decoration: underline; }
 .tbl td.pos { color: var(--green); }
 .tbl td.neg { color: var(--red); }
 
+/* Heatmap cells: column-relative background tint set inline via Report.jsx
+   heatBg(). Border-radius on the data cells gives the tint a card-ish
+   look without leaking onto adjacent cells. Padding bumps for breathing
+   room around the colour swatches. */
+.tbl-heatmap td.heat {
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: background-color 200ms ease;
+  position: relative;
+}
+
 .pnl-headline {
   background: var(--bg);
   border: 1px solid var(--line);
