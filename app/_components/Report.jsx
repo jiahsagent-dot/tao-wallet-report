@@ -281,6 +281,50 @@ function formatShortDate(iso) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
 }
 
+// Compact inline-SVG sparkline for the staking-income trend. Renders one
+// polyline + a baseline. Values are non-negative so we anchor the bottom at 0.
+// Skips render when fewer than 7 daily observations (noisy single-week trend).
+function StakingIncomeSparkline({ series, width = 200, height = 36 }) {
+  if (!Array.isArray(series) || series.length < 7) return null;
+  const values = series.map((p) => Math.max(0, Number(p.income) || 0));
+  const max = Math.max(...values, 0);
+  if (max <= 0) return null;
+  const pad = 2;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const stepX = values.length > 1 ? innerW / (values.length - 1) : 0;
+  const points = values
+    .map((v, i) => {
+      const x = pad + i * stepX;
+      const y = pad + innerH - (v / max) * innerH;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+  const last = values[values.length - 1];
+  const lastX = pad + (values.length - 1) * stepX;
+  const lastY = pad + innerH - (last / max) * innerH;
+  const firstDate = series[0]?.date;
+  const lastDate = series[series.length - 1]?.date;
+  return (
+    <span
+      className="spark"
+      title={`Daily staking income · ${formatShortDate(firstDate)} → ${formatShortDate(lastDate)} · peak ${max.toFixed(4)} τ/d`}
+    >
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} role="img" aria-label="Daily staking income trend">
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={points}
+        />
+        <circle cx={lastX.toFixed(2)} cy={lastY.toFixed(2)} r="2" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
+
 export default function Report({ data, showSubscribeNudge = true }) {
   const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
@@ -578,12 +622,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
               <Stat label="Current portfolio" value={`${fmt(gt.currentPortfolioTao, 6)} τ`} />
             </div>
             {gt.dailyIncomeTao > 0 && (
-              <div className="stats">
+              <div className="stats stats-staking-income">
                 <Stat
                   label={`Staking income (${gt.windowDays}d)`}
                   value={`${fmt(gt.dailyIncomeTao, 4)} τ ($${fmt(gt.dailyIncomeUsd, 2)} · A$${fmt(gt.dailyIncomeAud, 2)})`}
                   cls="pos"
                 />
+                {Array.isArray(gt.dailyIncomeSeries) && gt.dailyIncomeSeries.length >= 7 && (
+                  <div className="staking-income-trend">
+                    <div className="lbl">Daily trend</div>
+                    <StakingIncomeSparkline series={gt.dailyIncomeSeries} />
+                  </div>
+                )}
               </div>
             )}
             <p className="hint">

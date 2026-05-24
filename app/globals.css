@@ -151,6 +151,30 @@ a:hover { text-decoration: underline; }
 .stat .val.pos { color: var(--green); }
 .stat .val.neg { color: var(--red); }
 
+.staking-income-trend {
+  background: var(--bg);
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--green);
+}
+.staking-income-trend .lbl {
+  color: var(--dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.staking-income-trend .spark {
+  display: inline-block;
+  line-height: 0;
+}
+.staking-income-trend .spark svg {
+  display: block;
+}
+
 .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td {
