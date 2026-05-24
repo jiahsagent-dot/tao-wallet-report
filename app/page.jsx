@@ -101,7 +101,7 @@ function Section({ title, n, children }) {
 }
 
 function Report({ data }) {
-  const { portfolio: p, pnl, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, yield: y, flags: f, recommendations: r, broader: b } = data;
   return (
     <div className="report">
       <p className="meta">
@@ -153,36 +153,82 @@ function Report({ data }) {
       </Section>
 
       <Section n="2" title="PnL">
+        {gt && gt.available ? (
+          <>
+            <div className="pnl-headline">
+              <div className={`pnl-big ${cls(gt.profitTao)}`}>
+                {gt.profitTao >= 0 ? '+' : ''}{fmt(gt.profitTao, 3)} τ
+                <span className="pnl-pct">
+                  {' '}({gt.returnPct >= 0 ? '+' : ''}{fmt(gt.returnPct * 100, 2)}%)
+                </span>
+              </div>
+              <div className="pnl-fiat">
+                ≈ {gt.profitUsd >= 0 ? '+' : ''}${fmt(gt.profitUsd, 2)} USD ·{' '}
+                {gt.profitAud >= 0 ? '+' : ''}A${fmt(gt.profitAud, 2)}
+              </div>
+              <div className="pnl-window">
+                Over last {gt.windowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
+              </div>
+            </div>
+            <div className="stats">
+              <Stat label="Starting balance" value={`${fmt(gt.startingBalanceTao, 6)} τ`} />
+              <Stat label="Transfers in" value={`${fmt(gt.transferInTao, 6)} τ`} />
+              <Stat label="Transfers out" value={`${fmt(gt.transferOutTao, 6)} τ`} />
+              <Stat label="Current portfolio" value={`${fmt(gt.currentPortfolioTao, 6)} τ`} />
+            </div>
+            {gt.dailyIncomeTao > 0 && (
+              <div className="stats">
+                <Stat
+                  label={`Staking income (${gt.windowDays}d)`}
+                  value={`${fmt(gt.dailyIncomeTao, 4)} τ ($${fmt(gt.dailyIncomeUsd, 2)} · A$${fmt(gt.dailyIncomeAud, 2)})`}
+                  cls="pos"
+                />
+              </div>
+            )}
+            <p className="hint">
+              Formula: <code className="addr small">current + transfer_out − transfer_in − starting</code>.
+              Source: Taostats tax-report endpoint — same data the Bittensor weekly FINAL doc uses.
+              {' '}{gt.snapshotCount} daily snapshots, {gt.transferCount} transfers.
+            </p>
+          </>
+        ) : (
+          <p className="hint">
+            Ground-truth PnL unavailable for this coldkey
+            {gt?.reason ? ` (${gt.reason})` : ''}. Showing alpha-position PnL only.
+          </p>
+        )}
+
+        <p className="sub-h">Alpha-position breakdown</p>
         <div className="stats">
-          <Stat label="Spent" value={`${fmt(pnl.spentTao)} τ`} />
-          <Stat label="Sold" value={`${fmt(pnl.soldTao)} τ`} />
-          <Stat label="Current" value={`${fmt(pnl.currentTao)} τ`} />
+          <Stat label="Spent on α" value={`${fmt(pnl.spentTao)} τ`} />
+          <Stat label="Sold α" value={`${fmt(pnl.soldTao)} τ`} />
+          <Stat label="α value now" value={`${fmt(pnl.currentTao)} τ`} />
           <Stat
-            label="Total PnL"
+            label="α PnL"
             value={`${fmt(pnl.totalPnlTao)} τ ($${fmt(pnl.totalPnlUsd, 0)})`}
             cls={cls(pnl.totalPnlTao)}
           />
         </div>
         <div className="stats">
           <Stat
-            label="24h"
+            label="α 24h"
             value={`${fmt(pnl.change24hTao)} τ ($${fmt(pnl.change24hUsd, 0)})`}
             cls={cls(pnl.change24hTao)}
           />
           <Stat
-            label="7d"
+            label="α 7d"
             value={`${fmt(pnl.change7dTao)} τ ($${fmt(pnl.change7dUsd, 0)})`}
             cls={cls(pnl.change7dTao)}
           />
           <Stat
-            label="30d"
+            label="α 30d"
             value={`${fmt(pnl.change30dTao)} τ ($${fmt(pnl.change30dUsd, 0)})`}
             cls={cls(pnl.change30dTao)}
           />
         </div>
         <p className="hint">
-          {pnl.eventsCount} delegation events analysed. PnL excludes SN0 root staking
-          (not a trade).
+          {pnl.eventsCount} delegation events analysed (alpha-trading-only PnL, complements
+          the ground-truth balance-based number above).
         </p>
       </Section>
 

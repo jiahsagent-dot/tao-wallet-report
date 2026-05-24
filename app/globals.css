@@ -129,6 +129,37 @@ a:hover { text-decoration: underline; }
 .tbl td.pos { color: var(--green); }
 .tbl td.neg { color: var(--red); }
 
+.pnl-headline {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.pnl-big {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.pnl-big.pos { color: var(--green); }
+.pnl-big.neg { color: var(--red); }
+.pnl-pct { font-size: 20px; font-weight: 500; opacity: 0.85; }
+.pnl-fiat {
+  font-size: 16px;
+  color: var(--fg);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.pnl-window {
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .flags { list-style: none; }
 .flag {
   padding: 10px 12px;
