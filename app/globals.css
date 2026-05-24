@@ -312,6 +312,34 @@ a:hover { text-decoration: underline; }
   border-radius: 0 6px 6px 0;
 }
 
+.pnl-attrib-table {
+  width: 100%;
+  margin-top: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+.pnl-attrib-table th,
+.pnl-attrib-table td {
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.pnl-attrib-table th:first-child,
+.pnl-attrib-table td:first-child {
+  text-align: left;
+}
+.pnl-attrib-table th {
+  color: var(--dim);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pnl-attrib-table tr.loser-row td:first-child {
+  border-top: 1px dashed var(--border);
+}
+
 .cta {
   margin-top: 32px;
   background: var(--bg2);

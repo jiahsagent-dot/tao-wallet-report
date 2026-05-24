@@ -406,6 +406,60 @@ export default function Report({ data, showSubscribeNudge = true }) {
           {pnl.eventsCount} delegation events analysed (alpha-trading-only PnL, complements
           the ground-truth balance-based number above).
         </p>
+
+        {Array.isArray(pnl.perSubnet) && pnl.perSubnet.length > 0 && (
+          <>
+            <h3 className="sub-h">Per-subnet PnL attribution</h3>
+            <table className="pnl-attrib-table">
+              <thead>
+                <tr>
+                  <th>Subnet</th>
+                  <th>α value now</th>
+                  <th>Spent</th>
+                  <th>Sold</th>
+                  <th>PnL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pnl.perSubnet
+                  .filter((s) => Math.abs(s.pnlTao) >= 0.001 || s.currentTao > 0.001)
+                  .slice(0, 5)
+                  .map((s) => (
+                    <tr key={`win-${s.netuid}`}>
+                      <td>sn{s.netuid} {s.name}</td>
+                      <td>{fmt(s.currentTao, 3)} τ</td>
+                      <td>{fmt(s.spentTao, 3)} τ</td>
+                      <td>{fmt(s.soldTao, 3)} τ</td>
+                      <td className={cls(s.pnlTao)}>
+                        {s.pnlTao >= 0 ? '+' : ''}{fmt(s.pnlTao, 4)} τ
+                      </td>
+                    </tr>
+                  ))}
+                {(() => {
+                  const losers = pnl.perSubnet
+                    .filter((s) => s.pnlTao < -0.001)
+                    .slice(-3)
+                    .reverse();
+                  if (losers.length === 0) return null;
+                  return losers.map((s) => (
+                    <tr key={`lose-${s.netuid}`} className="loser-row">
+                      <td>sn{s.netuid} {s.name}</td>
+                      <td>{fmt(s.currentTao, 3)} τ</td>
+                      <td>{fmt(s.spentTao, 3)} τ</td>
+                      <td>{fmt(s.soldTao, 3)} τ</td>
+                      <td className={cls(s.pnlTao)}>
+                        {fmt(s.pnlTao, 4)} τ
+                      </td>
+                    </tr>
+                  ));
+                })()}
+              </tbody>
+            </table>
+            <p className="hint">
+              Top 5 contributors + bottom 3 detractors (subnets with PnL impact ≥ 0.001 τ). Computed from delegation history × current α value.
+            </p>
+          </>
+        )}
       </Section>
 
       <Section n="3" title="Yield">
