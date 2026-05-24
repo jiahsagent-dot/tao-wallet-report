@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { faqPageSchema, howToSchema } from '../../lib/structured-data.js';
+import StatusBadge from '../_components/StatusBadge.jsx';
 
 const TITLE = 'About Tao Wallet Report — methodology, data sources, FAQ';
 const DESCRIPTION =
@@ -42,6 +43,7 @@ export default function AboutPage() {
           tax-report — but personalised, instant, and shareable. Built by an
           indie developer who got tired of doing this calculation by hand.
         </p>
+        <StatusBadge />
       </header>
 
       <article className="prose">
