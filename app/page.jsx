@@ -98,6 +98,8 @@ export default function Page() {
           {' · '}
           <a href="/press">Press kit</a>
           {' · '}
+          <a href="/changelog">Changelog</a>
+          {' · '}
           <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener">
             Open source on GitHub
           </a>
