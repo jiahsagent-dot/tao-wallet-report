@@ -241,6 +241,8 @@ export default function AboutPage() {
           <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener noreferrer">
             Source on GitHub
           </a>
+          {' · '}
+          <a href="/api/health">Live status</a>
         </p>
       </footer>
     </main>
