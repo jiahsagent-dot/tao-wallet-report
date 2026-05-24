@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getOrBuildReport, peekCachedReport } from '../../../lib/report.js';
+import { getOrBuildReport, peekCachedReport, buildReport } from '../../../lib/report.js';
 import { rpc } from '../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
@@ -57,9 +57,12 @@ export async function POST(req) {
     );
   }
 
-  const cached = peekCachedReport(coldkey);
-  if (cached) {
-    return NextResponse.json({ ...cached, cached: true });
+  const skipCache = body?.skipCache === true;
+  if (!skipCache) {
+    const cached = peekCachedReport(coldkey);
+    if (cached) {
+      return NextResponse.json({ ...cached, cached: true });
+    }
   }
 
   // Only rate-limit on cache miss — cached responses are free.
@@ -73,7 +76,7 @@ export async function POST(req) {
   }
 
   try {
-    const report = await getOrBuildReport(coldkey);
+    const report = skipCache ? await buildReport(coldkey) : await getOrBuildReport(coldkey);
     // Fire-and-forget usage bump — don't block the response on it.
     rpc('bump_tao_usage').catch((e) => console.error('bump_tao_usage:', e));
     return NextResponse.json(report);
