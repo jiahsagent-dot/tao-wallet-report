@@ -15,5 +15,11 @@ export default function sitemap() {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: `${base}/press`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
   ];
 }
