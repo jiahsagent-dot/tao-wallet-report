@@ -996,6 +996,33 @@ pre.copy-block-body {
 }
 .pin-icon { font-size: 15px; line-height: 1; }
 
+/* Share to X — sits in share-row next to .pin-btn, mirrors its shape so they
+   read as siblings. Accent border on hover, brief 'opened' confirm state. */
+.share-x-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.share-x-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.share-x-btn.opened {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(74, 222, 128, 0.08);
+}
+.share-x-icon { font-size: 14px; line-height: 1; font-weight: 700; }
+
 .pinned {
   display: flex;
   align-items: flex-start;
