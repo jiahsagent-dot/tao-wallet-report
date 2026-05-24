@@ -441,6 +441,45 @@ a:hover { text-decoration: underline; }
   color: var(--accent);
 }
 
+.feed-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.feed-row-label {
+  font-size: 13px;
+  color: var(--dim);
+  margin-right: 2px;
+}
+.feed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.feed-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.feed-pill-icon {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  opacity: 0.85;
+}
+.feed-pill-atom .feed-pill-icon { color: #ffa14a; }
+.feed-pill-json .feed-pill-icon { color: #6ee7b7; }
+
 .copy-block {
   background: var(--bg2);
   border: 1px solid var(--line);
