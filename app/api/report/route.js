@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { buildReport } from '../../../lib/report.js';
+import { getOrBuildReport, peekCachedReport } from '../../../lib/report.js';
 import { rpc } from '../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
@@ -7,32 +7,6 @@ export const maxDuration = 30;
 
 // Bittensor SS58 addresses are 48 chars, prefix '5', base58 alphabet.
 const SS58_RE = /^5[a-km-zA-HJ-NP-Z1-9]{47}$/;
-
-// In-memory cache keyed by coldkey. Survives warm invocations on a single
-// Vercel function instance — cold starts wipe it, which is fine. Bursts on
-// the same coldkey (e.g. someone hitting refresh, or a thread sharing one
-// address) skip the ~5s of Taostats fetches.
-const CACHE_TTL_MS = 5 * 60 * 1000;
-const reportCache = globalThis.__reportCache || (globalThis.__reportCache = new Map());
-
-function cacheGet(coldkey) {
-  const entry = reportCache.get(coldkey);
-  if (!entry) return null;
-  if (Date.now() - entry.at > CACHE_TTL_MS) {
-    reportCache.delete(coldkey);
-    return null;
-  }
-  return entry.data;
-}
-
-function cacheSet(coldkey, data) {
-  reportCache.set(coldkey, { at: Date.now(), data });
-  // Cap cache at 100 entries (cheap LRU — drop oldest if over)
-  if (reportCache.size > 100) {
-    const firstKey = reportCache.keys().next().value;
-    reportCache.delete(firstKey);
-  }
-}
 
 // Per-IP rate limit: 5 requests / 60s window. In-memory + per-instance, so
 // not a hard guarantee under multi-instance bursts — but cheap insurance
@@ -57,7 +31,6 @@ function isRateLimited(ip) {
   }
   recent.push(now);
   rateBuckets.set(ip, recent);
-  // Trim cache to prevent unbounded growth
   if (rateBuckets.size > 500) {
     const firstKey = rateBuckets.keys().next().value;
     rateBuckets.delete(firstKey);
@@ -84,7 +57,7 @@ export async function POST(req) {
     );
   }
 
-  const cached = cacheGet(coldkey);
+  const cached = peekCachedReport(coldkey);
   if (cached) {
     return NextResponse.json({ ...cached, cached: true });
   }
@@ -100,8 +73,7 @@ export async function POST(req) {
   }
 
   try {
-    const report = await buildReport(coldkey);
-    cacheSet(coldkey, report);
+    const report = await getOrBuildReport(coldkey);
     // Fire-and-forget usage bump — don't block the response on it.
     rpc('bump_tao_usage').catch((e) => console.error('bump_tao_usage:', e));
     return NextResponse.json(report);
