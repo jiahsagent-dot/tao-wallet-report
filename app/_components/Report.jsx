@@ -240,7 +240,7 @@ function formatShortDate(iso) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -393,6 +393,59 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   Drawdown stats from {dd.pointCount} daily balance snapshots
                   ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
                   Source: Taostats /api/account/history/v1.
+                </p>
+              </div>
+            )}
+            {ty && ty.available && ty.buckets.length > 0 && (
+              <div className="tax-year-panel">
+                <h3 className="sub-h">AU tax-year breakdown</h3>
+                <table className="tax-year-table">
+                  <thead>
+                    <tr>
+                      <th>FY</th>
+                      <th>Window</th>
+                      <th>Start bal</th>
+                      <th>End bal</th>
+                      <th>In</th>
+                      <th>Out</th>
+                      <th>PnL τ</th>
+                      <th>Return %</th>
+                      <th>A$</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ty.buckets.map((b) => (
+                      <tr key={b.label} className={b.isCurrentFy ? 'fy-current' : ''}>
+                        <td>
+                          {b.label}
+                          {b.isCurrentFy && <span className="fy-tag"> (in progress)</span>}
+                        </td>
+                        <td className="fy-window">
+                          {formatShortDate(b.startDate)} → {formatShortDate(b.endDate)}
+                        </td>
+                        <td>{fmt(b.startBalanceTao, 3)} τ</td>
+                        <td>{fmt(b.endBalanceTao, 3)} τ</td>
+                        <td>{fmt(b.transferInTao, 3)} τ</td>
+                        <td>{fmt(b.transferOutTao, 3)} τ</td>
+                        <td className={cls(b.profitTao)}>
+                          {b.profitTao >= 0 ? '+' : ''}{fmt(b.profitTao, 4)}
+                        </td>
+                        <td className={cls(b.profitTao)}>
+                          {b.returnPct >= 0 ? '+' : ''}{fmt(b.returnPct * 100, 2)}%
+                        </td>
+                        <td className={cls(b.profitTao)}>
+                          {b.profitAud >= 0 ? '+' : ''}A${fmt(b.profitAud, 2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="hint">
+                  Australian financial year (Jul 1 → Jun 30). Same formula as the
+                  headline above, applied per FY:{' '}
+                  <code className="addr small">end + transfer_out − transfer_in − start</code>.
+                  Carry-in balance uses the last snapshot before FY start when available.
+                  {' '}{ty.pointCount} snapshots, {ty.transferCount} transfers across {ty.buckets.length} FY{ty.buckets.length === 1 ? '' : 's'}.
                 </p>
               </div>
             )}

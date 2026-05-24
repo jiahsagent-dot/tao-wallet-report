@@ -382,6 +382,50 @@ a:hover { text-decoration: underline; }
   font-size: 11px;
 }
 
+.tax-year-panel {
+  margin-top: 18px;
+}
+.tax-year-panel .sub-h {
+  margin-bottom: 8px;
+}
+.tax-year-table {
+  width: 100%;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+.tax-year-table th,
+.tax-year-table td {
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.tax-year-table th:first-child,
+.tax-year-table td:first-child,
+.tax-year-table th:nth-child(2),
+.tax-year-table td:nth-child(2) {
+  text-align: left;
+}
+.tax-year-table th {
+  color: var(--dim);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tax-year-table .fy-window {
+  color: var(--dim);
+  font-size: 12px;
+}
+.tax-year-table .fy-tag {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 400;
+}
+.tax-year-table tr.fy-current td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .cta {
   margin-top: 32px;
   background: var(--bg2);
