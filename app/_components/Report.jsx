@@ -240,7 +240,7 @@ function formatShortDate(iso) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -393,6 +393,51 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   Drawdown stats from {dd.pointCount} daily balance snapshots
                   ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
                   Source: Taostats /api/account/history/v1.
+                </p>
+              </div>
+            )}
+            {vol && vol.available && (
+              <div className="vol-panel">
+                <div className="dd-row">
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Annualised volatility</div>
+                    <div className="dd-val">{fmt(vol.annualisedVolPct * 100, 1)}%</div>
+                    <div className="dd-sub">daily σ {fmt(vol.dailyVolPct * 100, 2)}%</div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Return-per-risk</div>
+                    <div className={`dd-val ${vol.returnPerRisk != null ? cls(vol.returnPerRisk) : ''}`}>
+                      {vol.returnPerRisk != null
+                        ? `${vol.returnPerRisk >= 0 ? '+' : ''}${fmt(vol.returnPerRisk, 2)}`
+                        : '—'}
+                    </div>
+                    <div className="dd-sub">
+                      ann. return {vol.annualisedReturnPct != null
+                        ? `${vol.annualisedReturnPct >= 0 ? '+' : ''}${fmt(vol.annualisedReturnPct * 100, 1)}%`
+                        : '—'} ÷ vol
+                    </div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Best / worst day</div>
+                    <div className="dd-val dd-window">
+                      <span className="pos">+{fmt(vol.bestDayPct * 100, 1)}%</span>
+                      {' / '}
+                      <span className="neg">{fmt(vol.worstDayPct * 100, 1)}%</span>
+                    </div>
+                    <div className="dd-sub">
+                      {formatShortDate(vol.bestDayDate)} / {formatShortDate(vol.worstDayDate)}
+                    </div>
+                  </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Positive days</div>
+                    <div className="dd-val">{fmt(vol.positiveDayPct * 100, 0)}%</div>
+                    <div className="dd-sub">{vol.positiveDayCount}/{vol.returnsCount} sessions</div>
+                  </div>
+                </div>
+                <p className="hint">
+                  Volatility from {vol.returnsCount} daily-return observations
+                  over {vol.windowDays}d. Annualised σ ≈ daily σ × √365.
+                  Return-per-risk ≈ Sharpe with rf=0 (crypto convention).
                 </p>
               </div>
             )}

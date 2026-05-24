@@ -340,44 +340,52 @@ a:hover { text-decoration: underline; }
   border-top: 1px dashed var(--border);
 }
 
-.drawdown-panel {
+.drawdown-panel,
+.vol-panel {
   margin-top: 16px;
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bg2);
 }
-.drawdown-panel .dd-row {
+.drawdown-panel .dd-row,
+.vol-panel .dd-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
 }
-.drawdown-panel .dd-stat {
+.drawdown-panel .dd-stat,
+.vol-panel .dd-stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.drawdown-panel .dd-lbl {
+.drawdown-panel .dd-lbl,
+.vol-panel .dd-lbl {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--dim);
 }
-.drawdown-panel .dd-val {
+.drawdown-panel .dd-val,
+.vol-panel .dd-val {
   font-size: 18px;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
-.drawdown-panel .dd-val.dd-window {
+.drawdown-panel .dd-val.dd-window,
+.vol-panel .dd-val.dd-window {
   font-size: 13px;
   font-weight: 400;
 }
-.drawdown-panel .dd-sub {
+.drawdown-panel .dd-sub,
+.vol-panel .dd-sub {
   font-size: 11px;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
-.drawdown-panel .hint {
+.drawdown-panel .hint,
+.vol-panel .hint {
   margin-top: 10px;
   font-size: 11px;
 }
