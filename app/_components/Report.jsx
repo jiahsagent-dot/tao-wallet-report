@@ -1,5 +1,7 @@
 'use client';
 
+import AIInsights from './AIInsights.jsx';
+
 const fmt = (n, d = 2) =>
   n == null || !isFinite(n)
     ? '—'
@@ -74,6 +76,8 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <span className="top-nudge-arrow">→</span>
         </a>
       )}
+
+      <AIInsights coldkey={data.coldkey} />
 
       <Section n="1" title="Portfolio">
         <div className="stats">

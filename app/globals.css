@@ -427,6 +427,7 @@ a:hover { text-decoration: underline; }
 .tag-seo     { background: rgba(45,212,191,0.10); border-color: rgba(45,212,191,0.35); color: #2dd4bf; }
 .tag-safety  { background: rgba(248,113,113,0.10); border-color: rgba(248,113,113,0.35); color: var(--red); }
 .tag-ux      { background: rgba(252,211,77,0.10); border-color: rgba(252,211,77,0.35); color: #fcd34d; }
+.tag-ai      { background: rgba(249,168,38,0.16); border-color: rgba(249,168,38,0.5);  color: var(--accent); }
 
 .changelog-title {
   font-size: 18px;
@@ -812,4 +813,97 @@ pre.copy-block-body {
   .stat .val { font-size: 14px; }
   .card { padding: 16px; }
   .share-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* §0 AI Insights — distinct accent so it reads as a different layer than
+   the deterministic §1-§6 cards. Subtle orange-tinted border + slightly
+   darker bg. */
+.ai-insights {
+  border-color: rgba(249, 168, 38, 0.32);
+  background: linear-gradient(180deg, rgba(249, 168, 38, 0.04), transparent 60%), var(--bg2);
+}
+.ai-insights h2 .num { color: var(--accent); }
+.ai-beta {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(249, 168, 38, 0.14);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.ai-markdown { font-size: 14px; line-height: 1.6; }
+.ai-markdown .ai-h2 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin: 20px 0 8px;
+}
+.ai-markdown .ai-h2:first-child { margin-top: 4px; }
+.ai-markdown .ai-h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 16px 0 6px;
+}
+.ai-markdown p { margin: 0 0 10px; color: var(--fg); }
+.ai-markdown ul, .ai-markdown ol {
+  margin: 0 0 12px 22px;
+  padding: 0;
+}
+.ai-markdown li { margin: 0 0 6px; }
+.ai-markdown li::marker { color: var(--dim); }
+.ai-markdown code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.ai-markdown strong { color: var(--fg); font-weight: 600; }
+
+.ai-meta {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--dim);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.ai-meta code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  color: var(--fg);
+}
+
+.ai-loading { padding: 4px 0 8px; }
+.ai-shimmer {
+  height: 14px;
+  border-radius: 5px;
+  background: linear-gradient(
+    90deg,
+    var(--bg) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: ai-shimmer-slide 1.6s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+.ai-shimmer-h { height: 18px; width: 35%; margin-bottom: 16px; }
+.ai-shimmer-line { width: 100%; }
+.ai-loading-label {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--dim);
+}
+@keyframes ai-shimmer-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
