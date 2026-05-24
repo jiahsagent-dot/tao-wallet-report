@@ -17,7 +17,7 @@ export async function POST(req) {
   }
 
   try {
-    const rows = await select('payment_sessions', {
+    const rows = await select('tao_payment_sessions', {
       filters: [`session_id=eq.${sessionId}`],
       limit: 1,
     });
@@ -35,7 +35,7 @@ export async function POST(req) {
     }
 
     if (new Date(session.expires_at).getTime() < Date.now()) {
-      await update('payment_sessions', [`session_id=eq.${sessionId}`], { status: 'expired' });
+      await update('tao_payment_sessions', [`session_id=eq.${sessionId}`], { status: 'expired' });
       return NextResponse.json({ status: 'expired' });
     }
 
@@ -56,13 +56,13 @@ export async function POST(req) {
     const confirmedAt = new Date().toISOString();
     const expires30d = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    await update('payment_sessions', [`session_id=eq.${sessionId}`], {
+    await update('tao_payment_sessions', [`session_id=eq.${sessionId}`], {
       status: 'confirmed',
       confirmed_at: confirmedAt,
       tx_extrinsic_id: match.extrinsicId,
     });
 
-    await upsert('subscribers', {
+    await upsert('tao_subscribers', {
       email: session.email,
       coldkey: session.coldkey || '',
       paid_at: confirmedAt,

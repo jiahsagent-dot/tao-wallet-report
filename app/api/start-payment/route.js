@@ -28,7 +28,7 @@ export async function POST(req) {
   const expiresAt = expiryFromNow(10);
 
   try {
-    const row = await insert('payment_sessions', {
+    const row = await insert('tao_payment_sessions', {
       email,
       coldkey: coldkey || null,
       amount_tao: amountTao,
