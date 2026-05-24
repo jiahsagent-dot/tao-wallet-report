@@ -109,6 +109,14 @@ function Report({ data }) {
         Generated {new Date(data.generatedAt).toUTCString()}
       </p>
 
+      <a href="#subscribe" className="top-nudge">
+        <span className="top-nudge-icon">📬</span>
+        <span>
+          Want this report every Monday? <strong>Subscribe for ~$3 TAO</strong>
+        </span>
+        <span className="top-nudge-arrow">→</span>
+      </a>
+
       <Section n="1" title="Portfolio">
         <div className="stats">
           <Stat label="Total" value={`${fmt(p.totalTao)} τ`} />
@@ -379,9 +387,14 @@ function WeeklyEmailCTA({ defaultColdkey }) {
 
   if (!open) {
     return (
-      <section className="cta">
-        <h3>Want this every Monday?</h3>
-        <p>Get a fresh personalised report delivered weekly. One-time payment, 30 days of emails.</p>
+      <section className="cta" id="subscribe">
+        <h3>📬 Want this every Monday?</h3>
+        <p>
+          A fresh personalised report delivered to your inbox every Monday morning.
+          Same numbers, same format, same data source — but you don&apos;t have to remember to check.
+          <br />
+          <strong>One-time ~0.01 τ (~$3 USD). 30 days of weekly emails.</strong>
+        </p>
         <button className="btn" onClick={() => setOpen(true)}>Subscribe for ~$3 TAO</button>
       </section>
     );

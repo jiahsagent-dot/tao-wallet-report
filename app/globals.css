@@ -79,6 +79,30 @@ a:hover { text-decoration: underline; }
 
 .report { margin-top: 28px; }
 .meta { color: var(--dim); font-size: 12px; margin-bottom: 20px; word-break: break-all; }
+
+.top-nudge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(249,168,38,0.12), rgba(249,168,38,0.04));
+  border: 1px solid rgba(249,168,38,0.35);
+  color: var(--fg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.top-nudge:hover {
+  background: linear-gradient(135deg, rgba(249,168,38,0.18), rgba(249,168,38,0.06));
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.top-nudge strong { color: var(--accent); }
+.top-nudge-icon { font-size: 18px; flex: 0 0 auto; }
+.top-nudge-arrow { color: var(--accent); margin-left: auto; font-weight: 700; }
+
 .addr {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
