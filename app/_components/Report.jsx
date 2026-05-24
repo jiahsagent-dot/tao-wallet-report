@@ -423,24 +423,39 @@ export default function Report({ data, showSubscribeNudge = true }) {
                           {fmt(pos.alphaPriceTao, 6)}
                           {(() => {
                             const ps = perSubnetMap.get(pos.netuid);
-                            if (!ps) return null;
+                            if (!ps || !(pos.alphaHeld > 0) || !(pos.alphaPriceTao > 0)) return null;
                             const netSpent = (ps.spentTao || 0) - (ps.soldTao || 0);
-                            if (!(netSpent > 0) || !(pos.alphaHeld > 0) || !(pos.alphaPriceTao > 0)) return null;
-                            const avgEntry = netSpent / pos.alphaHeld;
-                            if (!Number.isFinite(avgEntry) || avgEntry <= 0) return null;
-                            const perAlphaReturn = (pos.alphaPriceTao - avgEntry) / avgEntry;
-                            return (
-                              <div
-                                className="cost-basis-chip"
-                                title={`Net spent ${netSpent.toFixed(4)} τ for ${pos.alphaHeld.toFixed(4)} α → avg entry ${avgEntry.toFixed(6)} τ/α (vs current ${pos.alphaPriceTao.toFixed(6)} τ/α)`}
-                              >
-                                <span className="cb-lbl">entry</span>{' '}
-                                <span className="cb-val">{fmt(avgEntry, 6)}</span>{' '}
-                                <span className={`cb-pct ${cls(perAlphaReturn)}`}>
-                                  {perAlphaReturn >= 0 ? '+' : ''}{fmt(perAlphaReturn * 100, 1)}%
-                                </span>
-                              </div>
-                            );
+                            // BUY mode: real net spend — show avg entry + per-α return.
+                            if (netSpent > 0) {
+                              const avgEntry = netSpent / pos.alphaHeld;
+                              if (!Number.isFinite(avgEntry) || avgEntry <= 0) return null;
+                              const perAlphaReturn = (pos.alphaPriceTao - avgEntry) / avgEntry;
+                              return (
+                                <div
+                                  className="cost-basis-chip"
+                                  title={`Net spent ${netSpent.toFixed(4)} τ for ${pos.alphaHeld.toFixed(4)} α → avg entry ${avgEntry.toFixed(6)} τ/α (vs current ${pos.alphaPriceTao.toFixed(6)} τ/α)`}
+                                >
+                                  <span className="cb-lbl">entry</span>{' '}
+                                  <span className="cb-val">{fmt(avgEntry, 6)}</span>{' '}
+                                  <span className={`cb-pct ${cls(perAlphaReturn)}`}>
+                                    {perAlphaReturn >= 0 ? '+' : ''}{fmt(perAlphaReturn * 100, 1)}%
+                                  </span>
+                                </div>
+                              );
+                            }
+                            // YIELD mode: position was earned via staking, no on-chain buy.
+                            // Surface a small badge so the row tells the user *why* there's no entry price.
+                            if (ps.currentTao > 0) {
+                              return (
+                                <div
+                                  className="cost-basis-chip cb-yield"
+                                  title={`No on-chain buys for sn${pos.netuid} — all ${pos.alphaHeld.toFixed(4)} α earned via staking/yield (current value ${ps.currentTao.toFixed(4)} τ).`}
+                                >
+                                  <span className="cb-lbl">🌱 yield</span>
+                                </div>
+                              );
+                            }
+                            return null;
                           })()}
                         </td>
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>

@@ -464,6 +464,12 @@ a:hover { text-decoration: underline; }
 }
 .cost-basis-chip .cb-pct.pos { color: var(--green); }
 .cost-basis-chip .cb-pct.neg { color: var(--red); }
+.cost-basis-chip.cb-yield .cb-lbl {
+  color: var(--green);
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.9;
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;
