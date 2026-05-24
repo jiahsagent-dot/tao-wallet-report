@@ -446,6 +446,24 @@ a:hover { text-decoration: underline; }
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+.cost-basis-chip {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: help;
+}
+.cost-basis-chip .cb-lbl {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.cost-basis-chip .cb-val {
+  color: var(--fg);
+}
+.cost-basis-chip .cb-pct.pos { color: var(--green); }
+.cost-basis-chip .cb-pct.neg { color: var(--red); }
 .tax-year-table {
   width: 100%;
   font-size: 13px;

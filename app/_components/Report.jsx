@@ -385,6 +385,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
           const maxPort = Math.max(...p.top10.map((x) => x.pctOfPortfolio || 0));
           const maxAbs1d = Math.max(...p.top10.map((x) => Math.abs(x.pct1d || 0)));
           const maxAbs7d = Math.max(...p.top10.map((x) => Math.abs(x.pct7d || 0)));
+          const perSubnetMap = new Map((pnl?.perSubnet || []).map((s) => [s.netuid, s]));
           return (
             <>
               <CopyCsvButton rows={p.top10} coldkey={data.coldkey} />
@@ -418,7 +419,30 @@ export default function Report({ data, showSubscribeNudge = true }) {
                           />
                         </td>
                         <td className="num">{fmt(pos.alphaHeld)}</td>
-                        <td className="num">{fmt(pos.alphaPriceTao, 6)}</td>
+                        <td className="num">
+                          {fmt(pos.alphaPriceTao, 6)}
+                          {(() => {
+                            const ps = perSubnetMap.get(pos.netuid);
+                            if (!ps) return null;
+                            const netSpent = (ps.spentTao || 0) - (ps.soldTao || 0);
+                            if (!(netSpent > 0) || !(pos.alphaHeld > 0) || !(pos.alphaPriceTao > 0)) return null;
+                            const avgEntry = netSpent / pos.alphaHeld;
+                            if (!Number.isFinite(avgEntry) || avgEntry <= 0) return null;
+                            const perAlphaReturn = (pos.alphaPriceTao - avgEntry) / avgEntry;
+                            return (
+                              <div
+                                className="cost-basis-chip"
+                                title={`Net spent ${netSpent.toFixed(4)} τ for ${pos.alphaHeld.toFixed(4)} α → avg entry ${avgEntry.toFixed(6)} τ/α (vs current ${pos.alphaPriceTao.toFixed(6)} τ/α)`}
+                              >
+                                <span className="cb-lbl">entry</span>{' '}
+                                <span className="cb-val">{fmt(avgEntry, 6)}</span>{' '}
+                                <span className={`cb-pct ${cls(perAlphaReturn)}`}>
+                                  {perAlphaReturn >= 0 ? '+' : ''}{fmt(perAlphaReturn * 100, 1)}%
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>
                         <td className="num heat" style={heatBg(pos.pctOfPortfolio, maxPort, HEAT_ORANGE)}>{fmt(pos.pctOfPortfolio, 1)}%</td>
                         <td className={`num heat ${cls(pos.pct1d)}`} style={heatBg(pos.pct1d, maxAbs1d, rgb1d)}>{fmtPct(pos.pct1d)}</td>
