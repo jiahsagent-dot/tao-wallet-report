@@ -10,6 +10,7 @@ import ShareButton from './_components/ShareButton.jsx';
 import RecentColdkeys, { addRecent } from './_components/RecentColdkeys.jsx';
 
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
+const DEMO_COLDKEY = '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd';
 
 export default function Page() {
   const [coldkey, setColdkey] = useState('');
@@ -17,8 +18,9 @@ export default function Page() {
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
 
-  async function onSubmit(e) {
-    e?.preventDefault();
+  async function runReport(rawKey) {
+    const key = rawKey.trim();
+    if (!key) return;
     setError(null);
     setReport(null);
     setLoading(true);
@@ -26,17 +28,27 @@ export default function Page() {
       const r = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coldkey: coldkey.trim() }),
+        body: JSON.stringify({ coldkey: key }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
       setReport(j);
-      addRecent(j.coldkey || coldkey.trim());
+      addRecent(j.coldkey || key);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  function onSubmit(e) {
+    e?.preventDefault();
+    return runReport(coldkey);
+  }
+
+  function onDemo() {
+    setColdkey(DEMO_COLDKEY);
+    return runReport(DEMO_COLDKEY);
   }
 
   return (
@@ -64,6 +76,19 @@ export default function Page() {
           {loading ? 'Building…' : 'Get report'}
         </button>
       </form>
+
+      <div className="demo-row">
+        <button
+          type="button"
+          className="demo-btn"
+          onClick={onDemo}
+          disabled={loading}
+          title="Run a sample report against a known-good coldkey"
+        >
+          ▸ Try a demo report
+        </button>
+        <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
+      </div>
 
       <RecentColdkeys />
 
