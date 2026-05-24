@@ -65,11 +65,7 @@ export default function Page() {
 
       {error && <div className="err">⚠ {error}</div>}
 
-      {loading && !report && (
-        <div className="loading">
-          Fetching holdings, delegation history, yield, and screener data… this takes ~2s.
-        </div>
-      )}
+      {loading && !report && <Skeleton />}
 
       {report && <Report data={report} />}
 
@@ -273,4 +269,23 @@ function Stat({ label, value, cls: c }) {
 function cls(n) {
   if (n == null) return '';
   return n > 0 ? 'pos' : n < 0 ? 'neg' : '';
+}
+
+function Skeleton() {
+  return (
+    <div className="report">
+      <p className="meta sk-line" style={{ width: '70%' }}>&nbsp;</p>
+      {[1, 2, 3, 4, 5, 6].map((n) => (
+        <section className="card" key={n}>
+          <h2><span className="num">§{n}</span> <span className="sk-text">Loading…</span></h2>
+          <div className="stats">
+            <div className="stat"><div className="lbl sk-line">&nbsp;</div><div className="val sk-line">&nbsp;</div></div>
+            <div className="stat"><div className="lbl sk-line">&nbsp;</div><div className="val sk-line">&nbsp;</div></div>
+            <div className="stat"><div className="lbl sk-line">&nbsp;</div><div className="val sk-line">&nbsp;</div></div>
+            <div className="stat"><div className="lbl sk-line">&nbsp;</div><div className="val sk-line">&nbsp;</div></div>
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 }

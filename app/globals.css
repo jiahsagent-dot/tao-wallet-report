@@ -62,6 +62,21 @@ a:hover { text-decoration: underline; }
 }
 .loading { color: var(--dim); font-size: 14px; margin-top: 16px; font-style: italic; }
 
+@keyframes pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.6; }
+}
+.sk-line, .sk-text {
+  background: var(--line);
+  border-radius: 4px;
+  color: transparent !important;
+  animation: pulse 1.4s ease-in-out infinite;
+  display: inline-block;
+  min-height: 12px;
+  min-width: 60px;
+}
+.sk-text { padding: 2px 10px; }
+
 .report { margin-top: 28px; }
 .meta { color: var(--dim); font-size: 12px; margin-bottom: 20px; word-break: break-all; }
 .addr {
