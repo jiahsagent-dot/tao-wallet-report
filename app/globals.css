@@ -24,6 +24,17 @@ a:hover { text-decoration: underline; }
 
 .head h1 { font-size: 32px; letter-spacing: -0.02em; }
 .head .sub { color: var(--dim); margin-top: 10px; max-width: 640px; }
+.usage-badge {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 6px 12px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
 
 .form { display: flex; gap: 8px; margin: 28px 0 16px; flex-wrap: wrap; }
 .input {

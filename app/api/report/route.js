@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { buildReport } from '../../../lib/report.js';
+import { rpc } from '../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -101,6 +102,8 @@ export async function POST(req) {
   try {
     const report = await buildReport(coldkey);
     cacheSet(coldkey, report);
+    // Fire-and-forget usage bump — don't block the response on it.
+    rpc('bump_tao_usage').catch((e) => console.error('bump_tao_usage:', e));
     return NextResponse.json(report);
   } catch (e) {
     console.error('buildReport failed:', e);

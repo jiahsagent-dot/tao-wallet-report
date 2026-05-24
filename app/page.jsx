@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const fmt = (n, d = 2) =>
   n == null || !isFinite(n)
@@ -46,6 +46,7 @@ export default function Page() {
           Paste any Bittensor coldkey. Get a personalised report with portfolio, PnL,
           yield, flags, and rule-based recommendations. Free, instant, public data only.
         </p>
+        <UsageBadge />
       </header>
 
       <form onSubmit={onSubmit} className="form">
@@ -456,6 +457,23 @@ function WeeklyEmailCTA({ defaultColdkey }) {
       {error && <div className="err" style={{ marginTop: 12 }}>⚠ {error}</div>}
       <p className="hint">Send ~0.01 τ (~$3) once. We'll email you a fresh report every Monday for 30 days.</p>
     </section>
+  );
+}
+
+function UsageBadge() {
+  const [total, setTotal] = useState(null);
+  useEffect(() => {
+    fetch('/api/usage')
+      .then((r) => r.json())
+      .then((j) => setTotal(Number(j?.total || 0)))
+      .catch(() => {});
+  }, []);
+  if (total == null || total < 1) return null;
+  const formatted = total.toLocaleString();
+  return (
+    <p className="usage-badge">
+      📊 {formatted} {total === 1 ? 'report' : 'reports'} generated so far
+    </p>
   );
 }
 
