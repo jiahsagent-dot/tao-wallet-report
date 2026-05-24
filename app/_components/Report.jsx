@@ -200,6 +200,21 @@ function buildTaxYearCsv(buckets) {
   return lines.join('\r\n') + '\r\n';
 }
 
+function buildDrawdownCsv(dd) {
+  const header = ['Date', 'Balance τ', 'Running peak τ', 'Drawdown τ', 'Drawdown %'];
+  const lines = [header.map(csvEscape).join(',')];
+  (dd.series || []).forEach((p) => {
+    lines.push([
+      p.date,
+      Number(p.balanceTao).toFixed(6),
+      Number(p.runningPeakTao).toFixed(6),
+      Number(p.drawdownTao).toFixed(6),
+      (Number(p.drawdownPct) * 100).toFixed(4),
+    ].map(csvEscape).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+
 function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ariaLabel = 'Copy as CSV' }) {
   const [state, setState] = useState('idle'); // idle | copied | error
   const onClick = useCallback(async () => {
@@ -441,6 +456,17 @@ export default function Report({ data, showSubscribeNudge = true }) {
             </div>
             {dd && dd.available && (
               <div className="drawdown-panel">
+                <div className="drawdown-head">
+                  <h3 className="dd-head-title">Drawdown &amp; recovery</h3>
+                  {Array.isArray(dd.series) && dd.series.length > 0 && (
+                    <CopyCsvButton
+                      getCsv={() => buildDrawdownCsv(dd)}
+                      coldkey={data.coldkey}
+                      filenamePrefix="drawdown"
+                      ariaLabel="Copy drawdown series as CSV"
+                    />
+                  )}
+                </div>
                 <div className="dd-row">
                   <div className="dd-stat">
                     <div className="dd-lbl">Peak balance</div>
