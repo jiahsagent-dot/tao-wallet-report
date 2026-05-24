@@ -33,6 +33,37 @@ function cacheSet(coldkey, data) {
   }
 }
 
+// Per-IP rate limit: 5 requests / 60s window. In-memory + per-instance, so
+// not a hard guarantee under multi-instance bursts — but cheap insurance
+// against trivial abuse (a single script hammering one URL). Bypassed for
+// cached responses (those don't hit Taostats anyway).
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+const rateBuckets = globalThis.__rateBuckets || (globalThis.__rateBuckets = new Map());
+
+function clientIp(req) {
+  const fwd = req.headers.get('x-forwarded-for') || '';
+  return fwd.split(',')[0].trim() || 'unknown';
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip) || [];
+  const recent = bucket.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT_MAX) {
+    rateBuckets.set(ip, recent);
+    return { limited: true, retryAfter: Math.ceil((RATE_LIMIT_WINDOW_MS - (now - recent[0])) / 1000) };
+  }
+  recent.push(now);
+  rateBuckets.set(ip, recent);
+  // Trim cache to prevent unbounded growth
+  if (rateBuckets.size > 500) {
+    const firstKey = rateBuckets.keys().next().value;
+    rateBuckets.delete(firstKey);
+  }
+  return { limited: false };
+}
+
 export async function POST(req) {
   let body;
   try {
@@ -55,6 +86,16 @@ export async function POST(req) {
   const cached = cacheGet(coldkey);
   if (cached) {
     return NextResponse.json({ ...cached, cached: true });
+  }
+
+  // Only rate-limit on cache miss — cached responses are free.
+  const ip = clientIp(req);
+  const rl = isRateLimited(ip);
+  if (rl.limited) {
+    return NextResponse.json(
+      { error: `Rate limit: ${RATE_LIMIT_MAX} requests / minute. Retry in ${rl.retryAfter}s.` },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+    );
   }
 
   try {
