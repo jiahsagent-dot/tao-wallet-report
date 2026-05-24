@@ -407,10 +407,34 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       {fmt(dd.maxDrawdownPeakTao, 2)} τ → {fmt(dd.maxDrawdownTroughTao, 2)} τ
                     </div>
                   </div>
+                  <div className="dd-stat">
+                    <div className="dd-lbl">Recovery time</div>
+                    {dd.recoveryDays != null ? (
+                      <>
+                        <div className="dd-val pos">{dd.recoveryDays}d</div>
+                        <div className="dd-sub">
+                          recovered {formatShortDate(dd.recoveryDate)}
+                        </div>
+                      </>
+                    ) : dd.currentlyUnderwater ? (
+                      <>
+                        <div className="dd-val neg">{dd.daysUnderwater}d underwater</div>
+                        <div className="dd-sub">
+                          still below {fmt(dd.maxDrawdownPeakTao, 2)} τ peak
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="dd-val">—</div>
+                        <div className="dd-sub">no drawdown observed</div>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <p className="hint">
                   Drawdown stats from {dd.pointCount} daily balance snapshots
                   ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
+                  Recovery time = days from trough until balance climbed back to the peak.
                   Source: Taostats /api/account/history/v1.
                 </p>
               </div>
