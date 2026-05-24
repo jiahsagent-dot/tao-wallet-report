@@ -121,10 +121,47 @@ function buildPortfolioCsv(top10) {
   return lines.join('\r\n') + '\r\n';
 }
 
-function CopyCsvButton({ rows, coldkey, filenamePrefix = 'portfolio' }) {
+// Broader-market CSV: two stacked sections (movers, then volume) in one file
+// so a single paste gives the spreadsheet user both views without juggling
+// two clipboards. pct7d isn't in the source rows (Taostats screener gives
+// 1d only here) so we surface Volume instead.
+function buildBroaderMarketCsv(broader) {
+  const movers = (broader && broader.topMovers24h) || [];
+  const volume = (broader && broader.topByVolume24h) || [];
+  const cols = ['#', 'Subnet', 'Netuid', 'Price (TAO)', '24h pct', 'Volume (TAO)'];
+  const lines = [];
+  lines.push(['Top movers 24h'].map(csvEscape).join(','));
+  lines.push(cols.map(csvEscape).join(','));
+  movers.forEach((m, i) => {
+    lines.push([
+      i + 1,
+      m.name ?? `Subnet ${m.netuid}`,
+      m.netuid,
+      m.priceTao != null ? Number(m.priceTao).toFixed(8) : '',
+      m.pct1d != null ? Number(m.pct1d).toFixed(2) : '',
+      m.volumeTao24h != null ? Number(m.volumeTao24h).toFixed(2) : '',
+    ].map(csvEscape).join(','));
+  });
+  lines.push('');
+  lines.push(['Top by volume 24h'].map(csvEscape).join(','));
+  lines.push(cols.map(csvEscape).join(','));
+  volume.forEach((v, i) => {
+    lines.push([
+      i + 1,
+      v.name ?? `Subnet ${v.netuid}`,
+      v.netuid,
+      v.priceTao != null ? Number(v.priceTao).toFixed(8) : '',
+      v.pct1d != null ? Number(v.pct1d).toFixed(2) : '',
+      v.volumeTao24h != null ? Number(v.volumeTao24h).toFixed(2) : '',
+    ].map(csvEscape).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+
+function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ariaLabel = 'Copy as CSV' }) {
   const [state, setState] = useState('idle'); // idle | copied | error
   const onClick = useCallback(async () => {
-    const csv = buildPortfolioCsv(rows);
+    const csv = getCsv ? getCsv() : buildPortfolioCsv(rows);
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(csv);
@@ -154,7 +191,7 @@ function CopyCsvButton({ rows, coldkey, filenamePrefix = 'portfolio' }) {
         alert('Could not access clipboard — please retry, or copy from the report manually.');
       }
     }
-  }, [rows]);
+  }, [rows, getCsv]);
 
   const ck = (coldkey || '').slice(0, 6);
   const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -167,7 +204,7 @@ function CopyCsvButton({ rows, coldkey, filenamePrefix = 'portfolio' }) {
         className={`csv-btn ${state === 'copied' ? 'copied' : ''} ${state === 'error' ? 'error' : ''}`}
         onClick={onClick}
         title={`Copy CSV (${filename})`}
-        aria-label="Copy portfolio as CSV"
+        aria-label={ariaLabel}
       >
         {state === 'copied' ? '✓ Copied' : state === 'error' ? '✗ Failed' : '📋 Copy as CSV'}
       </button>
@@ -418,6 +455,12 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="TAO/USD" value={`$${fmt(b.taoPrice, 2)}`} />
           <Stat label="Subnets" value={b.subnetCount} />
         </div>
+        <CopyCsvButton
+          getCsv={() => buildBroaderMarketCsv(b)}
+          coldkey={data.coldkey}
+          filenamePrefix="broader-market"
+          ariaLabel="Copy broader market as CSV"
+        />
         <h3 className="sub-h">Biggest 24h movers</h3>
         {(() => {
           const moversMaxAbs1d = Math.max(...b.topMovers24h.map((x) => Math.abs(x.pct1d || 0)), 0);
