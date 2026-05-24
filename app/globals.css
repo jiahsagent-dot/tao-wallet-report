@@ -1312,3 +1312,37 @@ pre.copy-block-body {
 @media (max-width: 640px) {
   .delta-chip .delta-hint { display: none; }
 }
+
+/* Copy as CSV button — power-user export above §1 Portfolio table */
+.csv-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 10px;
+}
+.csv-btn {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--dim);
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: all 150ms ease;
+}
+.csv-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  border-style: solid;
+}
+.csv-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+  border-style: solid;
+}
+.csv-btn.error {
+  border-color: var(--red);
+  color: var(--red);
+  border-style: solid;
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import AIInsights from './AIInsights.jsx';
 import SubnetLink, { buildSubnetLookup } from './SubnetLink.jsx';
 
@@ -93,6 +94,87 @@ function DeltaStrip({ data }) {
   );
 }
 
+// CSV escape: quote any field containing comma, quote, CR, or LF; double internal quotes.
+function csvEscape(v) {
+  if (v == null) return '';
+  const s = String(v);
+  if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function buildPortfolioCsv(top10) {
+  const header = ['#', 'Subnet', 'Netuid', 'Alpha held', 'Alpha price (TAO)', 'Value (TAO)', 'Pct portfolio', '24h pct', '7d pct'];
+  const lines = [header.map(csvEscape).join(',')];
+  top10.forEach((pos, i) => {
+    lines.push([
+      i + 1,
+      pos.name ?? `Subnet ${pos.netuid}`,
+      pos.netuid,
+      pos.alphaHeld != null ? Number(pos.alphaHeld).toFixed(6) : '',
+      pos.alphaPriceTao != null ? Number(pos.alphaPriceTao).toFixed(8) : '',
+      pos.taoValue != null ? Number(pos.taoValue).toFixed(6) : '',
+      pos.pctOfPortfolio != null ? Number(pos.pctOfPortfolio).toFixed(2) : '',
+      pos.pct1d != null ? Number(pos.pct1d).toFixed(2) : '',
+      pos.pct7d != null ? Number(pos.pct7d).toFixed(2) : '',
+    ].map(csvEscape).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+
+function CopyCsvButton({ rows, coldkey, filenamePrefix = 'portfolio' }) {
+  const [state, setState] = useState('idle'); // idle | copied | error
+  const onClick = useCallback(async () => {
+    const csv = buildPortfolioCsv(rows);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(csv);
+        setState('copied');
+        setTimeout(() => setState('idle'), 1500);
+        return;
+      }
+      throw new Error('no-clipboard-api');
+    } catch {
+      // Manual-select fallback: drop into a hidden textarea, select, leave it to user.
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = csv;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        ta.style.pointerEvents = 'none';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        setState('copied');
+        setTimeout(() => setState('idle'), 1500);
+      } catch {
+        setState('error');
+        setTimeout(() => setState('idle'), 1800);
+        // eslint-disable-next-line no-alert
+        alert('Could not access clipboard — please retry, or copy from the report manually.');
+      }
+    }
+  }, [rows]);
+
+  const ck = (coldkey || '').slice(0, 6);
+  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const filename = `tao-wallet-report-${ck}-${filenamePrefix}-${ymd}.csv`;
+
+  return (
+    <div className="csv-toolbar">
+      <button
+        type="button"
+        className={`csv-btn ${state === 'copied' ? 'copied' : ''} ${state === 'error' ? 'error' : ''}`}
+        onClick={onClick}
+        title={`Copy CSV (${filename})`}
+        aria-label="Copy portfolio as CSV"
+      >
+        {state === 'copied' ? '✓ Copied' : state === 'error' ? '✗ Failed' : '📋 Copy as CSV'}
+      </button>
+    </div>
+  );
+}
+
 function Section({ title, n, children }) {
   return (
     <section className="card">
@@ -159,7 +241,9 @@ export default function Report({ data, showSubscribeNudge = true }) {
           const maxAbs1d = Math.max(...p.top10.map((x) => Math.abs(x.pct1d || 0)));
           const maxAbs7d = Math.max(...p.top10.map((x) => Math.abs(x.pct7d || 0)));
           return (
-            <div className="tbl-scroll">
+            <>
+              <CopyCsvButton rows={p.top10} coldkey={data.coldkey} />
+              <div className="tbl-scroll">
               <table className="tbl tbl-heatmap">
                 <thead>
                   <tr>
@@ -199,7 +283,8 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           );
         })() : (
           <p className="empty">No alpha-token holdings found for this coldkey.</p>
