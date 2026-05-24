@@ -34,11 +34,16 @@ export async function POST(req) {
       { status: 400 },
     );
   }
+  const force = body?.force === true;
 
-  // Fast-path: serve cached insights immediately if we have them.
-  const cached = peekCachedInsights(coldkey);
-  if (cached) {
-    return NextResponse.json({ ...cached, cached: true });
+  // Fast-path: serve cached insights immediately unless the caller forced a
+  // refresh. force=true still respects the Pollinations 429 cooldown — we
+  // don't want a regenerate button to defeat the rate-limit protection.
+  if (!force) {
+    const cached = peekCachedInsights(coldkey);
+    if (cached) {
+      return NextResponse.json({ ...cached, cached: true });
+    }
   }
 
   let report;
@@ -51,6 +56,6 @@ export async function POST(req) {
     );
   }
 
-  const insights = await buildInsights(report);
+  const insights = await buildInsights(report, { force });
   return NextResponse.json({ ...insights, cached: false });
 }

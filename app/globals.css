@@ -907,3 +907,49 @@ pre.copy-block-body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+.ai-regenerate {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: transparent;
+  border: 1px dashed rgba(249, 168, 38, 0.4);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+.ai-regenerate:hover:not(:disabled) {
+  background: rgba(249, 168, 38, 0.1);
+  border-color: var(--accent);
+}
+.ai-regenerate:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.ai-insights h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-ttl-countdown {
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+}
+.ai-footnote {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--dim);
+  letter-spacing: 0.01em;
+}
+.ai-footnote a {
+  color: var(--dim);
+  text-decoration: underline dotted rgba(249, 168, 38, 0.5);
+  text-underline-offset: 2px;
+}
+.ai-footnote a:hover {
+  color: var(--accent);
+}
