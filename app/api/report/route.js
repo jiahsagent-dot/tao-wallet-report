@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getOrBuildReport, peekCachedReport, buildReport } from '../../../lib/report.js';
+import { getOrBuildReport, peekCachedReport, buildAndCacheReport } from '../../../lib/report.js';
 import { rpc } from '../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
@@ -76,7 +76,7 @@ export async function POST(req) {
   }
 
   try {
-    const report = skipCache ? await buildReport(coldkey) : await getOrBuildReport(coldkey);
+    const report = skipCache ? await buildAndCacheReport(coldkey) : await getOrBuildReport(coldkey);
     // Fire-and-forget usage bump — don't block the response on it.
     rpc('bump_tao_usage').catch((e) => console.error('bump_tao_usage:', e));
     return NextResponse.json(report);
