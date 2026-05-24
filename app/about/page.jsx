@@ -224,6 +224,27 @@ export default function AboutPage() {
           Monday morning emails — fresh report, your coldkey, your inbox.
           Same formula. Same data. Zero effort.
         </p>
+
+        <h3>Here&apos;s what subscribers actually get</h3>
+        <p className="email-preview-caption">
+          A live render of the same email format that goes out every Monday,
+          using a public demo coldkey. Refreshes every 10 minutes — same
+          render code, same AI Insights card, same PnL block.
+        </p>
+        <div className="email-preview-wrap">
+          <iframe
+            src="/api/email-preview"
+            loading="lazy"
+            title="Preview of the weekly Tao Wallet Report email"
+            className="email-preview-iframe"
+          />
+        </div>
+        <p className="email-preview-link">
+          <a href="/api/email-preview" target="_blank" rel="noopener noreferrer">
+            Open the full preview ↗
+          </a>
+        </p>
+
         <p>
           Send the TAO payment from any Bittensor wallet (Taostats web,
           Polkadot.js, mobile). We poll the chain every 5 seconds for your
