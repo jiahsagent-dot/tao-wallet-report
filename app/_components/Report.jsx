@@ -741,6 +741,26 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </p>
               </div>
             )}
+            {vol && vol.available && vol.bestDeltaDay && vol.worstDeltaDay && (
+              <div className="bw-day-strip">
+                <div className="bw-day bw-day-best" title={`Best day: balance grew from ${vol.bestDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.bestDeltaDay.balanceTao.toFixed(4)} τ (+${vol.bestDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
+                  <span className="bw-day-icon">🚀</span>
+                  <div className="bw-day-body">
+                    <div className="bw-day-lbl">Best day</div>
+                    <div className="bw-day-val">+{fmt(vol.bestDeltaDay.deltaTao, 4)} τ</div>
+                    <div className="bw-day-sub">{formatShortDate(vol.bestDeltaDay.date)}</div>
+                  </div>
+                </div>
+                <div className="bw-day bw-day-worst" title={`Worst day: balance dropped from ${vol.worstDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.worstDeltaDay.balanceTao.toFixed(4)} τ (${vol.worstDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
+                  <span className="bw-day-icon">🩸</span>
+                  <div className="bw-day-body">
+                    <div className="bw-day-lbl">Worst day</div>
+                    <div className="bw-day-val">{fmt(vol.worstDeltaDay.deltaTao, 4)} τ</div>
+                    <div className="bw-day-sub">{formatShortDate(vol.worstDeltaDay.date)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">
                 <div className="tax-year-head">

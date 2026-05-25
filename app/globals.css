@@ -603,6 +603,60 @@ a:hover { text-decoration: underline; }
   color: var(--muted);
   font-style: italic;
 }
+.bw-day-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+.bw-day {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  cursor: help;
+}
+.bw-day-best {
+  border-color: color-mix(in srgb, var(--green) 30%, var(--line));
+  background: color-mix(in srgb, var(--green) 5%, var(--card));
+}
+.bw-day-worst {
+  border-color: color-mix(in srgb, var(--red) 30%, var(--line));
+  background: color-mix(in srgb, var(--red) 5%, var(--card));
+}
+.bw-day-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.bw-day-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bw-day-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.bw-day-val {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.bw-day-best .bw-day-val { color: var(--green); }
+.bw-day-worst .bw-day-val { color: var(--red); }
+.bw-day-sub {
+  font-size: 12px;
+  color: var(--dim);
+}
+@media (max-width: 560px) {
+  .bw-day-strip { grid-template-columns: 1fr; }
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;
