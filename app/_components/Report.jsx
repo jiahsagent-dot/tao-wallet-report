@@ -1065,6 +1065,57 @@ export default function Report({ data, showSubscribeNudge = true }) {
           )}
         </div>
 
+        {(() => {
+          const series = Array.isArray(y.weightedApySeries) ? y.weightedApySeries : [];
+          if (series.length < 2) return null;
+          const baseline = series.find((r) => r.label === '30d')?.value ?? series[0].value;
+          const values = series.map((r) => r.value);
+          const max = Math.max(...values);
+          const titleParts = series.map((r) => `${r.label} ${(r.value * 100).toFixed(2)}%`);
+          const recent = series[series.length - 1];
+          const direction =
+            baseline > 0
+              ? (recent.value - baseline) / baseline > 0.02
+                ? 'up'
+                : (recent.value - baseline) / baseline < -0.02
+                ? 'down'
+                : 'flat'
+              : 'flat';
+          const arrow = direction === 'up' ? '↗' : direction === 'down' ? '↘' : '→';
+          return (
+            <div
+              className={`weighted-apy-trend weighted-apy-${direction}`}
+              title={`Weighted APY trend · ${titleParts.join(' · ')}`}
+            >
+              <span className="wat-lbl">Weighted APY trend</span>
+              <div className="wat-bars">
+                {series.map((r) => {
+                  const heightPct = max > 0 ? (r.value / max) * 100 : 0;
+                  const tier =
+                    r.value > baseline * 1.02
+                      ? 'up'
+                      : r.value < baseline * 0.98
+                      ? 'down'
+                      : 'flat';
+                  return (
+                    <div key={r.label} className="wat-bar-col">
+                      <div className="wat-bar-wrap">
+                        <div
+                          className={`wat-bar wat-bar-${tier}`}
+                          style={{ height: `${heightPct}%` }}
+                        />
+                      </div>
+                      <div className="wat-bar-val">{(r.value * 100).toFixed(1)}%</div>
+                      <div className="wat-bar-lbl">{r.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <span className={`wat-arrow wat-arrow-${direction}`}>{arrow}</span>
+            </div>
+          );
+        })()}
+
         {y.liftIfOptimised != null && y.liftIfOptimised > 0.02 && (
           <p className="yield-lift">
             ↗ Re-delegating each position to the best validator on its subnet would lift weighted APY by{' '}

@@ -416,6 +416,75 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--line);
 }
 
+.weighted-apy-trend {
+  margin: 12px 0 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 3%, var(--bg));
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.weighted-apy-up { border-left: 3px solid var(--green); }
+.weighted-apy-down { border-left: 3px solid var(--red); }
+.weighted-apy-flat { border-left: 3px solid var(--line); }
+.wat-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.wat-bars {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+}
+.wat-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 38px;
+}
+.wat-bar-wrap {
+  height: 32px;
+  width: 22px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--line);
+}
+.wat-bar {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+.wat-bar-up { background: var(--green); }
+.wat-bar-down { background: var(--red); }
+.wat-bar-flat { background: var(--dim); opacity: 0.6; }
+.wat-bar-val {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  font-weight: 600;
+}
+.wat-bar-lbl {
+  font-size: 10px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wat-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  margin-left: auto;
+}
+.wat-arrow-up { color: var(--green); }
+.wat-arrow-down { color: var(--red); }
+.wat-arrow-flat { color: var(--dim); }
+
 .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td {
