@@ -438,6 +438,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
           const maxAbs1d = Math.max(...p.top10.map((x) => Math.abs(x.pct1d || 0)));
           const maxAbs7d = Math.max(...p.top10.map((x) => Math.abs(x.pct7d || 0)));
           const perSubnetMap = new Map((pnl?.perSubnet || []).map((s) => [s.netuid, s]));
+          // Build a per-netuid APY map by alpha-weighting yield.perPosition rows
+          // across hotkeys on the same subnet (mirrors the §3 weighting logic so
+          // the per-row chip matches the headline weighted-APY when only one
+          // subnet is held).
+          const perNetuidApy = new Map();
+          for (const yp of y?.perPosition || []) {
+            if (yp.apy == null || !(yp.alphaTokens > 0)) continue;
+            const prev = perNetuidApy.get(yp.netuid) || { num: 0, den: 0, anyFallback: false };
+            prev.num += yp.apy * yp.alphaTokens;
+            prev.den += yp.alphaTokens;
+            if (yp.apyIsFallback) prev.anyFallback = true;
+            perNetuidApy.set(yp.netuid, prev);
+          }
           // Top movers: 24h winners + losers, sorted by signed pct1d, only when
           // there's enough breadth to be informative (≥4 positions with pct1d).
           const withPct1d = p.top10.filter((x) => typeof x.pct1d === 'number' && Number.isFinite(x.pct1d));
@@ -539,6 +552,23 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               );
                             }
                             return null;
+                          })()}
+                          {(() => {
+                            const apyAgg = perNetuidApy.get(pos.netuid);
+                            if (!apyAgg || !(apyAgg.den > 0)) return null;
+                            const apy = apyAgg.num / apyAgg.den;
+                            if (!Number.isFinite(apy) || apy <= 0) return null;
+                            const apyPct = apy * 100;
+                            const taoPerYr = pos.taoValue * apy;
+                            return (
+                              <div
+                                className={`apy-chip${apyAgg.anyFallback ? ' apy-fallback' : ''}`}
+                                title={`${apyPct.toFixed(2)}% APY on sn${pos.netuid}${apyAgg.anyFallback ? ' (subnet median — your validator not in response)' : ''} · ≈ ${taoPerYr.toFixed(4)} τ/yr at current price`}
+                              >
+                                <span className="apy-lbl">📈 APY</span>{' '}
+                                <span className="apy-val">{apyPct.toFixed(1)}%</span>
+                              </div>
+                            );
                           })()}
                         </td>
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>

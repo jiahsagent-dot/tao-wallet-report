@@ -582,6 +582,27 @@ a:hover { text-decoration: underline; }
   letter-spacing: 0;
   opacity: 0.9;
 }
+.apy-chip {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: help;
+}
+.apy-chip .apy-lbl {
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+.apy-chip .apy-val {
+  color: color-mix(in srgb, var(--green) 85%, var(--fg));
+  font-weight: 600;
+}
+.apy-chip.apy-fallback .apy-val {
+  color: var(--muted);
+  font-style: italic;
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;
