@@ -1094,6 +1094,29 @@ export default function Report({ data, showSubscribeNudge = true }) {
             </div>
           );
         })()}
+        {b.subnetsToWatch && b.subnetsToWatch.length > 0 && (
+          <div className="watch-strip">
+            <div className="watch-head">
+              <span className="watch-lbl">🔭 Subnets to watch</span>
+              <span className="watch-sub">top 7d gainers you don't hold</span>
+            </div>
+            <div className="watch-chips">
+              {b.subnetsToWatch.map((w) => (
+                <a
+                  key={w.netuid}
+                  className="watch-chip"
+                  href={`https://taostats.io/subnets/${w.netuid}/metagraph`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`sn${w.netuid} ${w.name} · ${fmt(w.priceTao, 6)} τ · vol ${fmt(w.volumeTao24h, 0)} τ/24h`}
+                >
+                  <span className="w-sn">sn{w.netuid}</span> {w.name}{' '}
+                  <span className="w-pct">+{fmt(w.pct7d, 2)}%</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </Section>
     </div>
   );
