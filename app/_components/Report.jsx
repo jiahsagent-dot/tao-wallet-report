@@ -489,6 +489,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="AUD" value={`A$${fmt(p.totalAud)}`} />
           <Stat label="Positions" value={p.positionCount} />
         </div>
+        {p.sparkline30d && p.sparkline30d.str && (
+          <div
+            className="sparkline-row"
+            title={`Last ${p.sparkline30d.points} daily balance snapshots: ${p.sparkline30d.firstTao.toFixed(4)} τ (${formatShortDate(p.sparkline30d.firstDate)}) → ${p.sparkline30d.lastTao.toFixed(4)} τ (${formatShortDate(p.sparkline30d.lastDate)}). Min ${p.sparkline30d.minTao.toFixed(4)} τ · Max ${p.sparkline30d.maxTao.toFixed(4)} τ.`}
+          >
+            <span className="sparkline-lbl">30d τ</span>
+            <span className="sparkline">{p.sparkline30d.str}</span>
+            <span className="sparkline-meta">
+              {p.sparkline30d.firstTao.toFixed(2)} → {p.sparkline30d.lastTao.toFixed(2)} τ
+            </span>
+          </div>
+        )}
         {(p.delta24h || p.delta7d) && (
           <div className="d24-row">
             {[
