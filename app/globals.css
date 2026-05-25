@@ -2659,3 +2659,41 @@ pre.copy-block-body {
   color: var(--muted);
   font-size: 12px;
 }
+
+.pnl-base-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-top: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  cursor: help;
+}
+.pnl-base-strip .pbs-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.pnl-base-strip .pbs-val {
+  color: var(--fg);
+  font-weight: 600;
+}
+.pnl-base-strip .pbs-arrow {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.pnl-base-strip .pbs-delta {
+  font-style: italic;
+  opacity: 0.85;
+}
+.pnl-base-strip .pbs-fiat {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  opacity: 0.75;
+}

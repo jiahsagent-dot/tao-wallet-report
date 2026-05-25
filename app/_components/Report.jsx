@@ -897,6 +897,41 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   </div>
                 );
               })()}
+              {(() => {
+                // Base-vs-current strip — surfaces the τ start and end the
+                // status pill (iter 97) only mentioned in its tooltip. Without
+                // these numbers a "+0.98%" return is ambiguous: profit on what
+                // base? AUD shown alongside for fiat anchor (start vs now uses
+                // current taoPrice for both sides — what the τ would be worth
+                // TODAY at each balance — so the gap is a pure τ delta in fiat
+                // terms, not contaminated by token price moves).
+                const sinceTao = gt.startingBalanceTao + gt.transferInTao - gt.transferOutTao;
+                const taoPrice = Number(data.taoPriceUsd) || 0;
+                const usdAud = Number(data.usdAud) || 0;
+                if (!(sinceTao > 0) || !(gt.currentPortfolioTao > 0) || !(taoPrice > 0)) return null;
+                const startAud = sinceTao * taoPrice * usdAud;
+                const nowAud = gt.currentPortfolioTao * taoPrice * usdAud;
+                const deltaTau = gt.currentPortfolioTao - sinceTao;
+                const deltaSign = deltaTau >= 0 ? '+' : '';
+                return (
+                  <div
+                    className="pnl-base-strip"
+                    title={`Net contributed base = starting balance ${gt.startingBalanceTao.toFixed(4)} τ + transfers in ${gt.transferInTao.toFixed(4)} τ − transfers out ${gt.transferOutTao.toFixed(4)} τ = ${sinceTao.toFixed(4)} τ. Both AUD figures use the CURRENT TAO price so the gap reflects pure τ growth (not token price moves).`}
+                  >
+                    <span className="pbs-lbl">Net contributed</span>
+                    <span className="pbs-val">{sinceTao.toFixed(3)} τ</span>
+                    <span className="pbs-arrow">→</span>
+                    <span className="pbs-lbl">Current</span>
+                    <span className="pbs-val">{gt.currentPortfolioTao.toFixed(3)} τ</span>
+                    <span className="pbs-delta">({deltaSign}{deltaTau.toFixed(3)} τ)</span>
+                    {usdAud > 0 && (
+                      <span className="pbs-fiat">
+                        ≈ A${startAud.toFixed(2)} → A${nowAud.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">
