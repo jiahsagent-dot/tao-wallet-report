@@ -389,6 +389,33 @@ a:hover { text-decoration: underline; }
 .top-apy-chip .a-apy { font-weight: 700; }
 .top-apy-chip .a-fb { opacity: 0.55; margin-left: 2px; font-size: 11px; }
 
+.apy-trend-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+.apy-trend-up {
+  background: color-mix(in srgb, var(--green) 12%, var(--bg));
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--line));
+}
+.apy-trend-down {
+  background: color-mix(in srgb, var(--red) 12%, var(--bg));
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line));
+}
+.apy-trend-flat {
+  background: transparent;
+  color: var(--dim);
+  border: 1px solid var(--line);
+}
+
 .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td {

@@ -1193,6 +1193,26 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               ~
                             </span>
                           )}
+                          {(() => {
+                            if (p.apyIsFallback) return null;
+                            if (p.apy1d == null || p.apy30d == null) return null;
+                            const deltaPp = (p.apy1d - p.apy30d) * 100;
+                            const tier =
+                              deltaPp >= 1 ? 'up' : deltaPp <= -1 ? 'down' : 'flat';
+                            const arrow =
+                              tier === 'up' ? '↗' : tier === 'down' ? '↘' : '→';
+                            const sign = deltaPp >= 0 ? '+' : '';
+                            const title = `30d ${(p.apy30d * 100).toFixed(2)}% · 7d ${p.apy7d != null ? `${(p.apy7d * 100).toFixed(2)}%` : '—'} · 1d ${(p.apy1d * 100).toFixed(2)}% (1d vs 30d Δ ${sign}${deltaPp.toFixed(2)}pp)`;
+                            return (
+                              <span
+                                className={`apy-trend-chip apy-trend-${tier}`}
+                                title={title}
+                              >
+                                {' '}
+                                {arrow} {sign}{deltaPp.toFixed(1)}pp
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td>{bestPct}</td>
                         <td className={`yield-delta ${deltaCls}`}>{deltaStr}</td>
