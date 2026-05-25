@@ -529,6 +529,26 @@ export default function Report({ data, showSubscribeNudge = true }) {
             ))}
           </div>
         )}
+        {p.trendHint && (() => {
+          const th = p.trendHint;
+          const tone =
+            th.kind === 'rally' ? 'th-up'
+            : th.kind === 'bleed' ? 'th-down'
+            : th.kind === 'bounce' ? 'th-up'  // 24h up: net positive nudge
+            : 'th-down';                       // pullback: 24h down
+          return (
+            <div
+              className={`portfolio-trend-hint ${tone}`}
+              title={`Portfolio day-vs-week shape: ${th.label.toLowerCase()}. 24h ${th.pct24h >= 0 ? '+' : ''}${th.pct24h.toFixed(2)}% / 7d ${th.pct7d >= 0 ? '+' : ''}${th.pct7d.toFixed(2)}% on total τ. Same vocabulary as the per-position chips in the table below — this aggregates across the whole book.`}
+            >
+              <span className="th-emoji">{th.emoji}</span>
+              <span className="th-label">{th.label}</span>
+              <span className="th-detail">
+                24h {th.pct24h >= 0 ? '+' : ''}{th.pct24h.toFixed(2)}% / 7d {th.pct7d >= 0 ? '+' : ''}{th.pct7d.toFixed(2)}%
+              </span>
+            </div>
+          );
+        })()}
         {(() => {
           if (!p.top10 || p.top10.length === 0) return null;
           const dominant = p.top10

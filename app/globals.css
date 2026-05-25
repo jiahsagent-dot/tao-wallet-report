@@ -2560,3 +2560,39 @@ pre.copy-block-body {
   opacity: 1;
   filter: none;
 }
+
+.portfolio-trend-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.portfolio-trend-hint.th-up {
+  background: color-mix(in srgb, var(--green) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--green) 28%, var(--line));
+}
+.portfolio-trend-hint.th-down {
+  background: color-mix(in srgb, var(--red) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--red) 28%, var(--line));
+}
+.portfolio-trend-hint .th-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+.portfolio-trend-hint .th-label {
+  font-weight: 600;
+  color: var(--fg);
+}
+.portfolio-trend-hint.th-up .th-label { color: var(--green); }
+.portfolio-trend-hint.th-down .th-label { color: var(--red); }
+.portfolio-trend-hint .th-detail {
+  color: var(--muted);
+  font-size: 12px;
+}
