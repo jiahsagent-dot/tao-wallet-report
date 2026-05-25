@@ -718,6 +718,52 @@ a:hover { text-decoration: underline; }
   }
   .d24-fiat { width: 100%; margin-left: 0; }
 }
+.conc-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 14px;
+  margin: 0 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.conc-warn {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--card));
+}
+.conc-crit {
+  border-color: color-mix(in srgb, var(--red) 50%, var(--line));
+  background: color-mix(in srgb, var(--red) 8%, var(--card));
+}
+.conc-icon {
+  font-size: 14px;
+}
+.conc-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.conc-warn .conc-lbl { color: var(--accent); }
+.conc-crit .conc-lbl { color: var(--red); }
+.conc-detail {
+  color: var(--dim);
+}
+.conc-detail strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+@media (max-width: 560px) {
+  .conc-chip {
+    flex-wrap: wrap;
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;

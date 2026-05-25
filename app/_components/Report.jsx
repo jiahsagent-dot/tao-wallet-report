@@ -460,6 +460,29 @@ export default function Report({ data, showSubscribeNudge = true }) {
             ))}
           </div>
         )}
+        {(() => {
+          if (!p.top10 || p.top10.length === 0) return null;
+          const dominant = p.top10
+            .filter((x) => typeof x.pctOfPortfolio === 'number')
+            .reduce((max, x) => (x.pctOfPortfolio > (max?.pctOfPortfolio || 0) ? x : max), null);
+          if (!dominant || dominant.pctOfPortfolio < 40) return null;
+          const tier = dominant.pctOfPortfolio >= 60 ? 'crit' : 'warn';
+          const icon = tier === 'crit' ? '🚨' : '⚠';
+          const label = tier === 'crit' ? 'Critical concentration' : 'High concentration';
+          return (
+            <div
+              className={`conc-chip conc-${tier}`}
+              title={`Single-position concentration risk: sn${dominant.netuid} ${dominant.name} is ${dominant.pctOfPortfolio.toFixed(1)}% of total τ. A move in this one subnet drives most of your portfolio swing — consider trimming if you'd rather have less idiosyncratic risk.`}
+            >
+              <span className="conc-icon">{icon}</span>
+              <span className="conc-lbl">{label}</span>
+              <span className="conc-detail">
+                sn{dominant.netuid} {dominant.name} is{' '}
+                <strong>{fmt(dominant.pctOfPortfolio, 1)}%</strong> of total τ
+              </span>
+            </div>
+          );
+        })()}
         {p.top10.length > 0 ? (() => {
           const maxValue = Math.max(...p.top10.map((x) => x.taoValue || 0));
           const maxPort = Math.max(...p.top10.map((x) => x.pctOfPortfolio || 0));
