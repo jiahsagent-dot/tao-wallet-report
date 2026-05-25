@@ -2356,3 +2356,21 @@ pre.copy-block-body {
   color: var(--dim);
   border: 1px solid var(--line);
 }
+
+/* §3 yield table per-row Δ-to-best τ/yr lift chip — surfaces how many τ/yr
+   re-delegating this position would capture, so "-144.6pp" reads as a real
+   number ("≈ 0.217 τ/yr left on the table") instead of an abstract gap. */
+.yield-lift-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: default;
+  background: color-mix(in srgb, var(--green) 12%, var(--bg));
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--line));
+}

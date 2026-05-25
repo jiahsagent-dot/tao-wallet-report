@@ -1333,14 +1333,30 @@ export default function Report({ data, showSubscribeNudge = true }) {
                           })()}
                         </td>
                         <td>{bestPct}</td>
-                        <td className={`yield-delta ${deltaCls}`}>{deltaStr}</td>
+                        <td className={`yield-delta ${deltaCls}`}>
+                          {deltaStr}
+                          {(() => {
+                            if (p.deltaToBest == null || p.deltaToBest >= 0) return null;
+                            if (!(p.alphaTokens > 0) || !(p.alphaPriceTao > 0)) return null;
+                            const liftTaoPerYr = p.alphaTokens * p.alphaPriceTao * Math.abs(p.deltaToBest);
+                            if (!Number.isFinite(liftTaoPerYr) || liftTaoPerYr < 0.001) return null;
+                            return (
+                              <span
+                                className="yield-lift-chip"
+                                title={`Re-delegating this row to the best validator on sn${p.netuid} would lift earnings by ≈ ${liftTaoPerYr.toFixed(4)} τ/yr at current α price (${p.alphaTokens.toFixed(2)} α × ${p.alphaPriceTao.toFixed(6)} τ/α × ${(Math.abs(p.deltaToBest) * 100).toFixed(2)}pp).`}
+                              >
+                                {' '}+{fmt(liftTaoPerYr, 3)} τ/yr
+                              </span>
+                            );
+                          })()}
+                        </td>
                       </tr>
                     );
                   })}
               </tbody>
             </table>
             <p className="hint">
-              Δ to best shows how far each validator is behind the best validator on the same subnet (in percentage points). Negative values are re-delegation opportunities.
+              Δ to best shows how far each validator is behind the best validator on the same subnet (in percentage points). Negative values are re-delegation opportunities — green chip beside the Δ shows the τ/yr lift you'd capture at current alpha levels.
             </p>
           </>
         )}
