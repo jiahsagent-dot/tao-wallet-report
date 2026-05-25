@@ -1609,6 +1609,32 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="TAO/USD" value={`$${fmt(b.taoPrice, 2)}`} />
           <Stat label="Subnets" value={b.subnetCount} />
         </div>
+        {b.marketContext && (() => {
+          const mc = b.marketContext;
+          const medPctCls = mc.median24hPct == null ? '' : mc.median24hPct > 0 ? 'mc-up' : mc.median24hPct < 0 ? 'mc-down' : '';
+          const breadthCls = mc.breadth == null ? '' : mc.breadth > 55 ? 'mc-up' : mc.breadth < 45 ? 'mc-down' : '';
+          const breadthLbl = mc.breadth == null ? '—' : mc.breadth > 55 ? 'risk-on' : mc.breadth < 45 ? 'risk-off' : 'mixed';
+          return (
+            <div className="market-context-strip" title={`Market snapshot across ${mc.tradeableCount} tradeable subnets (>1τ daily volume). ${mc.greenCount} up vs ${mc.redCount} down on 24h. Median centres the typical subnet day — frames whether any single pct figure below is unusual or routine.`}>
+              <div className="mc-cell">
+                <div className="mc-lbl">Tradeable</div>
+                <div className="mc-val">{mc.tradeableCount}<span className="mc-sub">/ {mc.totalActive}</span></div>
+              </div>
+              <div className="mc-cell">
+                <div className="mc-lbl">Median 24h</div>
+                <div className={`mc-val ${medPctCls}`}>{mc.median24hPct == null ? '—' : `${mc.median24hPct >= 0 ? '+' : ''}${mc.median24hPct.toFixed(2)}%`}</div>
+              </div>
+              <div className="mc-cell">
+                <div className="mc-lbl">Median 24h vol</div>
+                <div className="mc-val">{mc.median24hVolumeTao == null ? '—' : `${fmt(mc.median24hVolumeTao, 0)} τ`}</div>
+              </div>
+              <div className="mc-cell">
+                <div className="mc-lbl">Breadth</div>
+                <div className={`mc-val ${breadthCls}`}>{mc.greenCount}↑ {mc.redCount}↓<span className="mc-sub"> · {breadthLbl}</span></div>
+              </div>
+            </div>
+          );
+        })()}
         <CopyCsvButton
           getCsv={() => buildBroaderMarketCsv(b)}
           coldkey={data.coldkey}

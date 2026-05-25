@@ -2451,3 +2451,48 @@ pre.copy-block-body {
   color: var(--red);
   border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line));
 }
+
+.market-context-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  cursor: help;
+}
+.market-context-strip .mc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.market-context-strip .mc-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.market-context-strip .mc-val {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.market-context-strip .mc-val.mc-up { color: var(--green); }
+.market-context-strip .mc-val.mc-down { color: var(--red); }
+.market-context-strip .mc-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 4px;
+}
+@media (max-width: 640px) {
+  .market-context-strip { grid-template-columns: repeat(2, 1fr); }
+}
