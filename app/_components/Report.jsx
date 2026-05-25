@@ -559,6 +559,28 @@ export default function Report({ data, showSubscribeNudge = true }) {
             if (yp.apyIsFallback) prev.anyFallback = true;
             perNetuidApy.set(yp.netuid, prev);
           }
+          // Aggregate yield + value totals across rendered top10 for the tfoot row.
+          let totalTaoYr = 0;
+          let wApyNum = 0;
+          let wApyDen = 0;
+          let totalValueTao = 0;
+          let totalPctPort = 0;
+          let coveredPositions = 0;
+          for (const pos of p.top10) {
+            totalValueTao += pos.taoValue || 0;
+            totalPctPort += pos.pctOfPortfolio || 0;
+            const agg = perNetuidApy.get(pos.netuid);
+            if (agg && agg.den > 0) {
+              const apy = agg.num / agg.den;
+              if (Number.isFinite(apy) && apy > 0 && pos.taoValue > 0) {
+                totalTaoYr += pos.taoValue * apy;
+                wApyNum += pos.taoValue * apy;
+                wApyDen += pos.taoValue;
+                coveredPositions += 1;
+              }
+            }
+          }
+          const wApy = wApyDen > 0 ? wApyNum / wApyDen : null;
           // Top movers: 24h winners + losers, sorted by signed pct1d, only when
           // there's enough breadth to be informative (≥4 positions with pct1d).
           const withPct1d = p.top10.filter((x) => typeof x.pct1d === 'number' && Number.isFinite(x.pct1d));
@@ -710,6 +732,29 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     );
                   })}
                 </tbody>
+                <tfoot>
+                  <tr className="tfoot-totals">
+                    <td></td>
+                    <td><span className="tfoot-lbl">Total ({p.top10.length} pos)</span></td>
+                    <td className="num"></td>
+                    <td className="num">
+                      {wApy != null && totalTaoYr > 0 ? (
+                        <div
+                          className="apy-chip apy-chip-foot"
+                          title={`Portfolio-weighted APY across ${coveredPositions} of ${p.top10.length} top positions with yield data: ${(wApy * 100).toFixed(2)}% · ≈ ${totalTaoYr.toFixed(4)} τ/yr at current prices.`}
+                        >
+                          <span className="apy-lbl">Σ APY</span>{' '}
+                          <span className="apy-val">{(wApy * 100).toFixed(1)}%</span>{' '}
+                          <span className="apy-yr">· {totalTaoYr.toFixed(4)} τ/yr</span>
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="num">{fmt(totalValueTao)}</td>
+                    <td className="num">{fmt(totalPctPort, 1)}%</td>
+                    <td className="num"></td>
+                    <td className="num"></td>
+                  </tr>
+                </tfoot>
               </table>
               </div>
             </>

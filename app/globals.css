@@ -912,6 +912,24 @@ a:hover { text-decoration: underline; }
   font-size: 10px;
   opacity: 0.85;
 }
+.tbl tfoot tr.tfoot-totals td {
+  border-top: 2px solid var(--line);
+  padding-top: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.tfoot-lbl {
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.apy-chip.apy-chip-foot {
+  margin-top: 0;
+  display: inline-block;
+}
 .bw-day-strip {
   display: grid;
   grid-template-columns: 1fr 1fr;
