@@ -675,6 +675,9 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               >
                                 <span className="apy-lbl">📈 APY</span>{' '}
                                 <span className="apy-val">{apyPct.toFixed(1)}%</span>
+                                {Number.isFinite(taoPerYr) && taoPerYr >= 0.0001 && (
+                                  <span className="apy-yr">{' '}· {taoPerYr.toFixed(4)} τ/yr</span>
+                                )}
                               </div>
                             );
                           })()}
