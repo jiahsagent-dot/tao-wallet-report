@@ -1120,7 +1120,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
           the ground-truth balance-based number above).
         </p>
 
-        {Array.isArray(pnl.perSubnet) && pnl.perSubnet.length > 0 && (
+        {Array.isArray(pnl.perSubnet) && pnl.perSubnet.length > 0 && (() => {
+          const ps = pnl.perSubnet;
+          let pnlSumCurrent = 0;
+          let pnlSumSpent = 0;
+          let pnlSumSold = 0;
+          let pnlSumPnl = 0;
+          for (const s of ps) {
+            pnlSumCurrent += s.currentTao || 0;
+            pnlSumSpent += s.spentTao || 0;
+            pnlSumSold += s.soldTao || 0;
+            pnlSumPnl += s.pnlTao || 0;
+          }
+          return (
           <>
             <div className="pnl-attrib-head">
               <h3 className="sub-h">Per-subnet PnL attribution</h3>
@@ -1177,12 +1189,31 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   ));
                 })()}
               </tbody>
+              <tfoot>
+                <tr className="tfoot-totals">
+                  <td>
+                    <span
+                      className="tfoot-lbl"
+                      title={`Grand total summed across all ${ps.length} subnets in the full perSubnet array — should reconcile with the §4 stats grid above.`}
+                    >
+                      Total ({ps.length} sn)
+                    </span>
+                  </td>
+                  <td>{fmt(pnlSumCurrent, 3)} τ</td>
+                  <td>{fmt(pnlSumSpent, 3)} τ</td>
+                  <td>{fmt(pnlSumSold, 3)} τ</td>
+                  <td className={cls(pnlSumPnl)}>
+                    {pnlSumPnl >= 0 ? '+' : ''}{fmt(pnlSumPnl, 4)} τ
+                  </td>
+                </tr>
+              </tfoot>
             </table>
             <p className="hint">
-              Top 5 contributors + bottom 3 detractors (subnets with PnL impact ≥ 0.001 τ). Computed from delegation history × current α value.
+              Top 5 contributors + bottom 3 detractors (subnets with PnL impact ≥ 0.001 τ). Computed from delegation history × current α value. Totals row sums every subnet ever held (not just the visible 8).
             </p>
           </>
-        )}
+          );
+        })()}
       </Section>
 
       <Section n="3" title="Yield">

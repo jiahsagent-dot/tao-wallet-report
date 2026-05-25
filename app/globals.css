@@ -912,8 +912,7 @@ a:hover { text-decoration: underline; }
   font-size: 10px;
   opacity: 0.85;
 }
-.tbl tfoot tr.tfoot-totals td,
-.yield-table tfoot tr.tfoot-totals td {
+tfoot tr.tfoot-totals td {
   border-top: 2px solid var(--line);
   padding-top: 8px;
   font-weight: 600;
