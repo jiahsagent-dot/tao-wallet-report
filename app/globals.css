@@ -2742,3 +2742,62 @@ pre.copy-block-body {
   color: var(--muted);
   font-style: italic;
 }
+
+.pnl-income-breakdown {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.pnl-income-breakdown .pib-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--muted);
+}
+.pnl-income-breakdown .pib-leg {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.pnl-income-breakdown .pib-leg.pib-up {
+  background: color-mix(in srgb, var(--green) 12%, var(--bg));
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 32%, var(--line));
+}
+.pnl-income-breakdown .pib-leg.pib-down {
+  background: color-mix(in srgb, var(--red) 12%, var(--bg));
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 32%, var(--line));
+}
+.pnl-income-breakdown .pib-leg.pib-flat {
+  background: color-mix(in srgb, var(--muted) 10%, var(--bg));
+  color: var(--muted);
+  border: 1px solid color-mix(in srgb, var(--muted) 28%, var(--line));
+}
+.pnl-income-breakdown .pib-leg-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.pnl-income-breakdown .pib-leg-val {
+  font-weight: 700;
+}
+.pnl-income-breakdown .pib-sep {
+  color: var(--muted);
+  opacity: 0.5;
+}

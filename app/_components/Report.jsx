@@ -966,6 +966,44 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   </div>
                 );
               })()}
+              {(() => {
+                // Income breakdown — splits the headline PnL into two legs:
+                // recurring STAKING income (dailyIncomeTao, sourced from the
+                // tax-report endpoint same as the Bittensor weekly doc) and
+                // PRICE-driven PnL (the residual = profit − staking, which
+                // captures token-price moves on whatever is held). Both legs
+                // are real τ but they tell different stories: staking is a
+                // floor you'd earn even at flat prices, price is the mark on
+                // top. Soft-omits when staking income is null or zero (the
+                // breakdown collapses to profit ≈ price, no signal added).
+                const staking = Number(gt.dailyIncomeTao);
+                const profit = Number(gt.profitTao);
+                if (!Number.isFinite(staking) || !(staking > 0)) return null;
+                if (!Number.isFinite(profit)) return null;
+                const priceLeg = profit - staking;
+                const sLegCls = staking > 0 ? 'pib-up' : staking < 0 ? 'pib-down' : 'pib-flat';
+                const pLegCls = priceLeg > 0.0001 ? 'pib-up' : priceLeg < -0.0001 ? 'pib-down' : 'pib-flat';
+                const sSign = staking >= 0 ? '+' : '';
+                const pSign = priceLeg >= 0 ? '+' : '';
+                const stakingShareOfProfit = profit !== 0 ? (staking / profit) * 100 : null;
+                return (
+                  <div
+                    className="pnl-income-breakdown"
+                    title={`Headline PnL ${profit >= 0 ? '+' : ''}${profit.toFixed(4)} τ = staking ${sSign}${staking.toFixed(4)} τ + price-driven ${pSign}${priceLeg.toFixed(4)} τ. Staking is recurring (dailyIncomeTao from the tax-report endpoint — same source as the Bittensor weekly FINAL doc); price is the residual capturing token-price marks on what's held.${stakingShareOfProfit != null && Math.abs(stakingShareOfProfit) < 500 ? ` Staking covers ${stakingShareOfProfit.toFixed(0)}% of the headline.` : ''}`}
+                  >
+                    <span className="pib-lbl">Breakdown</span>
+                    <span className={`pib-leg ${sLegCls}`}>
+                      <span className="pib-leg-lbl">Staking</span>
+                      <span className="pib-leg-val">{sSign}{staking.toFixed(4)} τ</span>
+                    </span>
+                    <span className="pib-sep">·</span>
+                    <span className={`pib-leg ${pLegCls}`}>
+                      <span className="pib-leg-lbl">Price</span>
+                      <span className="pib-leg-val">{pSign}{priceLeg.toFixed(4)} τ</span>
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">
