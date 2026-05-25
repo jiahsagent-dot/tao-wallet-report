@@ -127,8 +127,10 @@ function buildPortfolioCsv(top10) {
 // 1d only here) so we surface Volume instead.
 function buildBroaderMarketCsv(broader) {
   const movers = (broader && broader.topMovers24h) || [];
+  const movers7d = (broader && broader.topMovers7d) || [];
   const volume = (broader && broader.topByVolume24h) || [];
   const cols = ['#', 'Subnet', 'Netuid', 'Price (TAO)', '24h pct', 'Volume (TAO)'];
+  const cols7d = ['#', 'Subnet', 'Netuid', 'Price (TAO)', '7d pct', '24h pct', 'Volume (TAO)'];
   const lines = [];
   lines.push(['Top movers 24h'].map(csvEscape).join(','));
   lines.push(cols.map(csvEscape).join(','));
@@ -138,6 +140,20 @@ function buildBroaderMarketCsv(broader) {
       m.name ?? `Subnet ${m.netuid}`,
       m.netuid,
       m.priceTao != null ? Number(m.priceTao).toFixed(8) : '',
+      m.pct1d != null ? Number(m.pct1d).toFixed(2) : '',
+      m.volumeTao24h != null ? Number(m.volumeTao24h).toFixed(2) : '',
+    ].map(csvEscape).join(','));
+  });
+  lines.push('');
+  lines.push(['Top movers 7d'].map(csvEscape).join(','));
+  lines.push(cols7d.map(csvEscape).join(','));
+  movers7d.forEach((m, i) => {
+    lines.push([
+      i + 1,
+      m.name ?? `Subnet ${m.netuid}`,
+      m.netuid,
+      m.priceTao != null ? Number(m.priceTao).toFixed(8) : '',
+      m.pct7d != null ? Number(m.pct7d).toFixed(2) : '',
       m.pct1d != null ? Number(m.pct1d).toFixed(2) : '',
       m.volumeTao24h != null ? Number(m.volumeTao24h).toFixed(2) : '',
     ].map(csvEscape).join(','));
@@ -1390,6 +1406,54 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </tbody>
               </table>
             </div>
+          );
+        })()}
+        {b.topMovers7d && b.topMovers7d.length > 0 && (() => {
+          const moversMaxAbs7d = Math.max(...b.topMovers7d.map((x) => Math.abs(x.pct7d || 0)), 0);
+          const moversMaxAbs1d = Math.max(...b.topMovers7d.map((x) => Math.abs(x.pct1d || 0)), 0);
+          return (
+            <>
+              <h3 className="sub-h">Biggest 7d movers</h3>
+              <div className="tbl-scroll">
+                <table className="tbl tbl-heatmap">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Subnet</th>
+                      <th className="num">Price (τ)</th>
+                      <th className="num">7d</th>
+                      <th className="num">24h</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.topMovers7d.map((m) => {
+                      const rgb7 = (m.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                      const rgb1 = (m.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                      return (
+                        <tr key={m.netuid}>
+                          <td>{m.netuid}</td>
+                          <td>
+                            <SubnetLink
+                              netuid={m.netuid}
+                              name={m.name}
+                              info={subnetLookup.get(m.netuid)}
+                              href={`https://taostats.io/subnets/${m.netuid}/metagraph`}
+                            />
+                          </td>
+                          <td className="num">{fmt(m.priceTao, 6)}</td>
+                          <td className={`num heat ${cls(m.pct7d)}`} style={heatBg(m.pct7d, moversMaxAbs7d, rgb7)}>{fmtPct(m.pct7d)}</td>
+                          {m.pct1d != null ? (
+                            <td className={`num heat ${cls(m.pct1d)}`} style={heatBg(m.pct1d, moversMaxAbs1d, rgb1)}>{fmtPct(m.pct1d)}</td>
+                          ) : (
+                            <td className="num muted">—</td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           );
         })()}
         {b.subnetsToWatch && b.subnetsToWatch.length > 0 && (
