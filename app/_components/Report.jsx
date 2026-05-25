@@ -1073,8 +1073,15 @@ export default function Report({ data, showSubscribeNudge = true }) {
         )}
 
         {(() => {
+          // Filter out dust positions (< 0.01 τ exposure ≈ <$3) so chip titles
+          // don't show "0.00 α held · ≈ 0.0000 τ/yr" — meaningless as a "top yielder".
+          const DUST_TAO = 0.01;
           const candidates = (y.perPosition || [])
-            .filter((p) => p.apy != null && p.apy > 0 && p.alphaTokens > 0)
+            .filter((p) => {
+              if (p.apy == null || p.apy <= 0 || !(p.alphaTokens > 0)) return false;
+              const priceTao = Number(p.alphaPriceTao || subnetLookup.get(p.netuid)?.priceTao || 0);
+              return p.alphaTokens * priceTao >= DUST_TAO;
+            })
             .slice()
             .sort((a, b) => b.apy - a.apy)
             .slice(0, 3);
