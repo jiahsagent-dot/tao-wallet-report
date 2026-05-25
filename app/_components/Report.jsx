@@ -682,7 +682,27 @@ export default function Report({ data, showSubscribeNudge = true }) {
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>
                         <td className="num heat" style={heatBg(pos.pctOfPortfolio, maxPort, HEAT_ORANGE)}>{fmt(pos.pctOfPortfolio, 1)}%</td>
                         <td className={`num heat ${cls(pos.pct1d)}`} style={heatBg(pos.pct1d, maxAbs1d, rgb1d)}>{fmtPct(pos.pct1d)}</td>
-                        <td className={`num heat ${cls(pos.pct7d)}`} style={heatBg(pos.pct7d, maxAbs7d, rgb7d)}>{fmtPct(pos.pct7d)}</td>
+                        <td className={`num heat ${cls(pos.pct7d)}`} style={heatBg(pos.pct7d, maxAbs7d, rgb7d)}>
+                          {fmtPct(pos.pct7d)}
+                          {(() => {
+                            if (pos.pct7d == null || !Number.isFinite(pos.pct7d)) return null;
+                            if (!(pos.taoValue > 0)) return null;
+                            const denom = 1 + pos.pct7d / 100;
+                            if (!(denom > 0)) return null;
+                            const change7dTao = pos.taoValue - pos.taoValue / denom;
+                            if (!Number.isFinite(change7dTao) || Math.abs(change7dTao) < 0.001) return null;
+                            const sign = change7dTao >= 0 ? '+' : '−';
+                            const tier = change7dTao >= 0 ? 'up' : 'down';
+                            return (
+                              <span
+                                className={`row-7d-change row-7d-${tier}`}
+                                title={`7d τ change on sn${pos.netuid}: ${sign}${Math.abs(change7dTao).toFixed(4)} τ (current ${pos.taoValue.toFixed(4)} τ vs 7d-ago ${(pos.taoValue / denom).toFixed(4)} τ at ${pos.pct7d >= 0 ? '+' : ''}${pos.pct7d.toFixed(2)}%)`}
+                              >
+                                {' '}{sign}{Math.abs(change7dTao).toFixed(2)} τ
+                              </span>
+                            );
+                          })()}
+                        </td>
                       </tr>
                     );
                   })}
