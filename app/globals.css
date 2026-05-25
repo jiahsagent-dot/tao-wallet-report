@@ -417,6 +417,7 @@ a:hover { text-decoration: underline; }
 .flag.medium .badge { background: rgba(249,168,38,0.2); color: var(--accent); }
 
 .recs { list-style: none; counter-reset: rec; }
+.recs[start="2"] { counter-reset: rec 1; }
 .recs li {
   counter-increment: rec;
   padding: 12px 0 12px 36px;
@@ -442,6 +443,35 @@ a:hover { text-decoration: underline; }
 }
 .recs .obs { font-size: 14px; }
 .recs .act { color: var(--accent); font-size: 14px; margin-top: 4px; }
+.top-rec-banner {
+  margin: 4px 0 18px;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line));
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.top-rec-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.top-rec-obs {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--fg);
+}
+.top-rec-act {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+}
 .disclaimer { color: var(--dim); font-size: 12px; font-style: italic; margin-top: 12px; }
 
 .empty { color: var(--dim); font-style: italic; }

@@ -1183,14 +1183,33 @@ export default function Report({ data, showSubscribeNudge = true }) {
       </Section>
 
       <Section n="5" title="Recommendations">
-        <ol className="recs">
-          {r.items.map((it, i) => (
-            <li key={i}>
-              <div className="obs">{it.observation}</div>
-              <div className="act">→ {it.action}</div>
-            </li>
-          ))}
-        </ol>
+        {r.items.length > 1 ? (
+          <>
+            <div className="top-rec-banner">
+              <div className="top-rec-tag">🎯 Top action</div>
+              <div className="top-rec-obs">{r.items[0].observation}</div>
+              <div className="top-rec-act">→ {r.items[0].action}</div>
+            </div>
+            <h3 className="sub-h">Other recommendations</h3>
+            <ol className="recs" start={2}>
+              {r.items.slice(1).map((it, i) => (
+                <li key={i + 1}>
+                  <div className="obs">{it.observation}</div>
+                  <div className="act">→ {it.action}</div>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : (
+          <ol className="recs">
+            {r.items.map((it, i) => (
+              <li key={i}>
+                <div className="obs">{it.observation}</div>
+                <div className="act">→ {it.action}</div>
+              </li>
+            ))}
+          </ol>
+        )}
         <p className="disclaimer">{r.disclaimer}</p>
       </Section>
 
