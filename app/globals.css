@@ -2323,3 +2323,33 @@ pre.copy-block-body {
   color: var(--dim);
   text-align: right;
 }
+
+/* §4 per-subnet PnL row 7d-price trend chip — same shape language as
+   .apy-trend-chip on §3 but a hair smaller since it sits inside a dense
+   tabular cell (PnL column). Tier colours mirror the apy chip. */
+.pnl-trend-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+.pnl-trend-up {
+  background: color-mix(in srgb, var(--green) 12%, var(--bg));
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--line));
+}
+.pnl-trend-down {
+  background: color-mix(in srgb, var(--red) 12%, var(--bg));
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line));
+}
+.pnl-trend-flat {
+  background: transparent;
+  color: var(--dim);
+  border: 1px solid var(--line);
+}

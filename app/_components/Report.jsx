@@ -305,6 +305,22 @@ function Stat({ label, value, cls: c }) {
   );
 }
 
+// §4 PnL attribution row trend chip: shows the position's 7d alpha price
+// movement so a "+0.83 τ PnL" cell carries the price direction context.
+// ±2% thresholds match the §3 weightedApySeries direction logic.
+function PnlTrendChip({ pct7d }) {
+  if (pct7d == null || !Number.isFinite(pct7d)) return null;
+  const tier = pct7d >= 2 ? 'up' : pct7d <= -2 ? 'down' : 'flat';
+  const arrow = tier === 'up' ? '↗' : tier === 'down' ? '↘' : '→';
+  const sign = pct7d >= 0 ? '+' : '';
+  const title = `7d α price ${sign}${pct7d.toFixed(2)}%`;
+  return (
+    <span className={`pnl-trend-chip pnl-trend-${tier}`} title={title}>
+      {' '}{arrow} {sign}{pct7d.toFixed(1)}%
+    </span>
+  );
+}
+
 function formatShortDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -1036,6 +1052,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       <td>{fmt(s.soldTao, 3)} τ</td>
                       <td className={cls(s.pnlTao)}>
                         {s.pnlTao >= 0 ? '+' : ''}{fmt(s.pnlTao, 4)} τ
+                        <PnlTrendChip pct7d={s.pct7d} />
                       </td>
                     </tr>
                   ))}
@@ -1053,6 +1070,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       <td>{fmt(s.soldTao, 3)} τ</td>
                       <td className={cls(s.pnlTao)}>
                         {fmt(s.pnlTao, 4)} τ
+                        <PnlTrendChip pct7d={s.pct7d} />
                       </td>
                     </tr>
                   ));
