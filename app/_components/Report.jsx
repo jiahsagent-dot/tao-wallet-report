@@ -1269,6 +1269,33 @@ export default function Report({ data, showSubscribeNudge = true }) {
             </div>
           </div>
         )}
+        {b.subnetsToTrim && b.subnetsToTrim.length > 0 && (
+          <div className="trim-strip">
+            <div className="trim-head">
+              <span className="trim-lbl">🩸 Worst held this week</span>
+              <span className="trim-sub">top 7d losers you currently hold — consider trimming</span>
+            </div>
+            <div className="trim-chips">
+              {b.subnetsToTrim.map((t) => (
+                <a
+                  key={t.netuid}
+                  className="trim-chip"
+                  href={`https://taostats.io/subnets/${t.netuid}/metagraph`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`sn${t.netuid} ${t.name} · ${fmt(t.valueTao, 3)} τ${
+                    t.pctOfPortfolio != null
+                      ? ` (${fmt(t.pctOfPortfolio, 1)}% of port)`
+                      : ''
+                  } · price ${fmt(t.priceTao, 6)} τ`}
+                >
+                  <span className="t-sn">sn{t.netuid}</span> {t.name}{' '}
+                  <span className="t-pct">{fmt(t.pct7d, 2)}%</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </Section>
     </div>
   );

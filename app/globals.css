@@ -287,6 +287,56 @@ a:hover { text-decoration: underline; }
 .watch-chip .w-sn { font-weight: 600; opacity: 0.7; font-size: 11px; }
 .watch-chip .w-pct { font-weight: 700; }
 
+.trim-strip {
+  margin: 14px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--red) 25%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--red) 4%, var(--bg));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trim-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.trim-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.trim-sub {
+  font-size: 11px;
+  color: var(--dim);
+}
+.trim-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trim-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--red) 40%, var(--line));
+  color: var(--red);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.trim-chip:hover {
+  background: color-mix(in srgb, var(--red) 8%, var(--bg));
+}
+.trim-chip .t-sn { font-weight: 600; opacity: 0.7; font-size: 11px; }
+.trim-chip .t-pct { font-weight: 700; }
+
 .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td {
