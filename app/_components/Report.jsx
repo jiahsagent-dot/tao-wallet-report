@@ -1799,56 +1799,84 @@ export default function Report({ data, showSubscribeNudge = true }) {
             </>
           );
         })()}
-        {b.subnetsToWatch && b.subnetsToWatch.length > 0 && (
-          <div className="watch-strip">
-            <div className="watch-head">
-              <span className="watch-lbl">🔭 Subnets to watch</span>
-              <span className="watch-sub">top 7d gainers you don't hold</span>
+        {b.subnetsToWatch && b.subnetsToWatch.length > 0 && (() => {
+          // "vs market" delta — separates idiosyncratic outperformance from
+          // the broader market lifting all boats. If watch row is +25% and
+          // the median 7d is -5%, that's +30 pts of alpha; if the median
+          // 7d is +20%, that's only +5 pts (not as exciting as the raw +25%).
+          const mkt7d = b.marketContext?.median7dPct;
+          return (
+            <div className="watch-strip">
+              <div className="watch-head">
+                <span className="watch-lbl">🔭 Subnets to watch</span>
+                <span className="watch-sub">top 7d gainers you don't hold{mkt7d != null && ` · vs market 7d ${mkt7d >= 0 ? '+' : ''}${mkt7d.toFixed(2)}%`}</span>
+              </div>
+              <div className="watch-chips">
+                {b.subnetsToWatch.map((w) => {
+                  const vsMkt = mkt7d != null ? w.pct7d - mkt7d : null;
+                  const vsMktCls = vsMkt == null ? '' : vsMkt > 0 ? 'vs-mkt-up' : vsMkt < 0 ? 'vs-mkt-down' : '';
+                  return (
+                    <a
+                      key={w.netuid}
+                      className="watch-chip"
+                      href={`https://taostats.io/subnets/${w.netuid}/metagraph`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`sn${w.netuid} ${w.name} · ${fmt(w.priceTao, 6)} τ · vol ${fmt(w.volumeTao24h, 0)} τ/24h${vsMkt != null ? ` · 7d ${vsMkt > 0 ? 'outperforming' : 'underperforming'} market median by ${Math.abs(vsMkt).toFixed(2)} pts` : ''}`}
+                    >
+                      <span className="w-sn">sn{w.netuid}</span> {w.name}{' '}
+                      <span className="w-pct">+{fmt(w.pct7d, 2)}%</span>
+                      {vsMkt != null && (
+                        <span className={`vs-mkt ${vsMktCls}`}>{vsMkt >= 0 ? '+' : ''}{vsMkt.toFixed(1)} vs mkt</span>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
             </div>
-            <div className="watch-chips">
-              {b.subnetsToWatch.map((w) => (
-                <a
-                  key={w.netuid}
-                  className="watch-chip"
-                  href={`https://taostats.io/subnets/${w.netuid}/metagraph`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`sn${w.netuid} ${w.name} · ${fmt(w.priceTao, 6)} τ · vol ${fmt(w.volumeTao24h, 0)} τ/24h`}
-                >
-                  <span className="w-sn">sn{w.netuid}</span> {w.name}{' '}
-                  <span className="w-pct">+{fmt(w.pct7d, 2)}%</span>
-                </a>
-              ))}
+          );
+        })()}
+        {b.subnetsToTrim && b.subnetsToTrim.length > 0 && (() => {
+          const mkt7d = b.marketContext?.median7dPct;
+          return (
+            <div className="trim-strip">
+              <div className="trim-head">
+                <span className="trim-lbl">🩸 Worst held this week</span>
+                <span className="trim-sub">top 7d losers you currently hold — consider trimming{mkt7d != null && ` · vs market 7d ${mkt7d >= 0 ? '+' : ''}${mkt7d.toFixed(2)}%`}</span>
+              </div>
+              <div className="trim-chips">
+                {b.subnetsToTrim.map((t) => {
+                  const vsMkt = mkt7d != null ? t.pct7d - mkt7d : null;
+                  // For trim chips a NEGATIVE vs-mkt means "bleeding worse than
+                  // the market" — still red, the colour-by-sign logic is the
+                  // same as watch (vs-mkt-up = green) but the read is "your
+                  // pain is subnet-specific, not market-wide" when red.
+                  const vsMktCls = vsMkt == null ? '' : vsMkt > 0 ? 'vs-mkt-up' : vsMkt < 0 ? 'vs-mkt-down' : '';
+                  return (
+                    <a
+                      key={t.netuid}
+                      className="trim-chip"
+                      href={`https://taostats.io/subnets/${t.netuid}/metagraph`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`sn${t.netuid} ${t.name} · ${fmt(t.valueTao, 3)} τ${
+                        t.pctOfPortfolio != null
+                          ? ` (${fmt(t.pctOfPortfolio, 1)}% of port)`
+                          : ''
+                      } · price ${fmt(t.priceTao, 6)} τ${vsMkt != null ? ` · 7d ${vsMkt < 0 ? 'underperforming' : 'outperforming'} market median by ${Math.abs(vsMkt).toFixed(2)} pts (${vsMkt < 0 ? 'subnet-specific bleed' : 'market-wide weakness'})` : ''}`}
+                    >
+                      <span className="t-sn">sn{t.netuid}</span> {t.name}{' '}
+                      <span className="t-pct">{fmt(t.pct7d, 2)}%</span>
+                      {vsMkt != null && (
+                        <span className={`vs-mkt ${vsMktCls}`}>{vsMkt >= 0 ? '+' : ''}{vsMkt.toFixed(1)} vs mkt</span>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-        {b.subnetsToTrim && b.subnetsToTrim.length > 0 && (
-          <div className="trim-strip">
-            <div className="trim-head">
-              <span className="trim-lbl">🩸 Worst held this week</span>
-              <span className="trim-sub">top 7d losers you currently hold — consider trimming</span>
-            </div>
-            <div className="trim-chips">
-              {b.subnetsToTrim.map((t) => (
-                <a
-                  key={t.netuid}
-                  className="trim-chip"
-                  href={`https://taostats.io/subnets/${t.netuid}/metagraph`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`sn${t.netuid} ${t.name} · ${fmt(t.valueTao, 3)} τ${
-                    t.pctOfPortfolio != null
-                      ? ` (${fmt(t.pctOfPortfolio, 1)}% of port)`
-                      : ''
-                  } · price ${fmt(t.priceTao, 6)} τ`}
-                >
-                  <span className="t-sn">sn{t.netuid}</span> {t.name}{' '}
-                  <span className="t-pct">{fmt(t.pct7d, 2)}%</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </Section>
     </div>
   );
