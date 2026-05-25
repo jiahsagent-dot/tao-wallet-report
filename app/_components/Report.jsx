@@ -197,6 +197,31 @@ function buildYieldCsv(perPosition) {
   return lines.join('\r\n') + '\r\n';
 }
 
+// §4 PnL attribution CSV — full per-subnet table including the new 7d
+// price-trend chip data. All rows, not just the on-screen top-5/bottom-3,
+// so the spreadsheet user gets the complete picture for sort/filter.
+function buildPnlAttribCsv(perSubnet) {
+  const header = [
+    'Netuid', 'Subnet', 'α value now (τ)', 'Spent (τ)', 'Sold (τ)', 'PnL (τ)', '7d α price %',
+  ];
+  const lines = [header.map(csvEscape).join(',')];
+  perSubnet
+    .slice()
+    .sort((a, b) => (b.pnlTao || 0) - (a.pnlTao || 0))
+    .forEach((s) => {
+      lines.push([
+        s.netuid,
+        s.name || `Subnet ${s.netuid}`,
+        s.currentTao != null ? Number(s.currentTao).toFixed(6) : '',
+        s.spentTao != null ? Number(s.spentTao).toFixed(6) : '',
+        s.soldTao != null ? Number(s.soldTao).toFixed(6) : '',
+        s.pnlTao != null ? Number(s.pnlTao).toFixed(6) : '',
+        s.pct7d != null ? Number(s.pct7d).toFixed(2) : '',
+      ].map(csvEscape).join(','));
+    });
+  return lines.join('\r\n') + '\r\n';
+}
+
 function buildTaxYearCsv(buckets) {
   const header = ['FY', 'Window', 'Start bal (τ)', 'End bal (τ)', 'In (τ)', 'Out (τ)', 'PnL τ', 'Return %', 'A$'];
   const lines = [header.map(csvEscape).join(',')];
@@ -1029,7 +1054,15 @@ export default function Report({ data, showSubscribeNudge = true }) {
 
         {Array.isArray(pnl.perSubnet) && pnl.perSubnet.length > 0 && (
           <>
-            <h3 className="sub-h">Per-subnet PnL attribution</h3>
+            <div className="pnl-attrib-head">
+              <h3 className="sub-h">Per-subnet PnL attribution</h3>
+              <CopyCsvButton
+                getCsv={() => buildPnlAttribCsv(pnl.perSubnet)}
+                coldkey={data.coldkey}
+                filenamePrefix="pnl-attribution"
+                ariaLabel="Copy per-subnet PnL attribution as CSV"
+              />
+            </div>
             <table className="pnl-attrib-table">
               <thead>
                 <tr>

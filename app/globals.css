@@ -834,7 +834,8 @@ a:hover { text-decoration: underline; }
 }
 .tax-year-head,
 .yield-head,
-.drawdown-head {
+.drawdown-head,
+.pnl-attrib-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -842,12 +843,14 @@ a:hover { text-decoration: underline; }
   margin-bottom: 8px;
 }
 .tax-year-head .sub-h,
-.yield-head .sub-h {
+.yield-head .sub-h,
+.pnl-attrib-head .sub-h {
   margin-bottom: 0;
 }
 .tax-year-head .csv-toolbar,
 .yield-head .csv-toolbar,
-.drawdown-head .csv-toolbar {
+.drawdown-head .csv-toolbar,
+.pnl-attrib-head .csv-toolbar {
   margin: 0;
 }
 .drawdown-head .dd-head-title {
