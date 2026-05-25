@@ -1071,6 +1071,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 <div className="dd-sub">{vol.positiveDayCount}/{vol.returnsCount} sessions</div>
               </div>
             </div>
+            {vol.returnsSparkline30d && vol.returnsSparkline30d.str && (
+              <div
+                className="sparkline-row"
+                title={`Last ${vol.returnsSparkline30d.points} daily returns (${formatShortDate(vol.returnsSparkline30d.firstDate)} → ${formatShortDate(vol.returnsSparkline30d.lastDate)}). Worst ${(vol.returnsSparkline30d.minPct * 100).toFixed(2)}% · Best ${(vol.returnsSparkline30d.maxPct * 100).toFixed(2)}%. Symmetric around zero — mid block = flat day, taller = positive return, shorter = negative.`}
+              >
+                <span className="sparkline-lbl">30d ret</span>
+                <span className="sparkline">{vol.returnsSparkline30d.str}</span>
+                <span className="sparkline-meta">
+                  {(vol.returnsSparkline30d.minPct * 100).toFixed(1)}% / +{(vol.returnsSparkline30d.maxPct * 100).toFixed(1)}%
+                </span>
+              </div>
+            )}
             {Array.isArray(vol.volSeries) && vol.volSeries.length >= 7 && (
               <div className="vol-trend">
                 <div className="vol-trend-lbl">30d rolling annualised σ</div>
