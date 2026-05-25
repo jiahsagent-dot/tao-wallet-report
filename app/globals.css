@@ -2545,3 +2545,18 @@ pre.copy-block-body {
   color: var(--red);
   border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line));
 }
+
+.trend-hint-chip {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
+  opacity: 0.85;
+  cursor: help;
+  filter: grayscale(0.1);
+}
+.trend-hint-chip:hover {
+  opacity: 1;
+  filter: none;
+}

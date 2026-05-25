@@ -722,6 +722,39 @@ export default function Report({ data, showSubscribeNudge = true }) {
                         <td className={`num heat ${cls(pos.pct7d)}`} style={heatBg(pos.pct7d, maxAbs7d, rgb7d)}>
                           {fmtPct(pos.pct7d)}
                           {(() => {
+                            // Day-vs-week trend hint — mirrors the iter 92 movers
+                            // tooltip logic but as a visible per-row emoji so the
+                            // §1 table tells the same shape story at a glance:
+                            //   📈 week-long rally   (both green)
+                            //   📉 week-long bleed   (both red)
+                            //   ↩️ bounce off weekly low (red 7d, green 24h)
+                            //   🔻 pullback in uptrend   (green 7d, red 24h)
+                            if (pos.pct1d == null || pos.pct7d == null) return null;
+                            if (!Number.isFinite(pos.pct1d) || !Number.isFinite(pos.pct7d)) return null;
+                            // Soft-omit near-zero either side — chip would be noise.
+                            if (Math.abs(pos.pct1d) < 0.1 || Math.abs(pos.pct7d) < 0.1) return null;
+                            const sameSign =
+                              (pos.pct1d > 0 && pos.pct7d > 0) ||
+                              (pos.pct1d < 0 && pos.pct7d < 0);
+                            const oppSign =
+                              (pos.pct1d > 0 && pos.pct7d < 0) ||
+                              (pos.pct1d < 0 && pos.pct7d > 0);
+                            let emoji = null, label = null;
+                            if (sameSign && pos.pct7d > 0) { emoji = '📈'; label = 'week-long rally'; }
+                            else if (sameSign && pos.pct7d < 0) { emoji = '📉'; label = 'week-long bleed'; }
+                            else if (oppSign && pos.pct1d > 0) { emoji = '↩️'; label = 'bounce off weekly low'; }
+                            else if (oppSign && pos.pct1d < 0) { emoji = '🔻'; label = 'pullback in uptrend'; }
+                            if (!emoji) return null;
+                            return (
+                              <span
+                                className="trend-hint-chip"
+                                title={`Day shape vs week shape on sn${pos.netuid}: ${label} (24h ${pos.pct1d >= 0 ? '+' : ''}${pos.pct1d.toFixed(2)}% / 7d ${pos.pct7d >= 0 ? '+' : ''}${pos.pct7d.toFixed(2)}%).`}
+                              >
+                                {' '}{emoji}
+                              </span>
+                            );
+                          })()}
+                          {(() => {
                             if (pos.pct7d == null || !Number.isFinite(pos.pct7d)) return null;
                             if (!(pos.taoValue > 0)) return null;
                             const denom = 1 + pos.pct7d / 100;
