@@ -2697,3 +2697,48 @@ pre.copy-block-body {
   border-left: 1px solid var(--line);
   opacity: 0.75;
 }
+
+.pnl-apy-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.pnl-apy-chip.pnl-apy-up {
+  background: color-mix(in srgb, var(--green) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--green) 30%, var(--line));
+}
+.pnl-apy-chip.pnl-apy-down {
+  background: color-mix(in srgb, var(--red) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--red) 30%, var(--line));
+}
+.pnl-apy-chip.pnl-apy-flat {
+  background: color-mix(in srgb, var(--muted) 8%, var(--bg));
+  border-color: color-mix(in srgb, var(--muted) 28%, var(--line));
+}
+.pnl-apy-chip .pnl-apy-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pnl-apy-chip .pnl-apy-val {
+  font-weight: 700;
+  color: var(--fg);
+}
+.pnl-apy-chip.pnl-apy-up .pnl-apy-val { color: var(--green); }
+.pnl-apy-chip.pnl-apy-down .pnl-apy-val { color: var(--red); }
+.pnl-apy-chip .pnl-apy-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}

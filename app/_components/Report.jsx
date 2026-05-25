@@ -898,6 +898,40 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 );
               })()}
               {(() => {
+                // Annualised return chip — normalises the windowed return so
+                // a 0.98% over 30d (12.4% annualised) doesn't read like a
+                // 0.98% over 365d (already annual). Compound formula:
+                // (1 + ret)^(365/days) − 1. Soft-omits below 14 days only —
+                // compounding tiny windows produces nonsense extremes (e.g.
+                // +5% over 3d ≈ +400% annualised). At exactly 365d the chip
+                // collapses to the same number as the raw return; that's
+                // honest, not noise, so we render it with an "= raw" sub.
+                const ret = Number(gt.returnPct);
+                const days = Number(gt.windowDays);
+                if (!Number.isFinite(ret) || !(days >= 14)) return null;
+                const annual = Math.pow(1 + ret, 365 / days) - 1;
+                if (!Number.isFinite(annual)) return null;
+                const annualPct = annual * 100;
+                const rawPct = ret * 100;
+                const sign = annualPct >= 0 ? '+' : '';
+                const tone = annualPct > 0.5 ? 'up' : annualPct < -0.5 ? 'down' : 'flat';
+                const sameAsRaw = Math.abs(annualPct - rawPct) < 0.01;
+                return (
+                  <div
+                    className={`pnl-apy-chip pnl-apy-${tone}`}
+                    title={`Compound-annualised equivalent: (1 + ${rawPct.toFixed(4)}%)^(365 / ${days}) − 1 = ${sign}${annualPct.toFixed(2)}%. Lets different report windows compare on the same footing (e.g. a 30-day +1% becomes ~12% annualised, very different from a 365-day +1%). Soft-omitted on <14d windows.`}
+                  >
+                    <span className="pnl-apy-lbl">≈ Annualised</span>
+                    <span className="pnl-apy-val">{sign}{annualPct.toFixed(2)}%</span>
+                    <span className="pnl-apy-sub">
+                      {sameAsRaw
+                        ? `= raw over ${days}d (already annual)`
+                        : `vs raw ${rawPct >= 0 ? '+' : ''}${rawPct.toFixed(2)}% over ${days}d`}
+                    </span>
+                  </div>
+                );
+              })()}
+              {(() => {
                 // Base-vs-current strip — surfaces the τ start and end the
                 // status pill (iter 97) only mentioned in its tooltip. Without
                 // these numbers a "+0.98%" return is ambiguous: profit on what
