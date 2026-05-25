@@ -1611,27 +1611,65 @@ export default function Report({ data, showSubscribeNudge = true }) {
         </div>
         {b.marketContext && (() => {
           const mc = b.marketContext;
-          const medPctCls = mc.median24hPct == null ? '' : mc.median24hPct > 0 ? 'mc-up' : mc.median24hPct < 0 ? 'mc-down' : '';
-          const breadthCls = mc.breadth == null ? '' : mc.breadth > 55 ? 'mc-up' : mc.breadth < 45 ? 'mc-down' : '';
-          const breadthLbl = mc.breadth == null ? '—' : mc.breadth > 55 ? 'risk-on' : mc.breadth < 45 ? 'risk-off' : 'mixed';
+          const pc = b.portfolioContext;
+          const pctCls = (v) => v == null ? '' : v > 0 ? 'mc-up' : v < 0 ? 'mc-down' : '';
+          const breadthCls = (b) => b == null ? '' : b > 55 ? 'mc-up' : b < 45 ? 'mc-down' : '';
+          const breadthLbl = (b) => b == null ? '—' : b > 55 ? 'risk-on' : b < 45 ? 'risk-off' : 'mixed';
+          const fmtPctSigned = (v) => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+          // Comparison hint: market median vs portfolio median 24h. Lets the
+          // tooltip on the "You" row say "leaning with the market" or "bucking
+          // the trend" without making the reader subtract two numbers.
+          const leanLabel = (() => {
+            if (!pc || mc.median24hPct == null || pc.median24hPct == null) return null;
+            const diff = pc.median24hPct - mc.median24hPct;
+            if (Math.abs(diff) < 0.1) return 'in line with market';
+            return `${diff > 0 ? 'outperforming' : 'underperforming'} market by ${Math.abs(diff).toFixed(2)} pts`;
+          })();
           return (
-            <div className="market-context-strip" title={`Market snapshot across ${mc.tradeableCount} tradeable subnets (>1τ daily volume). ${mc.greenCount} up vs ${mc.redCount} down on 24h. Median centres the typical subnet day — frames whether any single pct figure below is unusual or routine.`}>
-              <div className="mc-cell">
-                <div className="mc-lbl">Tradeable</div>
-                <div className="mc-val">{mc.tradeableCount}<span className="mc-sub">/ {mc.totalActive}</span></div>
+            <div className="market-context-block">
+              <div className="market-context-strip mc-row-market" title={`Market snapshot across ${mc.tradeableCount} tradeable subnets (>1τ daily volume). ${mc.greenCount} up vs ${mc.redCount} down on 24h. Median centres the typical subnet day — frames whether any single pct figure below is unusual or routine.`}>
+                <div className="mc-rowlbl">Market</div>
+                <div className="mc-cell">
+                  <div className="mc-lbl">Tradeable</div>
+                  <div className="mc-val">{mc.tradeableCount}<span className="mc-sub">/ {mc.totalActive}</span></div>
+                </div>
+                <div className="mc-cell">
+                  <div className="mc-lbl">Median 24h</div>
+                  <div className={`mc-val ${pctCls(mc.median24hPct)}`}>{fmtPctSigned(mc.median24hPct)}</div>
+                </div>
+                <div className="mc-cell">
+                  <div className="mc-lbl">Median 24h vol</div>
+                  <div className="mc-val">{mc.median24hVolumeTao == null ? '—' : `${fmt(mc.median24hVolumeTao, 0)} τ`}</div>
+                </div>
+                <div className="mc-cell">
+                  <div className="mc-lbl">Breadth</div>
+                  <div className={`mc-val ${breadthCls(mc.breadth)}`}>{mc.greenCount}↑ {mc.redCount}↓<span className="mc-sub"> · {breadthLbl(mc.breadth)}</span></div>
+                </div>
               </div>
-              <div className="mc-cell">
-                <div className="mc-lbl">Median 24h</div>
-                <div className={`mc-val ${medPctCls}`}>{mc.median24hPct == null ? '—' : `${mc.median24hPct >= 0 ? '+' : ''}${mc.median24hPct.toFixed(2)}%`}</div>
-              </div>
-              <div className="mc-cell">
-                <div className="mc-lbl">Median 24h vol</div>
-                <div className="mc-val">{mc.median24hVolumeTao == null ? '—' : `${fmt(mc.median24hVolumeTao, 0)} τ`}</div>
-              </div>
-              <div className="mc-cell">
-                <div className="mc-lbl">Breadth</div>
-                <div className={`mc-val ${breadthCls}`}>{mc.greenCount}↑ {mc.redCount}↓<span className="mc-sub"> · {breadthLbl}</span></div>
-              </div>
+              {pc && (
+                <div className="market-context-strip mc-row-portfolio" title={`Same 4 metrics over YOUR ${pc.positionCount} positions (${pc.coveredCount} with 24h price data). ${pc.greenCount} up vs ${pc.redCount} down today.${leanLabel ? ` You are ${leanLabel}.` : ''}`}>
+                  <div className="mc-rowlbl mc-rowlbl-you">Your holdings</div>
+                  <div className="mc-cell">
+                    <div className="mc-lbl">Positions</div>
+                    <div className="mc-val">{pc.positionCount}{pc.coveredCount < pc.positionCount && <span className="mc-sub">/ {pc.coveredCount} priced</span>}</div>
+                  </div>
+                  <div className="mc-cell">
+                    <div className="mc-lbl">Median 24h</div>
+                    <div className={`mc-val ${pctCls(pc.median24hPct)}`}>
+                      {fmtPctSigned(pc.median24hPct)}
+                      {leanLabel && <span className="mc-sub mc-lean"> · {leanLabel.startsWith('out') ? '↗ outperf' : leanLabel.startsWith('under') ? '↘ underperf' : '= in line'}</span>}
+                    </div>
+                  </div>
+                  <div className="mc-cell">
+                    <div className="mc-lbl">Median pos τ</div>
+                    <div className="mc-val">{pc.medianPositionValueTao == null ? '—' : `${fmt(pc.medianPositionValueTao, 3)} τ`}</div>
+                  </div>
+                  <div className="mc-cell">
+                    <div className="mc-lbl">Breadth</div>
+                    <div className={`mc-val ${breadthCls(pc.breadth)}`}>{pc.greenCount}↑ {pc.redCount}↓<span className="mc-sub"> · {breadthLbl(pc.breadth)}</span></div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

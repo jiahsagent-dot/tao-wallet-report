@@ -2452,16 +2452,42 @@ pre.copy-block-body {
   border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line));
 }
 
+.market-context-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 14px;
+}
 .market-context-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 110px repeat(4, 1fr);
   gap: 8px;
-  margin: 10px 0 14px;
+  align-items: center;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--accent) 4%, var(--bg));
   cursor: help;
+}
+.market-context-strip.mc-row-portfolio {
+  background: color-mix(in srgb, var(--green) 4%, var(--bg));
+  border-color: color-mix(in srgb, var(--green) 22%, var(--line));
+}
+.market-context-strip .mc-rowlbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--muted);
+  padding-right: 8px;
+  border-right: 1px solid var(--line);
+}
+.market-context-strip .mc-rowlbl-you {
+  color: var(--green);
+  border-right-color: color-mix(in srgb, var(--green) 30%, var(--line));
+}
+.market-context-strip .mc-lean {
+  font-style: italic;
 }
 .market-context-strip .mc-cell {
   display: flex;
@@ -2494,5 +2520,6 @@ pre.copy-block-body {
   margin-left: 4px;
 }
 @media (max-width: 640px) {
-  .market-context-strip { grid-template-columns: repeat(2, 1fr); }
+  .market-context-strip { grid-template-columns: 1fr 1fr; }
+  .market-context-strip .mc-rowlbl { grid-column: 1 / -1; border-right: none; border-bottom: 1px solid var(--line); padding: 0 0 4px; }
 }
