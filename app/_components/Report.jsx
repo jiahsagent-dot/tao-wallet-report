@@ -1682,6 +1682,10 @@ export default function Report({ data, showSubscribeNudge = true }) {
         <h3 className="sub-h">Biggest 24h movers</h3>
         {(() => {
           const moversMaxAbs1d = Math.max(...b.topMovers24h.map((x) => Math.abs(x.pct1d || 0)), 0);
+          // 7d heat normalised over THIS table's 7d values only — keeps the
+          // colour gradient internally calibrated (the 7d movers table below
+          // has its own — a 50% week in here may colour mid, not extreme).
+          const moversMaxAbs7d = Math.max(...b.topMovers24h.map((x) => Math.abs(x.pct7d || 0)), 0);
           const moversMaxVol = Math.max(...b.topMovers24h.map((x) => x.volumeTao24h || 0), 0);
           return (
             <div className="tbl-scroll">
@@ -1692,14 +1696,29 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     <th>Subnet</th>
                     <th className="num">Price (τ)</th>
                     <th className="num">24h</th>
+                    <th className="num">7d</th>
                     <th className="num">Volume (τ)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {b.topMovers24h.map((m) => {
-                    const rgb = (m.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                    const rgb1 = (m.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                    const rgb7 = (m.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                    // Day-vs-week narrative hint: green 24h + red 7d = bounce
+                    // off weekly low, red 24h + green 7d = pullback in uptrend,
+                    // same sign = trend continuation. Cheap text annotation
+                    // surfaces the relationship without another column.
+                    const sameSign = m.pct7d != null &&
+                      ((m.pct1d > 0 && m.pct7d > 0) || (m.pct1d < 0 && m.pct7d < 0));
+                    const oppSign = m.pct7d != null &&
+                      ((m.pct1d > 0 && m.pct7d < 0) || (m.pct1d < 0 && m.pct7d > 0));
+                    const trendHint = sameSign
+                      ? (m.pct1d > 0 ? 'week-long rally' : 'week-long bleed')
+                      : oppSign
+                        ? (m.pct1d > 0 ? 'bounce off weekly low' : 'pullback in uptrend')
+                        : null;
                     return (
-                      <tr key={m.netuid}>
+                      <tr key={m.netuid} title={trendHint ? `Day shape vs week shape: ${trendHint}.` : undefined}>
                         <td>{m.netuid}</td>
                         <td>
                           <SubnetLink
@@ -1710,7 +1729,8 @@ export default function Report({ data, showSubscribeNudge = true }) {
                           />
                         </td>
                         <td className="num">{fmt(m.priceTao, 6)}</td>
-                        <td className={`num heat ${cls(m.pct1d)}`} style={heatBg(m.pct1d, moversMaxAbs1d, rgb)}>{fmtPct(m.pct1d)}</td>
+                        <td className={`num heat ${cls(m.pct1d)}`} style={heatBg(m.pct1d, moversMaxAbs1d, rgb1)}>{fmtPct(m.pct1d)}</td>
+                        <td className={`num heat ${cls(m.pct7d)}`} style={heatBg(m.pct7d, moversMaxAbs7d, rgb7)}>{m.pct7d == null ? '—' : fmtPct(m.pct7d)}</td>
                         <td className="num heat" style={heatBg(m.volumeTao24h, moversMaxVol, HEAT_ORANGE)}>{fmt(m.volumeTao24h, 0)}</td>
                       </tr>
                     );
@@ -1741,8 +1761,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     {b.topMovers7d.map((m) => {
                       const rgb7 = (m.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                       const rgb1 = (m.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                      // Symmetric to the 24h table: day-vs-week narrative hint
+                      // surfaces trend continuation / bounce / pullback.
+                      const sameSign = m.pct1d != null &&
+                        ((m.pct1d > 0 && m.pct7d > 0) || (m.pct1d < 0 && m.pct7d < 0));
+                      const oppSign = m.pct1d != null &&
+                        ((m.pct1d > 0 && m.pct7d < 0) || (m.pct1d < 0 && m.pct7d > 0));
+                      const trendHint = sameSign
+                        ? (m.pct7d > 0 ? 'week-long rally' : 'week-long bleed')
+                        : oppSign
+                          ? (m.pct7d > 0 ? 'pullback in uptrend' : 'bounce off weekly low')
+                          : null;
                       return (
-                        <tr key={m.netuid}>
+                        <tr key={m.netuid} title={trendHint ? `Day shape vs week shape: ${trendHint}.` : undefined}>
                           <td>{m.netuid}</td>
                           <td>
                             <SubnetLink
