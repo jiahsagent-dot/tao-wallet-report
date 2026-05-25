@@ -871,6 +871,32 @@ export default function Report({ data, showSubscribeNudge = true }) {
               <div className="pnl-window">
                 Over last {gt.windowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
               </div>
+              {(() => {
+                // Status pill — companion to the §1 portfolio-trend-hint but
+                // anchored on cumulative window PnL rather than 24h/7d delta.
+                // Break-even threshold ±0.5% so a fractional drift doesn't
+                // flip the label on a wallet sitting right at cost basis.
+                const pctNum = Number(gt.returnPct) * 100;
+                if (!Number.isFinite(pctNum)) return null;
+                let kind, emoji, label;
+                if (Math.abs(pctNum) < 0.5) { kind = 'flat'; emoji = '🟰'; label = 'Break-even'; }
+                else if (pctNum > 0) { kind = 'up'; emoji = '📈'; label = 'In profit'; }
+                else { kind = 'down'; emoji = '📉'; label = 'In drawdown'; }
+                const sinceTao = gt.startingBalanceTao + gt.transferInTao - gt.transferOutTao;
+                const profitTaoSign = gt.profitTao >= 0 ? '+' : '';
+                return (
+                  <div
+                    className={`pnl-status-chip pnl-status-${kind}`}
+                    title={`Wallet is ${label.toLowerCase()} over the ${gt.windowDays}-day window. Net contributed base ${sinceTao.toFixed(3)} τ (start + transfers in − transfers out) → current ${gt.currentPortfolioTao.toFixed(3)} τ → ${profitTaoSign}${gt.profitTao.toFixed(3)} τ (${pctNum >= 0 ? '+' : ''}${pctNum.toFixed(2)}%). Break-even band ±0.5% absorbs fractional drift on flat wallets.`}
+                  >
+                    <span className="pnl-status-emoji">{emoji}</span>
+                    <span className="pnl-status-label">{label}</span>
+                    <span className="pnl-status-detail">
+                      {pctNum >= 0 ? '+' : ''}{pctNum.toFixed(2)}% over {gt.windowDays}d
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">

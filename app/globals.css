@@ -2618,3 +2618,44 @@ pre.copy-block-body {
   color: var(--red);
   border-color: color-mix(in srgb, var(--red) 38%, var(--line));
 }
+
+.pnl-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+.pnl-status-chip.pnl-status-up {
+  background: color-mix(in srgb, var(--green) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--green) 30%, var(--line));
+}
+.pnl-status-chip.pnl-status-down {
+  background: color-mix(in srgb, var(--red) 6%, var(--bg));
+  border-color: color-mix(in srgb, var(--red) 30%, var(--line));
+}
+.pnl-status-chip.pnl-status-flat {
+  background: color-mix(in srgb, var(--muted) 8%, var(--bg));
+  border-color: color-mix(in srgb, var(--muted) 28%, var(--line));
+}
+.pnl-status-chip .pnl-status-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+.pnl-status-chip .pnl-status-label {
+  font-weight: 600;
+  color: var(--fg);
+}
+.pnl-status-chip.pnl-status-up .pnl-status-label { color: var(--green); }
+.pnl-status-chip.pnl-status-down .pnl-status-label { color: var(--red); }
+.pnl-status-chip.pnl-status-flat .pnl-status-label { color: var(--muted); }
+.pnl-status-chip .pnl-status-detail {
+  color: var(--muted);
+  font-size: 12px;
+}
