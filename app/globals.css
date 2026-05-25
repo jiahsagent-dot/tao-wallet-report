@@ -657,11 +657,16 @@ a:hover { text-decoration: underline; }
 @media (max-width: 560px) {
   .bw-day-strip { grid-template-columns: 1fr; }
 }
+.d24-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
 .d24-strip {
   display: inline-flex;
   align-items: baseline;
   gap: 8px;
-  margin: 10px 0 12px;
   padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--line);

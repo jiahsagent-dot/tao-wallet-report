@@ -432,21 +432,32 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="AUD" value={`A$${fmt(p.totalAud)}`} />
           <Stat label="Positions" value={p.positionCount} />
         </div>
-        {p.delta24h && (
-          <div className={`d24-strip ${p.delta24h.deltaTao >= 0 ? 'd24-pos' : 'd24-neg'}`} title={`24h Δ: ${p.delta24h.priorTao.toFixed(4)} τ → ${p.delta24h.currentTao.toFixed(4)} τ (snapshot ${formatShortDate(p.delta24h.priorDate)} → ${formatShortDate(p.delta24h.currentDate)})`}>
-            <span className="d24-arrow">{p.delta24h.deltaTao >= 0 ? '▲' : '▼'}</span>
-            <span className="d24-lbl">24h</span>
-            <span className="d24-tao">
-              {p.delta24h.deltaTao >= 0 ? '+' : ''}{fmt(p.delta24h.deltaTao, 4)} τ
-            </span>
-            <span className="d24-pct">
-              ({p.delta24h.deltaTao >= 0 ? '+' : ''}{fmt(p.delta24h.deltaPct * 100, 2)}%)
-            </span>
-            <span className="d24-fiat">
-              {p.delta24h.deltaUsd >= 0 ? '+' : '−'}${fmt(Math.abs(p.delta24h.deltaUsd), 2)}
-              {' · '}
-              {p.delta24h.deltaAud >= 0 ? '+' : '−'}A${fmt(Math.abs(p.delta24h.deltaAud), 2)}
-            </span>
+        {(p.delta24h || p.delta7d) && (
+          <div className="d24-row">
+            {[
+              { d: p.delta24h, lbl: '24h', titlePrefix: '24h Δ' },
+              { d: p.delta7d, lbl: '7d', titlePrefix: '7d Δ' },
+            ].filter((x) => x.d).map(({ d, lbl, titlePrefix }) => (
+              <div
+                key={lbl}
+                className={`d24-strip ${d.deltaTao >= 0 ? 'd24-pos' : 'd24-neg'}`}
+                title={`${titlePrefix}: ${d.priorTao.toFixed(4)} τ → ${d.currentTao.toFixed(4)} τ (snapshot ${formatShortDate(d.priorDate)} → ${formatShortDate(d.currentDate)})`}
+              >
+                <span className="d24-arrow">{d.deltaTao >= 0 ? '▲' : '▼'}</span>
+                <span className="d24-lbl">{lbl}</span>
+                <span className="d24-tao">
+                  {d.deltaTao >= 0 ? '+' : ''}{fmt(d.deltaTao, 4)} τ
+                </span>
+                <span className="d24-pct">
+                  ({d.deltaTao >= 0 ? '+' : ''}{fmt(d.deltaPct * 100, 2)}%)
+                </span>
+                <span className="d24-fiat">
+                  {d.deltaUsd >= 0 ? '+' : '−'}${fmt(Math.abs(d.deltaUsd), 2)}
+                  {' · '}
+                  {d.deltaAud >= 0 ? '+' : '−'}A${fmt(Math.abs(d.deltaAud), 2)}
+                </span>
+              </div>
+            ))}
           </div>
         )}
         {p.top10.length > 0 ? (() => {
