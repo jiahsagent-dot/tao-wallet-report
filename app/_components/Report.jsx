@@ -727,6 +727,57 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     )}
                   </div>
                 </div>
+                {(() => {
+                  const peak = Number(dd.maxDrawdownPeakTao);
+                  const trough = Number(dd.maxDrawdownTroughTao);
+                  const cur = Number(dd.currentTao);
+                  if (!(peak > 0) || !(trough >= 0) || !(cur >= 0) || !(peak > trough)) {
+                    return null;
+                  }
+                  const span = peak - trough;
+                  const rawProgress = (cur - trough) / span;
+                  const recovered = cur >= peak;
+                  const beyondPct = recovered ? ((cur - peak) / peak) * 100 : 0;
+                  const fillPct = recovered
+                    ? 100
+                    : Math.max(0, Math.min(100, rawProgress * 100));
+                  const tier = recovered
+                    ? 'full'
+                    : fillPct >= 75
+                    ? 'high'
+                    : fillPct >= 40
+                    ? 'mid'
+                    : 'low';
+                  const centerLabel = recovered
+                    ? beyondPct > 1
+                      ? `Fully recovered · +${beyondPct.toFixed(1)}% beyond peak`
+                      : 'Fully recovered'
+                    : `${fillPct.toFixed(0)}% recovered from trough`;
+                  return (
+                    <div
+                      className={`dd-recovery dd-rec-${tier}`}
+                      title={`Trough ${fmt(trough, 4)} τ → Current ${fmt(cur, 4)} τ → Peak ${fmt(peak, 4)} τ. ${recovered ? 'Balance has reclaimed (and exceeded) the pre-drawdown peak.' : `Climbed ${fmt(cur - trough, 4)} τ of the ${fmt(span, 4)} τ peak-to-trough gap.`}`}
+                    >
+                      <div className="dd-rec-track">
+                        <div
+                          className="dd-rec-fill"
+                          style={{ width: `${fillPct}%` }}
+                        />
+                      </div>
+                      <div className="dd-rec-axis">
+                        <span className="dd-rec-left">
+                          <span className="dd-rec-tic">▼</span>{' '}
+                          Trough <strong>{fmt(trough, 2)} τ</strong>
+                        </span>
+                        <span className="dd-rec-center">{centerLabel}</span>
+                        <span className="dd-rec-right">
+                          Peak <strong>{fmt(peak, 2)} τ</strong>{' '}
+                          <span className="dd-rec-tic">▲</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <p className="hint">
                   Drawdown stats from {dd.pointCount} daily balance snapshots
                   ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).

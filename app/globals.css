@@ -520,6 +520,78 @@ a:hover { text-decoration: underline; }
   color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
+.dd-recovery {
+  margin: 18px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: help;
+}
+.dd-rec-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.dd-rec-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.dd-rec-low .dd-rec-fill {
+  background: color-mix(in srgb, var(--red) 75%, var(--accent));
+}
+.dd-rec-mid .dd-rec-fill {
+  background: var(--accent);
+}
+.dd-rec-high .dd-rec-fill {
+  background: color-mix(in srgb, var(--green) 55%, var(--accent));
+}
+.dd-rec-full .dd-rec-fill {
+  background: var(--green);
+}
+.dd-rec-axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.dd-rec-left,
+.dd-rec-right {
+  white-space: nowrap;
+}
+.dd-rec-left strong,
+.dd-rec-right strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.dd-rec-center {
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex: 1 1 auto;
+}
+.dd-rec-low .dd-rec-center { color: var(--red); }
+.dd-rec-mid .dd-rec-center { color: var(--accent); }
+.dd-rec-high .dd-rec-center { color: color-mix(in srgb, var(--green) 65%, var(--accent)); }
+.dd-rec-full .dd-rec-center { color: var(--green); }
+.dd-rec-tic {
+  font-size: 9px;
+  opacity: 0.65;
+}
+@media (max-width: 560px) {
+  .dd-rec-axis {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .dd-rec-center { order: 3; width: 100%; text-align: center; }
+}
 .drawdown-panel .hint,
 .vol-panel .hint {
   margin-top: 10px;
