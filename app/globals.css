@@ -337,6 +337,58 @@ a:hover { text-decoration: underline; }
 .trim-chip .t-sn { font-weight: 600; opacity: 0.7; font-size: 11px; }
 .trim-chip .t-pct { font-weight: 700; }
 
+.top-apy-strip {
+  margin: 14px 0 4px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.top-apy-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.top-apy-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.top-apy-sub {
+  font-size: 11px;
+  color: var(--dim);
+}
+.top-apy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.top-apy-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.top-apy-chip:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+.top-apy-chip .a-sn { font-weight: 600; opacity: 0.7; font-size: 11px; }
+.top-apy-chip .a-apy { font-weight: 700; }
+.top-apy-chip .a-fb { opacity: 0.55; margin-left: 2px; font-size: 11px; }
+
 .tbl-scroll { overflow-x: auto; margin: 0 -4px; }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td {

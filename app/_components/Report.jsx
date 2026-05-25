@@ -1072,6 +1072,54 @@ export default function Report({ data, showSubscribeNudge = true }) {
           </p>
         )}
 
+        {(() => {
+          const candidates = (y.perPosition || [])
+            .filter((p) => p.apy != null && p.apy > 0 && p.alphaTokens > 0)
+            .slice()
+            .sort((a, b) => b.apy - a.apy)
+            .slice(0, 3);
+          if (candidates.length < 2) return null;
+          return (
+            <div className="top-apy-strip">
+              <div className="top-apy-head">
+                <span className="top-apy-lbl">🏆 Top yielders</span>
+                <span className="top-apy-sub">your highest-APY positions — earning most per α held</span>
+              </div>
+              <div className="top-apy-chips">
+                {candidates.map((p) => {
+                  const apyPct = p.apy * 100;
+                  const validatorShort = p.validatorName
+                    ? p.validatorName
+                    : p.hotkey
+                    ? `${p.hotkey.slice(0, 6)}…${p.hotkey.slice(-4)}`
+                    : '—';
+                  const priceTao = Number(p.alphaPriceTao || subnetLookup.get(p.netuid)?.priceTao || 0);
+                  const taoPerYr = p.alphaTokens * priceTao * p.apy;
+                  const titleParts = [
+                    `sn${p.netuid} ${p.subnetName || ''}`.trim(),
+                    `validator: ${validatorShort}`,
+                    `${apyPct.toFixed(2)}% APY${p.apyIsFallback ? ' (subnet median — your validator not in response)' : ''}`,
+                    `${p.alphaTokens.toFixed(2)} α held`,
+                    taoPerYr > 0 ? `≈ ${taoPerYr.toFixed(4)} τ/yr at current price` : null,
+                  ].filter(Boolean);
+                  return (
+                    <a
+                      key={`${p.netuid}-${p.hotkey || p.subnetName || ''}`}
+                      className="top-apy-chip"
+                      href={`https://taostats.io/subnets/${p.netuid}/metagraph`}
+                      title={titleParts.join(' · ')}
+                    >
+                      <span className="a-sn">sn{p.netuid}</span> {p.subnetName || `Subnet ${p.netuid}`}{' '}
+                      <span className="a-apy">{apyPct.toFixed(1)}%</span>
+                      {p.apyIsFallback && <span className="a-fb">~</span>}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {Array.isArray(y.perPosition) && y.perPosition.length > 0 && (
           <>
             <div className="yield-head">
