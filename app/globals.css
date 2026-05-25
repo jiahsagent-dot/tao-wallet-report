@@ -657,6 +657,62 @@ a:hover { text-decoration: underline; }
 @media (max-width: 560px) {
   .bw-day-strip { grid-template-columns: 1fr; }
 }
+.d24-strip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  cursor: help;
+}
+.d24-pos {
+  border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+  background: color-mix(in srgb, var(--green) 5%, var(--card));
+}
+.d24-neg {
+  border-color: color-mix(in srgb, var(--red) 35%, var(--line));
+  background: color-mix(in srgb, var(--red) 5%, var(--card));
+}
+.d24-arrow {
+  font-size: 14px;
+  font-weight: 700;
+}
+.d24-pos .d24-arrow { color: var(--green); }
+.d24-neg .d24-arrow { color: var(--red); }
+.d24-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.d24-tao {
+  font-size: 15px;
+  font-weight: 700;
+}
+.d24-pos .d24-tao { color: var(--green); }
+.d24-neg .d24-tao { color: var(--red); }
+.d24-pct {
+  font-size: 13px;
+  color: var(--dim);
+}
+.d24-fiat {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+@media (max-width: 560px) {
+  .d24-strip {
+    flex-wrap: wrap;
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .d24-fiat { width: 100%; margin-left: 0; }
+}
 .tax-year-table {
   width: 100%;
   font-size: 13px;

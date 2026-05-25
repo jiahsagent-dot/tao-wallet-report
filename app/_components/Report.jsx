@@ -432,6 +432,23 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="AUD" value={`A$${fmt(p.totalAud)}`} />
           <Stat label="Positions" value={p.positionCount} />
         </div>
+        {p.delta24h && (
+          <div className={`d24-strip ${p.delta24h.deltaTao >= 0 ? 'd24-pos' : 'd24-neg'}`} title={`24h Δ: ${p.delta24h.priorTao.toFixed(4)} τ → ${p.delta24h.currentTao.toFixed(4)} τ (snapshot ${formatShortDate(p.delta24h.priorDate)} → ${formatShortDate(p.delta24h.currentDate)})`}>
+            <span className="d24-arrow">{p.delta24h.deltaTao >= 0 ? '▲' : '▼'}</span>
+            <span className="d24-lbl">24h</span>
+            <span className="d24-tao">
+              {p.delta24h.deltaTao >= 0 ? '+' : ''}{fmt(p.delta24h.deltaTao, 4)} τ
+            </span>
+            <span className="d24-pct">
+              ({p.delta24h.deltaTao >= 0 ? '+' : ''}{fmt(p.delta24h.deltaPct * 100, 2)}%)
+            </span>
+            <span className="d24-fiat">
+              {p.delta24h.deltaUsd >= 0 ? '+' : '−'}${fmt(Math.abs(p.delta24h.deltaUsd), 2)}
+              {' · '}
+              {p.delta24h.deltaAud >= 0 ? '+' : '−'}A${fmt(Math.abs(p.delta24h.deltaAud), 2)}
+            </span>
+          </div>
+        )}
         {p.top10.length > 0 ? (() => {
           const maxValue = Math.max(...p.top10.map((x) => x.taoValue || 0));
           const maxPort = Math.max(...p.top10.map((x) => x.pctOfPortfolio || 0));
