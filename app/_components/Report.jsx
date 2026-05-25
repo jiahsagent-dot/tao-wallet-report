@@ -536,16 +536,41 @@ export default function Report({ data, showSubscribeNudge = true }) {
             : th.kind === 'bleed' ? 'th-down'
             : th.kind === 'bounce' ? 'th-up'  // 24h up: net positive nudge
             : 'th-down';                       // pullback: 24h down
+          // Alignment: how many top holdings carry the same shape kind.
+          // ≥70% = broad → green tint (broad move). <40% = narrow → red
+          // tint (aggregate driven by a couple of positions; rest mixed).
+          // 40–70% = neutral, default tint.
+          const al = th.alignment;
+          const alignRatio = al ? al.matches / al.total : null;
+          const alignCls = alignRatio == null
+            ? ''
+            : alignRatio >= 0.7
+              ? 'th-align-broad'
+              : alignRatio < 0.4
+                ? 'th-align-narrow'
+                : '';
+          const alignBlurb = al
+            ? alignRatio >= 0.7
+              ? `broad — ${al.matches} of ${al.total} top holdings share this shape, the move is well-supported across positions`
+              : alignRatio < 0.4
+                ? `narrow — only ${al.matches} of ${al.total} top holdings share this shape, the aggregate is being driven by a small number of positions while the rest are mixed`
+                : `mixed — ${al.matches} of ${al.total} top holdings share this shape`
+            : null;
           return (
             <div
               className={`portfolio-trend-hint ${tone}`}
-              title={`Portfolio day-vs-week shape: ${th.label.toLowerCase()}. 24h ${th.pct24h >= 0 ? '+' : ''}${th.pct24h.toFixed(2)}% / 7d ${th.pct7d >= 0 ? '+' : ''}${th.pct7d.toFixed(2)}% on total τ. Same vocabulary as the per-position chips in the table below — this aggregates across the whole book.`}
+              title={`Portfolio day-vs-week shape: ${th.label.toLowerCase()}. 24h ${th.pct24h >= 0 ? '+' : ''}${th.pct24h.toFixed(2)}% / 7d ${th.pct7d >= 0 ? '+' : ''}${th.pct7d.toFixed(2)}% on total τ.${alignBlurb ? ` Alignment ${alignBlurb}.` : ''} Same vocabulary as the per-position chips in the table below.`}
             >
               <span className="th-emoji">{th.emoji}</span>
               <span className="th-label">{th.label}</span>
               <span className="th-detail">
                 24h {th.pct24h >= 0 ? '+' : ''}{th.pct24h.toFixed(2)}% / 7d {th.pct7d >= 0 ? '+' : ''}{th.pct7d.toFixed(2)}%
               </span>
+              {al && (
+                <span className={`th-alignment ${alignCls}`}>
+                  {al.matches}/{al.total} holdings agree
+                </span>
+              )}
             </div>
           );
         })()}

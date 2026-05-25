@@ -2596,3 +2596,25 @@ pre.copy-block-body {
   color: var(--muted);
   font-size: 12px;
 }
+
+.portfolio-trend-hint .th-alignment {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--muted) 12%, var(--bg));
+  color: var(--muted);
+  border: 1px solid color-mix(in srgb, var(--muted) 30%, var(--line));
+}
+.portfolio-trend-hint .th-alignment.th-align-broad {
+  background: color-mix(in srgb, var(--green) 14%, var(--bg));
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 38%, var(--line));
+}
+.portfolio-trend-hint .th-alignment.th-align-narrow {
+  background: color-mix(in srgb, var(--red) 14%, var(--bg));
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 38%, var(--line));
+}
