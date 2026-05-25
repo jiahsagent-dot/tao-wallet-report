@@ -438,8 +438,39 @@ export default function Report({ data, showSubscribeNudge = true }) {
           const maxAbs1d = Math.max(...p.top10.map((x) => Math.abs(x.pct1d || 0)));
           const maxAbs7d = Math.max(...p.top10.map((x) => Math.abs(x.pct7d || 0)));
           const perSubnetMap = new Map((pnl?.perSubnet || []).map((s) => [s.netuid, s]));
+          // Top movers: 24h winners + losers, sorted by signed pct1d, only when
+          // there's enough breadth to be informative (≥4 positions with pct1d).
+          const withPct1d = p.top10.filter((x) => typeof x.pct1d === 'number' && Number.isFinite(x.pct1d));
+          const sortedByPct1d = withPct1d.slice().sort((a, b) => b.pct1d - a.pct1d);
+          const winners = sortedByPct1d.filter((x) => x.pct1d > 0).slice(0, 3);
+          const losers = sortedByPct1d.filter((x) => x.pct1d < 0).slice(-3).reverse();
+          const showMovers = withPct1d.length >= 4 && (winners.length > 0 || losers.length > 0);
           return (
             <>
+              {showMovers && (
+                <div className="movers-strip">
+                  <div className="movers-grp movers-win">
+                    <span className="movers-grp-lbl">▲ 24h</span>
+                    {winners.map((m) => (
+                      <span key={`w-${m.netuid}`} className="mover-chip pos" title={`sn${m.netuid} ${m.name} · ${fmt(m.taoValue, 4)} τ (${fmt(m.pctOfPortfolio, 1)}% of port)`}>
+                        <span className="m-sn">sn{m.netuid}</span> {m.name}{' '}
+                        <span className="m-pct">+{fmt(m.pct1d, 2)}%</span>
+                      </span>
+                    ))}
+                    {winners.length === 0 && <span className="mover-empty">no green positions</span>}
+                  </div>
+                  <div className="movers-grp movers-lose">
+                    <span className="movers-grp-lbl">▼ 24h</span>
+                    {losers.map((m) => (
+                      <span key={`l-${m.netuid}`} className="mover-chip neg" title={`sn${m.netuid} ${m.name} · ${fmt(m.taoValue, 4)} τ (${fmt(m.pctOfPortfolio, 1)}% of port)`}>
+                        <span className="m-sn">sn{m.netuid}</span> {m.name}{' '}
+                        <span className="m-pct">{fmt(m.pct1d, 2)}%</span>
+                      </span>
+                    ))}
+                    {losers.length === 0 && <span className="mover-empty">no red positions</span>}
+                  </div>
+                </div>
+              )}
               <CopyCsvButton rows={p.top10} coldkey={data.coldkey} />
               <div className="tbl-scroll">
               <table className="tbl tbl-heatmap">
