@@ -296,6 +296,58 @@ function formatShortDate(iso) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
 }
 
+// Generic compact inline-SVG sparkline — used by §2 staking-income trend
+// (values: daily τ income) and §2 rolling-vol trend (values: 30d annualised σ).
+// Anchor-mode 'zero' fills bottom-to-value (income), 'minmax' uses series
+// min/max for visual contrast (vol — sigma is always >0 but the meaningful
+// movement is relative, not absolute-from-zero).
+function Sparkline({ series, valueKey, anchor = 'zero', titlePrefix, valueFmt, width = 200, height = 36, minObs = 7 }) {
+  if (!Array.isArray(series) || series.length < minObs) return null;
+  const values = series.map((p) => Math.max(0, Number(p[valueKey]) || 0));
+  const max = Math.max(...values);
+  if (max <= 0) return null;
+  let base = 0;
+  let span = max;
+  if (anchor === 'minmax') {
+    const min = Math.min(...values);
+    base = min;
+    span = Math.max(max - min, 1e-9);
+  }
+  const pad = 2;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const stepX = values.length > 1 ? innerW / (values.length - 1) : 0;
+  const points = values
+    .map((v, i) => {
+      const x = pad + i * stepX;
+      const y = pad + innerH - ((v - base) / span) * innerH;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(' ');
+  const last = values[values.length - 1];
+  const lastX = pad + (values.length - 1) * stepX;
+  const lastY = pad + innerH - ((last - base) / span) * innerH;
+  const firstDate = series[0]?.date;
+  const lastDate = series[series.length - 1]?.date;
+  const valFmt = valueFmt || ((v) => v.toFixed(4));
+  const title = `${titlePrefix} · ${formatShortDate(firstDate)} → ${formatShortDate(lastDate)} · peak ${valFmt(max)}${anchor === 'minmax' ? `, low ${valFmt(base)}` : ''}`;
+  return (
+    <span className="spark" title={title}>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} role="img" aria-label={titlePrefix}>
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={points}
+        />
+        <circle cx={lastX.toFixed(2)} cy={lastY.toFixed(2)} r="2" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
+
 // Compact inline-SVG sparkline for the staking-income trend. Renders one
 // polyline + a baseline. Values are non-negative so we anchor the bottom at 0.
 // Skips render when fewer than 7 daily observations (noisy single-week trend).
@@ -609,6 +661,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     <div className="dd-sub">{vol.positiveDayCount}/{vol.returnsCount} sessions</div>
                   </div>
                 </div>
+                {Array.isArray(vol.volSeries) && vol.volSeries.length >= 7 && (
+                  <div className="vol-trend">
+                    <div className="vol-trend-lbl">30d rolling annualised σ</div>
+                    <Sparkline
+                      series={vol.volSeries}
+                      valueKey="sigma"
+                      anchor="minmax"
+                      titlePrefix="30d rolling annualised σ"
+                      valueFmt={(v) => `${(v * 100).toFixed(1)}%`}
+                    />
+                  </div>
+                )}
                 <p className="hint">
                   Volatility from {vol.returnsCount} daily-return observations
                   over {vol.windowDays}d. Annualised σ ≈ daily σ × √365.
