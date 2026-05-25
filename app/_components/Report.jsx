@@ -657,212 +657,6 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 Over last {gt.windowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
               </div>
             </div>
-            {dd && dd.available && (
-              <div className="drawdown-panel">
-                <div className="drawdown-head">
-                  <h3 className="dd-head-title">Drawdown &amp; recovery</h3>
-                  {Array.isArray(dd.series) && dd.series.length > 0 && (
-                    <CopyCsvButton
-                      getCsv={() => buildDrawdownCsv(dd)}
-                      coldkey={data.coldkey}
-                      filenamePrefix="drawdown"
-                      ariaLabel="Copy drawdown series as CSV"
-                    />
-                  )}
-                </div>
-                <div className="dd-row">
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Peak balance</div>
-                    <div className="dd-val">{fmt(dd.allTimePeakTao, 2)} τ</div>
-                    <div className="dd-sub">{formatShortDate(dd.allTimePeakDate)}</div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Days since peak</div>
-                    <div className={`dd-val ${dd.isAtAllTimeHigh ? 'pos' : ''}`}>
-                      {dd.isAtAllTimeHigh ? 'at ATH' : `${dd.daysSincePeak}d`}
-                    </div>
-                    <div className="dd-sub">
-                      {dd.isAtAllTimeHigh
-                        ? 'all-time high'
-                        : `currently ${fmt(dd.currentDrawdownPct * 100, 1)}% off`}
-                    </div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Max drawdown</div>
-                    <div className={`dd-val ${dd.maxDrawdownPct >= 0.1 ? 'neg' : ''}`}>
-                      −{fmt(dd.maxDrawdownPct * 100, 1)}%
-                    </div>
-                    <div className="dd-sub">−{fmt(dd.maxDrawdownTao, 2)} τ peak-to-trough</div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Worst dip window</div>
-                    <div className="dd-val dd-window">
-                      {formatShortDate(dd.maxDrawdownPeakDate)} → {formatShortDate(dd.maxDrawdownTroughDate)}
-                    </div>
-                    <div className="dd-sub">
-                      {fmt(dd.maxDrawdownPeakTao, 2)} τ → {fmt(dd.maxDrawdownTroughTao, 2)} τ
-                    </div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Recovery time</div>
-                    {dd.recoveryDays != null ? (
-                      <>
-                        <div className="dd-val pos">{dd.recoveryDays}d</div>
-                        <div className="dd-sub">
-                          recovered {formatShortDate(dd.recoveryDate)}
-                        </div>
-                      </>
-                    ) : dd.currentlyUnderwater ? (
-                      <>
-                        <div className="dd-val neg">{dd.daysUnderwater}d underwater</div>
-                        <div className="dd-sub">
-                          still below {fmt(dd.maxDrawdownPeakTao, 2)} τ peak
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="dd-val">—</div>
-                        <div className="dd-sub">no drawdown observed</div>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {(() => {
-                  const peak = Number(dd.maxDrawdownPeakTao);
-                  const trough = Number(dd.maxDrawdownTroughTao);
-                  const cur = Number(dd.currentTao);
-                  if (!(peak > 0) || !(trough >= 0) || !(cur >= 0) || !(peak > trough)) {
-                    return null;
-                  }
-                  const span = peak - trough;
-                  const rawProgress = (cur - trough) / span;
-                  const recovered = cur >= peak;
-                  const beyondPct = recovered ? ((cur - peak) / peak) * 100 : 0;
-                  const fillPct = recovered
-                    ? 100
-                    : Math.max(0, Math.min(100, rawProgress * 100));
-                  const tier = recovered
-                    ? 'full'
-                    : fillPct >= 75
-                    ? 'high'
-                    : fillPct >= 40
-                    ? 'mid'
-                    : 'low';
-                  const centerLabel = recovered
-                    ? beyondPct > 1
-                      ? `Fully recovered · +${beyondPct.toFixed(1)}% beyond peak`
-                      : 'Fully recovered'
-                    : `${fillPct.toFixed(0)}% recovered from trough`;
-                  return (
-                    <div
-                      className={`dd-recovery dd-rec-${tier}`}
-                      title={`Trough ${fmt(trough, 4)} τ → Current ${fmt(cur, 4)} τ → Peak ${fmt(peak, 4)} τ. ${recovered ? 'Balance has reclaimed (and exceeded) the pre-drawdown peak.' : `Climbed ${fmt(cur - trough, 4)} τ of the ${fmt(span, 4)} τ peak-to-trough gap.`}`}
-                    >
-                      <div className="dd-rec-track">
-                        <div
-                          className="dd-rec-fill"
-                          style={{ width: `${fillPct}%` }}
-                        />
-                      </div>
-                      <div className="dd-rec-axis">
-                        <span className="dd-rec-left">
-                          <span className="dd-rec-tic">▼</span>{' '}
-                          Trough <strong>{fmt(trough, 2)} τ</strong>
-                        </span>
-                        <span className="dd-rec-center">{centerLabel}</span>
-                        <span className="dd-rec-right">
-                          Peak <strong>{fmt(peak, 2)} τ</strong>{' '}
-                          <span className="dd-rec-tic">▲</span>
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
-                <p className="hint">
-                  Drawdown stats from {dd.pointCount} daily balance snapshots
-                  ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
-                  Recovery time = days from trough until balance climbed back to the peak.
-                  Source: Taostats /api/account/history/v1.
-                </p>
-              </div>
-            )}
-            {vol && vol.available && (
-              <div className="vol-panel">
-                <div className="dd-row">
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Annualised volatility</div>
-                    <div className="dd-val">{fmt(vol.annualisedVolPct * 100, 1)}%</div>
-                    <div className="dd-sub">daily σ {fmt(vol.dailyVolPct * 100, 2)}%</div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Return-per-risk</div>
-                    <div className={`dd-val ${vol.returnPerRisk != null ? cls(vol.returnPerRisk) : ''}`}>
-                      {vol.returnPerRisk != null
-                        ? `${vol.returnPerRisk >= 0 ? '+' : ''}${fmt(vol.returnPerRisk, 2)}`
-                        : '—'}
-                    </div>
-                    <div className="dd-sub">
-                      ann. return {vol.annualisedReturnPct != null
-                        ? `${vol.annualisedReturnPct >= 0 ? '+' : ''}${fmt(vol.annualisedReturnPct * 100, 1)}%`
-                        : '—'} ÷ vol
-                    </div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Best / worst day</div>
-                    <div className="dd-val dd-window">
-                      <span className="pos">+{fmt(vol.bestDayPct * 100, 1)}%</span>
-                      {' / '}
-                      <span className="neg">{fmt(vol.worstDayPct * 100, 1)}%</span>
-                    </div>
-                    <div className="dd-sub">
-                      {formatShortDate(vol.bestDayDate)} / {formatShortDate(vol.worstDayDate)}
-                    </div>
-                  </div>
-                  <div className="dd-stat">
-                    <div className="dd-lbl">Positive days</div>
-                    <div className="dd-val">{fmt(vol.positiveDayPct * 100, 0)}%</div>
-                    <div className="dd-sub">{vol.positiveDayCount}/{vol.returnsCount} sessions</div>
-                  </div>
-                </div>
-                {Array.isArray(vol.volSeries) && vol.volSeries.length >= 7 && (
-                  <div className="vol-trend">
-                    <div className="vol-trend-lbl">30d rolling annualised σ</div>
-                    <Sparkline
-                      series={vol.volSeries}
-                      valueKey="sigma"
-                      anchor="minmax"
-                      titlePrefix="30d rolling annualised σ"
-                      valueFmt={(v) => `${(v * 100).toFixed(1)}%`}
-                    />
-                  </div>
-                )}
-                <p className="hint">
-                  Volatility from {vol.returnsCount} daily-return observations
-                  over {vol.windowDays}d. Annualised σ ≈ daily σ × √365.
-                  Return-per-risk ≈ Sharpe with rf=0 (crypto convention).
-                </p>
-              </div>
-            )}
-            {vol && vol.available && vol.bestDeltaDay && vol.worstDeltaDay && (
-              <div className="bw-day-strip">
-                <div className="bw-day bw-day-best" title={`Best day: balance grew from ${vol.bestDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.bestDeltaDay.balanceTao.toFixed(4)} τ (+${vol.bestDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
-                  <span className="bw-day-icon">🚀</span>
-                  <div className="bw-day-body">
-                    <div className="bw-day-lbl">Best day</div>
-                    <div className="bw-day-val">+{fmt(vol.bestDeltaDay.deltaTao, 4)} τ</div>
-                    <div className="bw-day-sub">{formatShortDate(vol.bestDeltaDay.date)}</div>
-                  </div>
-                </div>
-                <div className="bw-day bw-day-worst" title={`Worst day: balance dropped from ${vol.worstDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.worstDeltaDay.balanceTao.toFixed(4)} τ (${vol.worstDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
-                  <span className="bw-day-icon">🩸</span>
-                  <div className="bw-day-body">
-                    <div className="bw-day-lbl">Worst day</div>
-                    <div className="bw-day-val">{fmt(vol.worstDeltaDay.deltaTao, 4)} τ</div>
-                    <div className="bw-day-sub">{formatShortDate(vol.worstDeltaDay.date)}</div>
-                  </div>
-                </div>
-              </div>
-            )}
             {ty && ty.available && ty.buckets.length > 0 && (
               <div className="tax-year-panel">
                 <div className="tax-year-head">
@@ -959,6 +753,213 @@ export default function Report({ data, showSubscribeNudge = true }) {
             Ground-truth PnL unavailable for this coldkey
             {gt?.reason ? ` (${gt.reason})` : ''}. Showing alpha-position PnL only.
           </p>
+        )}
+
+        {dd && dd.available && (
+          <div className="drawdown-panel">
+            <div className="drawdown-head">
+              <h3 className="dd-head-title">Drawdown &amp; recovery</h3>
+              {Array.isArray(dd.series) && dd.series.length > 0 && (
+                <CopyCsvButton
+                  getCsv={() => buildDrawdownCsv(dd)}
+                  coldkey={data.coldkey}
+                  filenamePrefix="drawdown"
+                  ariaLabel="Copy drawdown series as CSV"
+                />
+              )}
+            </div>
+            <div className="dd-row">
+              <div className="dd-stat">
+                <div className="dd-lbl">Peak balance</div>
+                <div className="dd-val">{fmt(dd.allTimePeakTao, 2)} τ</div>
+                <div className="dd-sub">{formatShortDate(dd.allTimePeakDate)}</div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Days since peak</div>
+                <div className={`dd-val ${dd.isAtAllTimeHigh ? 'pos' : ''}`}>
+                  {dd.isAtAllTimeHigh ? 'at ATH' : `${dd.daysSincePeak}d`}
+                </div>
+                <div className="dd-sub">
+                  {dd.isAtAllTimeHigh
+                    ? 'all-time high'
+                    : `currently ${fmt(dd.currentDrawdownPct * 100, 1)}% off`}
+                </div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Max drawdown</div>
+                <div className={`dd-val ${dd.maxDrawdownPct >= 0.1 ? 'neg' : ''}`}>
+                  −{fmt(dd.maxDrawdownPct * 100, 1)}%
+                </div>
+                <div className="dd-sub">−{fmt(dd.maxDrawdownTao, 2)} τ peak-to-trough</div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Worst dip window</div>
+                <div className="dd-val dd-window">
+                  {formatShortDate(dd.maxDrawdownPeakDate)} → {formatShortDate(dd.maxDrawdownTroughDate)}
+                </div>
+                <div className="dd-sub">
+                  {fmt(dd.maxDrawdownPeakTao, 2)} τ → {fmt(dd.maxDrawdownTroughTao, 2)} τ
+                </div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Recovery time</div>
+                {dd.recoveryDays != null ? (
+                  <>
+                    <div className="dd-val pos">{dd.recoveryDays}d</div>
+                    <div className="dd-sub">
+                      recovered {formatShortDate(dd.recoveryDate)}
+                    </div>
+                  </>
+                ) : dd.currentlyUnderwater ? (
+                  <>
+                    <div className="dd-val neg">{dd.daysUnderwater}d underwater</div>
+                    <div className="dd-sub">
+                      still below {fmt(dd.maxDrawdownPeakTao, 2)} τ peak
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="dd-val">—</div>
+                    <div className="dd-sub">no drawdown observed</div>
+                  </>
+                )}
+              </div>
+            </div>
+            {(() => {
+              const peak = Number(dd.maxDrawdownPeakTao);
+              const trough = Number(dd.maxDrawdownTroughTao);
+              const cur = Number(dd.currentTao);
+              if (!(peak > 0) || !(trough >= 0) || !(cur >= 0) || !(peak > trough)) {
+                return null;
+              }
+              const span = peak - trough;
+              const rawProgress = (cur - trough) / span;
+              const recovered = cur >= peak;
+              const beyondPct = recovered ? ((cur - peak) / peak) * 100 : 0;
+              const fillPct = recovered
+                ? 100
+                : Math.max(0, Math.min(100, rawProgress * 100));
+              const tier = recovered
+                ? 'full'
+                : fillPct >= 75
+                ? 'high'
+                : fillPct >= 40
+                ? 'mid'
+                : 'low';
+              const centerLabel = recovered
+                ? beyondPct > 1
+                  ? `Fully recovered · +${beyondPct.toFixed(1)}% beyond peak`
+                  : 'Fully recovered'
+                : `${fillPct.toFixed(0)}% recovered from trough`;
+              return (
+                <div
+                  className={`dd-recovery dd-rec-${tier}`}
+                  title={`Trough ${fmt(trough, 4)} τ → Current ${fmt(cur, 4)} τ → Peak ${fmt(peak, 4)} τ. ${recovered ? 'Balance has reclaimed (and exceeded) the pre-drawdown peak.' : `Climbed ${fmt(cur - trough, 4)} τ of the ${fmt(span, 4)} τ peak-to-trough gap.`}`}
+                >
+                  <div className="dd-rec-track">
+                    <div
+                      className="dd-rec-fill"
+                      style={{ width: `${fillPct}%` }}
+                    />
+                  </div>
+                  <div className="dd-rec-axis">
+                    <span className="dd-rec-left">
+                      <span className="dd-rec-tic">▼</span>{' '}
+                      Trough <strong>{fmt(trough, 2)} τ</strong>
+                    </span>
+                    <span className="dd-rec-center">{centerLabel}</span>
+                    <span className="dd-rec-right">
+                      Peak <strong>{fmt(peak, 2)} τ</strong>{' '}
+                      <span className="dd-rec-tic">▲</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+            <p className="hint">
+              Drawdown stats from {dd.pointCount} daily balance snapshots
+              ({formatShortDate(dd.firstDate)} → {formatShortDate(dd.lastDate)}).
+              Recovery time = days from trough until balance climbed back to the peak.
+              Source: Taostats /api/account/history/v1.
+            </p>
+          </div>
+        )}
+        {vol && vol.available && (
+          <div className="vol-panel">
+            <div className="dd-row">
+              <div className="dd-stat">
+                <div className="dd-lbl">Annualised volatility</div>
+                <div className="dd-val">{fmt(vol.annualisedVolPct * 100, 1)}%</div>
+                <div className="dd-sub">daily σ {fmt(vol.dailyVolPct * 100, 2)}%</div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Return-per-risk</div>
+                <div className={`dd-val ${vol.returnPerRisk != null ? cls(vol.returnPerRisk) : ''}`}>
+                  {vol.returnPerRisk != null
+                    ? `${vol.returnPerRisk >= 0 ? '+' : ''}${fmt(vol.returnPerRisk, 2)}`
+                    : '—'}
+                </div>
+                <div className="dd-sub">
+                  ann. return {vol.annualisedReturnPct != null
+                    ? `${vol.annualisedReturnPct >= 0 ? '+' : ''}${fmt(vol.annualisedReturnPct * 100, 1)}%`
+                    : '—'} ÷ vol
+                </div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Best / worst day</div>
+                <div className="dd-val dd-window">
+                  <span className="pos">+{fmt(vol.bestDayPct * 100, 1)}%</span>
+                  {' / '}
+                  <span className="neg">{fmt(vol.worstDayPct * 100, 1)}%</span>
+                </div>
+                <div className="dd-sub">
+                  {formatShortDate(vol.bestDayDate)} / {formatShortDate(vol.worstDayDate)}
+                </div>
+              </div>
+              <div className="dd-stat">
+                <div className="dd-lbl">Positive days</div>
+                <div className="dd-val">{fmt(vol.positiveDayPct * 100, 0)}%</div>
+                <div className="dd-sub">{vol.positiveDayCount}/{vol.returnsCount} sessions</div>
+              </div>
+            </div>
+            {Array.isArray(vol.volSeries) && vol.volSeries.length >= 7 && (
+              <div className="vol-trend">
+                <div className="vol-trend-lbl">30d rolling annualised σ</div>
+                <Sparkline
+                  series={vol.volSeries}
+                  valueKey="sigma"
+                  anchor="minmax"
+                  titlePrefix="30d rolling annualised σ"
+                  valueFmt={(v) => `${(v * 100).toFixed(1)}%`}
+                />
+              </div>
+            )}
+            <p className="hint">
+              Volatility from {vol.returnsCount} daily-return observations
+              over {vol.windowDays}d. Annualised σ ≈ daily σ × √365.
+              Return-per-risk ≈ Sharpe with rf=0 (crypto convention).
+            </p>
+          </div>
+        )}
+        {vol && vol.available && vol.bestDeltaDay && vol.worstDeltaDay && (
+          <div className="bw-day-strip">
+            <div className="bw-day bw-day-best" title={`Best day: balance grew from ${vol.bestDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.bestDeltaDay.balanceTao.toFixed(4)} τ (+${vol.bestDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
+              <span className="bw-day-icon">🚀</span>
+              <div className="bw-day-body">
+                <div className="bw-day-lbl">Best day</div>
+                <div className="bw-day-val">+{fmt(vol.bestDeltaDay.deltaTao, 4)} τ</div>
+                <div className="bw-day-sub">{formatShortDate(vol.bestDeltaDay.date)}</div>
+              </div>
+            </div>
+            <div className="bw-day bw-day-worst" title={`Worst day: balance dropped from ${vol.worstDeltaDay.prevBalanceTao.toFixed(4)} τ to ${vol.worstDeltaDay.balanceTao.toFixed(4)} τ (${vol.worstDeltaDay.deltaTao.toFixed(4)} τ in one snapshot).`}>
+              <span className="bw-day-icon">🩸</span>
+              <div className="bw-day-body">
+                <div className="bw-day-lbl">Worst day</div>
+                <div className="bw-day-val">{fmt(vol.worstDeltaDay.deltaTao, 4)} τ</div>
+                <div className="bw-day-sub">{formatShortDate(vol.worstDeltaDay.date)}</div>
+              </div>
+            </div>
+          </div>
         )}
 
         <p className="sub-h">Alpha-position breakdown</p>
