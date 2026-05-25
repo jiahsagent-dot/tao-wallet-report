@@ -1314,7 +1314,30 @@ export default function Report({ data, showSubscribeNudge = true }) {
           );
         })()}
 
-        {Array.isArray(y.perPosition) && y.perPosition.length > 0 && (
+        {Array.isArray(y.perPosition) && y.perPosition.length > 0 && (() => {
+          const renderedRows = y.perPosition
+            .slice()
+            .sort((a, b) => b.alphaTokens - a.alphaTokens)
+            .slice(0, 10);
+          // Aggregate totals across rendered rows for tfoot row.
+          let sumAlpha = 0;
+          let yWApyNum = 0;
+          let yWApyDen = 0;
+          let yTotalTaoYr = 0;
+          let yCovered = 0;
+          for (const p of renderedRows) {
+            sumAlpha += p.alphaTokens || 0;
+            if (p.apy != null && Number.isFinite(p.apy) && p.alphaTokens > 0) {
+              yWApyNum += p.apy * p.alphaTokens;
+              yWApyDen += p.alphaTokens;
+              if (p.alphaPriceTao > 0) {
+                yTotalTaoYr += p.alphaTokens * p.alphaPriceTao * p.apy;
+              }
+              yCovered += 1;
+            }
+          }
+          const yWApy = yWApyDen > 0 ? yWApyNum / yWApyDen : null;
+          return (
           <>
             <div className="yield-head">
               <h3 className="sub-h">Per-validator breakdown</h3>
@@ -1337,11 +1360,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </tr>
               </thead>
               <tbody>
-                {y.perPosition
-                  .slice()
-                  .sort((a, b) => b.alphaTokens - a.alphaTokens)
-                  .slice(0, 10)
-                  .map((p, i) => {
+                {renderedRows.map((p, i) => {
                     const apyPct = p.apy != null ? `${fmt(p.apy * 100, 2)}%` : '—';
                     const bestPct =
                       p.subnetBestApy != null ? `${fmt(p.subnetBestApy * 100, 2)}%` : '—';
@@ -1422,12 +1441,39 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     );
                   })}
               </tbody>
+              <tfoot>
+                <tr className="tfoot-totals">
+                  <td><span className="tfoot-lbl">Total ({renderedRows.length} val)</span></td>
+                  <td></td>
+                  <td>{fmt(sumAlpha, 2)}</td>
+                  <td>
+                    {yWApy != null ? (
+                      <div
+                        className="apy-chip apy-chip-foot"
+                        title={`Alpha-weighted APY across ${yCovered} of ${renderedRows.length} rendered validators: ${(yWApy * 100).toFixed(2)}%${yTotalTaoYr > 0 ? ` · ≈ ${yTotalTaoYr.toFixed(4)} τ/yr at current α prices.` : '.'}`}
+                      >
+                        <span className="apy-lbl">Σ APY</span>{' '}
+                        <span className="apy-val">{(yWApy * 100).toFixed(2)}%</span>
+                        {yTotalTaoYr > 0 && (
+                          <>
+                            {' '}
+                            <span className="apy-yr">· {yTotalTaoYr.toFixed(4)} τ/yr</span>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
             <p className="hint">
               Δ to best shows how far each validator is behind the best validator on the same subnet (in percentage points). Negative values are re-delegation opportunities — green chip beside the Δ shows the τ/yr lift you'd capture at current alpha levels.
             </p>
           </>
-        )}
+          );
+        })()}
 
         {Array.isArray(y.delegationOpportunities) && y.delegationOpportunities.length > 0 && (
           <>
