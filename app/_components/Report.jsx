@@ -962,6 +962,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 )}
               </div>
             </div>
+            {dd.sparkline90d && dd.sparkline90d.str && (
+              <div
+                className="sparkline-row"
+                title={`Last ${dd.sparkline90d.points} daily balance snapshots (drawdown window): ${dd.sparkline90d.firstTao.toFixed(4)} τ (${formatShortDate(dd.sparkline90d.firstDate)}) → ${dd.sparkline90d.lastTao.toFixed(4)} τ (${formatShortDate(dd.sparkline90d.lastDate)}). Min ${dd.sparkline90d.minTao.toFixed(4)} τ · Max ${dd.sparkline90d.maxTao.toFixed(4)} τ. Visualises the dip + recovery shape the stats above describe.`}
+              >
+                <span className="sparkline-lbl">90d τ</span>
+                <span className="sparkline">{dd.sparkline90d.str}</span>
+                <span className="sparkline-meta">
+                  {dd.sparkline90d.firstTao.toFixed(2)} → {dd.sparkline90d.lastTao.toFixed(2)} τ
+                </span>
+              </div>
+            )}
             {(() => {
               const peak = Number(dd.maxDrawdownPeakTao);
               const trough = Number(dd.maxDrawdownTroughTao);
