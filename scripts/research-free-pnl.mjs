@@ -97,7 +97,23 @@ async function paidBaseline(coldkey, start, end, freeCurrentBalance) {
   };
 }
 
-// Free-tier reconstruction.
+// Free-tier reconstruction. Returns BOTH balance variants so we can test the
+// iter 104 hypothesis: that paid tax/v1's "starting balance" excludes
+// alpha-staked-as-tao. variant=full uses balance_total (free+reserved+staked,
+// where staked = root + alpha-as-tao). variant=rootOnly uses
+// free + reserved + balance_staked_root (excludes alpha-as-tao).
+function balancesFromRow(row) {
+  if (!row) return { full: 0, rootOnly: 0 };
+  return {
+    full: Number(row.balance_total || 0) / RAO,
+    rootOnly:
+      (Number(row.balance_free || 0) +
+        Number(row.balance_reserved || 0) +
+        Number(row.balance_staked_root || 0)) /
+      RAO,
+  };
+}
+
 async function freeReconstruct(coldkey, start, end) {
   // Current balance — most recent history row.
   const latestJ = await get('/api/account/history/v1', {
@@ -106,12 +122,10 @@ async function freeReconstruct(coldkey, start, end) {
     page: 1,
   });
   const latest = latestJ?.data?.[0];
-  // NB: balance_total already includes staked + reserved. Adding balance_staked
-  // double-counts the staked portion (caught in iter 104).
-  const currentBalanceTao = latest ? Number(latest.balance_total || 0) / RAO : 0;
+  const currentBalances = balancesFromRow(latest);
 
-  // Starting balance — page history until we cross `start`, take last row before it.
-  let startBalanceTao = 0;
+  // Starting balance — page history until we cross `start`, take first row at or before it.
+  let startingRow = null;
   let page = 1;
   outer: while (page <= 20) {
     const j = await get('/api/account/history/v1', {
@@ -124,13 +138,14 @@ async function freeReconstruct(coldkey, start, end) {
     for (const r of rows) {
       const ts = new Date(r.timestamp).getTime();
       if (ts <= start.getTime()) {
-        startBalanceTao = Number(r.balance_total || 0) / RAO;
+        startingRow = r;
         break outer;
       }
     }
     if (rows.length < 200) break;
     page += 1;
   }
+  const startingBalances = balancesFromRow(startingRow);
 
   // Transfers in/out within [start, end]. /api/transfer/v1 is on free tier.
   let transfersIn = 0;
@@ -157,22 +172,41 @@ async function freeReconstruct(coldkey, start, end) {
     page += 1;
   }
 
-  const netProfitTao =
-    currentBalanceTao + transfersOut - transfersIn - startBalanceTao;
-
-  return {
-    current_balance: currentBalanceTao,
-    starting_balance: startBalanceTao,
+  // Two reconstructions: balance_total (full) vs free+reserved+staked_root only.
+  // iter 105: hypothesis is that paid tax/v1 matches rootOnly variant.
+  const full = {
+    current_balance: currentBalances.full,
+    starting_balance: startingBalances.full,
     transfers_in: transfersIn,
     transfers_out: transfersOut,
-    net_profit: netProfitTao,
+    net_profit:
+      currentBalances.full + transfersOut - transfersIn - startingBalances.full,
   };
+  const rootOnly = {
+    current_balance: currentBalances.rootOnly,
+    starting_balance: startingBalances.rootOnly,
+    transfers_in: transfersIn,
+    transfers_out: transfersOut,
+    net_profit:
+      currentBalances.rootOnly +
+      transfersOut -
+      transfersIn -
+      startingBalances.rootOnly,
+  };
+  return { full, rootOnly };
 }
 
-function diff(label, paid, free) {
-  const d = (free - paid).toFixed(6);
-  const tag = Math.abs(free - paid) > 0.001 ? '⚠️ ' : '   ';
-  console.log(`${tag}${label.padEnd(20)} paid=${String(paid).padStart(14)}  free=${String(free).padStart(14)}  Δ=${d}`);
+function fmt(n) {
+  return Number(n).toFixed(4).padStart(11);
+}
+
+function row3(label, paid, free, rootOnly) {
+  const dFull = (free - paid).toFixed(4);
+  const dRoot = (rootOnly - paid).toFixed(4);
+  const tag = Math.abs(rootOnly - paid) > 0.001 ? '⚠️ ' : '✅ ';
+  console.log(
+    `${tag}${label.padEnd(18)} paid=${fmt(paid)}τ  full=${fmt(free)}τ (Δ${dFull})  rootOnly=${fmt(rootOnly)}τ (Δ${dRoot})`,
+  );
 }
 
 async function main() {
@@ -188,19 +222,31 @@ async function main() {
   console.log(`\nProbe: ${coldkey}`);
   console.log(`Window: ${start.toISOString().slice(0, 10)} → ${end.toISOString().slice(0, 10)} (${days}d)\n`);
 
-  const free = await freeReconstruct(coldkey, start, end);
-  const paid = await paidBaseline(coldkey, start, end, free.current_balance);
+  const { full, rootOnly } = await freeReconstruct(coldkey, start, end);
+  // Honest comparison: reuse the full current_balance for paid's current.
+  const paid = await paidBaseline(coldkey, start, end, full.current_balance);
   if (paid._rowCount === 0) {
     console.error('Paid tax/v1 returned no rows — aborting.');
     process.exit(1);
   }
   console.log(`Paid tax/v1 rows: ${paid._rowCount}`);
-  console.log('Field comparison (τ):');
-  diff('current_balance', Number(paid.current_balance || 0), free.current_balance);
-  diff('starting_balance', Number(paid.starting_balance || 0), free.starting_balance);
-  diff('transfers_in', Number(paid.transfers_in || 0), free.transfers_in);
-  diff('transfers_out', Number(paid.transfers_out || 0), free.transfers_out);
-  diff('net_profit', Number(paid.net_profit || 0), free.net_profit);
+  console.log('3-way comparison (τ) — ✅ = rootOnly variant matches paid within 0.001τ:');
+  row3('current_balance', Number(paid.current_balance || 0), full.current_balance, rootOnly.current_balance);
+  row3('starting_balance', Number(paid.starting_balance || 0), full.starting_balance, rootOnly.starting_balance);
+  row3('transfers_in', Number(paid.transfers_in || 0), full.transfers_in, rootOnly.transfers_in);
+  row3('transfers_out', Number(paid.transfers_out || 0), full.transfers_out, rootOnly.transfers_out);
+  row3('net_profit', Number(paid.net_profit || 0), full.net_profit, rootOnly.net_profit);
+
+  // iter 105 finding: paid uses ALPHA-as-tao on current but ROOT-only on
+  // starting. The "mixed" reconstruction below replicates paid's semantics
+  // from free primitives.
+  const mixedNet =
+    full.current_balance + full.transfers_out - full.transfers_in - rootOnly.starting_balance;
+  const mixedDelta = Math.abs(mixedNet - Number(paid.net_profit || 0));
+  const mixedTag = mixedDelta < 0.001 ? '✅' : '⚠️';
+  console.log('');
+  console.log(`Mixed reconstruction (current=full, starting=rootOnly):`);
+  console.log(`  net_profit = ${fmt(mixedNet)}τ   paid=${fmt(paid.net_profit)}τ   Δ=${(mixedNet - paid.net_profit).toFixed(6)}  ${mixedTag}`);
   console.log('');
 }
 
