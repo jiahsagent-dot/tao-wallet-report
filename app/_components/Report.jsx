@@ -868,8 +868,16 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 ≈ {gt.profitUsd >= 0 ? '+' : ''}${fmt(gt.profitUsd, 2)} USD ·{' '}
                 {gt.profitAud >= 0 ? '+' : ''}A${fmt(gt.profitAud, 2)}
               </div>
-              <div className="pnl-window">
-                Over last {gt.windowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
+              <div
+                className="pnl-window"
+                title={
+                  gt.windowIsShortened
+                    ? `Headline label uses the actual reconstruction window (${gt.effectiveWindowDays}d) rather than the requested ${gt.windowDays}d — the underlying free-tier Taostats /api/account/history/v1 endpoint only retains ~6 months of snapshots, so a 365d request falls back to the oldest available row (iter 109).`
+                    : undefined
+                }
+              >
+                Over last {gt.effectiveWindowDays} days ({gt.firstSnapshotDate} → {gt.lastSnapshotDate})
+                {gt.windowIsShortened ? ` · requested ${gt.windowDays}d, data covers ${gt.effectiveWindowDays}d` : ''}
               </div>
               {(() => {
                 // Status pill — companion to the §1 portfolio-trend-hint but
@@ -887,12 +895,12 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 return (
                   <div
                     className={`pnl-status-chip pnl-status-${kind}`}
-                    title={`Wallet is ${label.toLowerCase()} over the ${gt.windowDays}-day window. Net contributed base ${sinceTao.toFixed(3)} τ (start + transfers in − transfers out) → current ${gt.currentPortfolioTao.toFixed(3)} τ → ${profitTaoSign}${gt.profitTao.toFixed(3)} τ (${pctNum >= 0 ? '+' : ''}${pctNum.toFixed(2)}%). Break-even band ±0.5% absorbs fractional drift on flat wallets.`}
+                    title={`Wallet is ${label.toLowerCase()} over the ${gt.effectiveWindowDays}-day window${gt.windowIsShortened ? ` (requested ${gt.windowDays}d but data only covers ${gt.effectiveWindowDays}d since ${gt.firstSnapshotDate})` : ''}. Net contributed base ${sinceTao.toFixed(3)} τ (start + transfers in − transfers out) → current ${gt.currentPortfolioTao.toFixed(3)} τ → ${profitTaoSign}${gt.profitTao.toFixed(3)} τ (${pctNum >= 0 ? '+' : ''}${pctNum.toFixed(2)}%). Break-even band ±0.5% absorbs fractional drift on flat wallets.`}
                   >
                     <span className="pnl-status-emoji">{emoji}</span>
                     <span className="pnl-status-label">{label}</span>
                     <span className="pnl-status-detail">
-                      {pctNum >= 0 ? '+' : ''}{pctNum.toFixed(2)}% over {gt.windowDays}d
+                      {pctNum >= 0 ? '+' : ''}{pctNum.toFixed(2)}% over {gt.effectiveWindowDays}d
                     </span>
                   </div>
                 );
@@ -907,7 +915,9 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 // collapses to the same number as the raw return; that's
                 // honest, not noise, so we render it with an "= raw" sub.
                 const ret = Number(gt.returnPct);
-                const days = Number(gt.windowDays);
+                // Use effective (actual data) window — annualising a 172d return
+                // as if it were 365d would silently dampen the chip (iter 110).
+                const days = Number(gt.effectiveWindowDays);
                 if (!Number.isFinite(ret) || !(days >= 14)) return null;
                 const annual = Math.pow(1 + ret, 365 / days) - 1;
                 if (!Number.isFinite(annual)) return null;
@@ -1078,7 +1088,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
             {gt.dailyIncomeTao > 0 && (
               <div className="stats stats-staking-income">
                 <Stat
-                  label={`Staking income (${gt.windowDays}d)`}
+                  label={`Staking income (${gt.effectiveWindowDays}d)`}
                   value={`${fmt(gt.dailyIncomeTao, 4)} τ ($${fmt(gt.dailyIncomeUsd, 2)} · A$${fmt(gt.dailyIncomeAud, 2)})`}
                   cls="pos"
                 />

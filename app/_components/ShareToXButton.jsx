@@ -7,7 +7,8 @@ function composeText(pnl) {
   if (gt?.available && Number.isFinite(gt.profitTao) && Number.isFinite(gt.returnPct)) {
     const sign = gt.profitTao >= 0 ? '+' : '';
     const pctSign = gt.returnPct >= 0 ? '+' : '';
-    return `Bittensor PnL last 365d: ${sign}${gt.profitTao.toFixed(3)} τ (${pctSign}${(gt.returnPct * 100).toFixed(2)}%) — full report:`;
+    const days = Number(gt.effectiveWindowDays) || 365;
+    return `Bittensor PnL last ${days}d: ${sign}${gt.profitTao.toFixed(3)} τ (${pctSign}${(gt.returnPct * 100).toFixed(2)}%) — full report:`;
   }
   return 'Live Bittensor wallet report:';
 }
