@@ -53,8 +53,16 @@ async function get(path, params = {}) {
   }
 }
 
-// Paid baseline (the row we're trying to reproduce without paying).
-async function paidTaxRow(coldkey, start, end) {
+// Paid baseline. The /api/accounting/tax/v1 endpoint does NOT return an
+// aggregate row — it returns daily balance snapshots interleaved with
+// transaction rows (transfer_in / transfer_out / token_swap / …). The app
+// (lib/report.js → pnlGroundTruth) aggregates them the same way we do here:
+//   starting_balance = first row in window with total_balance != null
+//   current_balance  = LATEST history snapshot (getLatestBalance)
+//   transfers_in     = sum of credit_amount where transaction_type=='transfer_in'
+//   transfers_out    = sum of debit_amount where transaction_type=='transfer_out'
+//   net_profit       = current + transfer_out - transfer_in - starting
+async function paidBaseline(coldkey, start, end, freeCurrentBalance) {
   const fmt = (d) => d.toISOString().slice(0, 10);
   const j = await get('/api/accounting/tax/v1', {
     token: 'TAO',
@@ -63,7 +71,30 @@ async function paidTaxRow(coldkey, start, end) {
     coldkey,
   });
   const rows = j?.data || [];
-  return rows[0] || null;
+  let startingBalance = null;
+  let transfersIn = 0;
+  let transfersOut = 0;
+  for (const r of rows) {
+    const t = r.transaction_type;
+    if (t === 'transfer_in') {
+      transfersIn += Number(r.credit_amount || 0);
+    } else if (t === 'transfer_out') {
+      transfersOut += Number(r.debit_amount || 0);
+    } else if (!t && r.total_balance != null) {
+      if (startingBalance == null) startingBalance = Number(r.total_balance);
+    }
+  }
+  // current_balance from paid path = also history/v1 (paid app does the same).
+  // We reuse the free reconstruction's current so the comparison is honest.
+  const currentBalance = freeCurrentBalance;
+  return {
+    current_balance: currentBalance,
+    starting_balance: startingBalance ?? 0,
+    transfers_in: transfersIn,
+    transfers_out: transfersOut,
+    net_profit: currentBalance + transfersOut - transfersIn - (startingBalance ?? 0),
+    _rowCount: rows.length,
+  };
 }
 
 // Free-tier reconstruction.
@@ -75,8 +106,9 @@ async function freeReconstruct(coldkey, start, end) {
     page: 1,
   });
   const latest = latestJ?.data?.[0];
-  const currentBalanceTao =
-    latest ? (Number(latest.balance_total || 0) + Number(latest.balance_staked || 0)) / RAO : 0;
+  // NB: balance_total already includes staked + reserved. Adding balance_staked
+  // double-counts the staked portion (caught in iter 104).
+  const currentBalanceTao = latest ? Number(latest.balance_total || 0) / RAO : 0;
 
   // Starting balance — page history until we cross `start`, take last row before it.
   let startBalanceTao = 0;
@@ -92,8 +124,7 @@ async function freeReconstruct(coldkey, start, end) {
     for (const r of rows) {
       const ts = new Date(r.timestamp).getTime();
       if (ts <= start.getTime()) {
-        startBalanceTao =
-          (Number(r.balance_total || 0) + Number(r.balance_staked || 0)) / RAO;
+        startBalanceTao = Number(r.balance_total || 0) / RAO;
         break outer;
       }
     }
@@ -157,13 +188,13 @@ async function main() {
   console.log(`\nProbe: ${coldkey}`);
   console.log(`Window: ${start.toISOString().slice(0, 10)} → ${end.toISOString().slice(0, 10)} (${days}d)\n`);
 
-  const paid = await paidTaxRow(coldkey, start, end);
-  if (!paid) {
+  const free = await freeReconstruct(coldkey, start, end);
+  const paid = await paidBaseline(coldkey, start, end, free.current_balance);
+  if (paid._rowCount === 0) {
     console.error('Paid tax/v1 returned no rows — aborting.');
     process.exit(1);
   }
-  const free = await freeReconstruct(coldkey, start, end);
-
+  console.log(`Paid tax/v1 rows: ${paid._rowCount}`);
   console.log('Field comparison (τ):');
   diff('current_balance', Number(paid.current_balance || 0), free.current_balance);
   diff('starting_balance', Number(paid.starting_balance || 0), free.starting_balance);
