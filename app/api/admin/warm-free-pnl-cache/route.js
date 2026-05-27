@@ -6,6 +6,11 @@ import {
   _getTransferRowsLastSource,
   _getDelegationRowsLastSource,
 } from '../../../../lib/taostats.js';
+import {
+  historyCacheRead,
+  transfersCacheRead,
+  delegationCacheRead,
+} from '../../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -17,9 +22,46 @@ export const maxDuration = 60;
 // FREE_PNL=1 always hit cache=db instead of paying the page walk and racing
 // Taostats' shared-IP rate limit on Vercel.
 //
+// iter 131: self-validating — after each warm, read the cache row back
+// directly from Supabase via *CacheRead helpers and report `db_state` per
+// endpoint. Closes the structural gap iter 125 flagged: "DB read path covered
+// structurally" was theory; this confirms the row is materially present in
+// the DB after warming. Operators (and the iter-132 cron) can now assert on
+// `db_state.{history,transfers,delegation}.present === true` rather than
+// trusting `cache_state.last_source === 'fetch'` as a proxy.
+//
 // Coldkeys come from FREE_PNL_WARM_COLDKEYS (comma-separated SS58 list).
 // Auth: CRON_SECRET via ?secret= or Authorization: Bearer (same shape as
 // /api/cron/weekly-emails).
+
+// 1 year — effectively "ignore freshness, just tell me if a row exists".
+// Caller can derive fresh-vs-stale from ageMs vs the 15-min TTL.
+const DB_PROBE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
+const TTL_MS = 15 * 60 * 1000;
+
+async function probeDbState(coldkey) {
+  const probe = async (reader) => {
+    try {
+      const hit = await reader(coldkey, DB_PROBE_MAX_AGE_MS);
+      if (!hit) return { present: false };
+      return {
+        present: true,
+        row_count: Array.isArray(hit.rows) ? hit.rows.length : null,
+        age_ms: hit.ageMs,
+        fresh: hit.ageMs <= TTL_MS,
+        fetched_at: hit.fetched_at,
+      };
+    } catch (e) {
+      return { present: false, error: String(e?.message || e) };
+    }
+  };
+  const [history, transfers, delegation] = await Promise.all([
+    probe(historyCacheRead),
+    probe(transfersCacheRead),
+    probe(delegationCacheRead),
+  ]);
+  return { history, transfers, delegation };
+}
 
 function authorized(req) {
   const secret = process.env.CRON_SECRET;
@@ -79,6 +121,9 @@ async function warmOne(coldkey) {
     transfers: _getTransferRowsLastSource(coldkey),
     delegation: _getDelegationRowsLastSource(coldkey),
   };
+  // iter 131: read each cache row back from Supabase directly to confirm the
+  // write landed (not just that the wrapper claimed to write).
+  out.db_state = await probeDbState(coldkey);
   out.ms_total = Date.now() - t0;
   return out;
 }
@@ -102,7 +147,7 @@ export async function GET(req) {
   }
   return NextResponse.json(
     {
-      iter: 130,
+      iter: 131,
       coldkey_count: coldkeys.length,
       ms_total: Date.now() - t0,
       results,
