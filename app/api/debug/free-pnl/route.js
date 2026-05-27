@@ -51,7 +51,7 @@ export async function GET(req) {
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 129,
+    iter: 130,
     input: {
       coldkey,
       days,
