@@ -51,7 +51,7 @@ export async function GET(req) {
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 128,
+    iter: 129,
     input: {
       coldkey,
       days,
@@ -158,6 +158,22 @@ export async function GET(req) {
   }
   out.delegation_cache = {
     last_source: _getDelegationRowsLastSource(coldkey),
+  };
+
+  // iter 129: surface the methodology note pnlGroundTruth attaches to its
+  // payload. Lets a single probe confirm the new field is wired all the way
+  // through (taostats row tagging → report.js detection → ai-insights prompt
+  // line) without rendering a full report. We rebuild it locally from the
+  // first_snapshot_source already on out.tax_report_free to keep the probe
+  // dependency-free — same heuristic pnlGroundTruth uses.
+  const fps = out.tax_report_free?.first_snapshot_source || '';
+  const isFreePath = typeof fps === 'string' && fps.startsWith('free:');
+  out.methodology = {
+    path: isFreePath ? 'free' : (fps ? 'paid-or-unknown' : 'no-rows'),
+    first_snapshot_source: fps || null,
+    note_preview: isFreePath
+      ? 'free-tier reconstruction from /api/account/history/v1 (rootOnly) + /api/transfer/v1; ~170d retention.'
+      : (fps ? 'paid /api/accounting/tax/v1' : null),
   };
 
   return NextResponse.json(out);
