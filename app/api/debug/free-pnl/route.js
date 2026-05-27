@@ -3,8 +3,10 @@ import {
   getTaxReportRangeFree,
   getLatestBalance,
   getBalanceHistory,
+  getDelegationHistory,
   _getHistoryRowsLastSource,
   _getTransferRowsLastSource,
+  _getDelegationRowsLastSource,
 } from '../../../../lib/taostats.js';
 
 export const runtime = 'nodejs';
@@ -49,7 +51,7 @@ export async function GET(req) {
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 127,
+    iter: 128,
     input: {
       coldkey,
       days,
@@ -136,6 +138,26 @@ export async function GET(req) {
   // /api/transfer/v1 failed (iter 122-style instrumentation).
   out.transfers_cache = {
     last_source: _getTransferRowsLastSource(coldkey),
+  };
+
+  // iter 128: third and last endpoint in the burst-429 triplet closed onto the
+  // cache shape. Probe /api/delegation/v1 + expose last_source so cold-lambda
+  // DB-hit + warm memo-hit are both directly observable on the debug endpoint.
+  try {
+    const t0 = Date.now();
+    const dh = await getDelegationHistory(coldkey);
+    out.delegation_history = {
+      ok: true,
+      ms: Date.now() - t0,
+      row_count: Array.isArray(dh) ? dh.length : 0,
+      first: Array.isArray(dh) && dh[0] ? dh[0] : null,
+      last: Array.isArray(dh) && dh.length ? dh[dh.length - 1] : null,
+    };
+  } catch (e) {
+    out.delegation_history = { ok: false, error: String(e?.message || e) };
+  }
+  out.delegation_cache = {
+    last_source: _getDelegationRowsLastSource(coldkey),
   };
 
   return NextResponse.json(out);
