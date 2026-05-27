@@ -4,6 +4,7 @@ import {
   getLatestBalance,
   getBalanceHistory,
   _getHistoryRowsLastSource,
+  _getTransferRowsLastSource,
 } from '../../../../lib/taostats.js';
 
 export const runtime = 'nodejs';
@@ -48,7 +49,7 @@ export async function GET(req) {
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 125,
+    iter: 127,
     input: {
       coldkey,
       days,
@@ -127,6 +128,14 @@ export async function GET(req) {
   // cache is actually hitting on the 2nd probe instead of always re-walking.
   out.history_cache = {
     last_source: _getHistoryRowsLastSource(coldkey),
+  };
+
+  // iter 127: same shape for the new transfer-rows cache. 'memo' confirms
+  // FY24+FY25 share one walk per fire; 'db' confirms cross-request reuse after
+  // a cold lambda inside the 15-min TTL. 'fetch-empty' = page 1 of
+  // /api/transfer/v1 failed (iter 122-style instrumentation).
+  out.transfers_cache = {
+    last_source: _getTransferRowsLastSource(coldkey),
   };
 
   return NextResponse.json(out);
