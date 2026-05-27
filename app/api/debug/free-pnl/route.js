@@ -3,6 +3,7 @@ import {
   getTaxReportRangeFree,
   getLatestBalance,
   getBalanceHistory,
+  _getHistoryRowsLastSource,
 } from '../../../../lib/taostats.js';
 
 export const runtime = 'nodejs';
@@ -47,7 +48,7 @@ export async function GET(req) {
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 123,
+    iter: 125,
     input: {
       coldkey,
       days,
@@ -119,6 +120,14 @@ export async function GET(req) {
   } catch (e) {
     out.balance_history_30d = { ok: false, error: String(e?.message || e) };
   }
+
+  // iter 125: expose which layer served the history rows for this request —
+  // 'memo' = in-process (warm lambda), 'db' = Supabase tao_taostats_history_cache,
+  // 'fetch' = fresh /api/account/history/v1 walk. Lets me verify cross-request
+  // cache is actually hitting on the 2nd probe instead of always re-walking.
+  out.history_cache = {
+    last_source: _getHistoryRowsLastSource(coldkey),
+  };
 
   return NextResponse.json(out);
 }
