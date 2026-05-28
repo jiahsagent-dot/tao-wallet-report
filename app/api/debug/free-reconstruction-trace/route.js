@@ -48,6 +48,64 @@ export const maxDuration = 120;
 const SS58_RE = /^5[a-km-zA-HJ-NP-Z1-9]{47}$/;
 const AMOUNT_KEY_PRECISION = 1e6; // 6dp matching ~rao precision after τ scaling
 const ROW_CAP = 50;
+const TAOSTATS_BASE = 'https://api.taostats.io';
+
+// iter 138: raw uncached walk of /api/transfer/v1?address=X to distinguish
+// (a) the rows aren't in the Taostats /transfer/v1 response at all → structural
+//     API gap, real reconstruction-source bug
+// from
+// (b) the rows ARE returned by /transfer/v1 but our cache/filter path drops them
+//     → fixable inside lib/taostats.js
+// Iter 137 verify named the 3 missing rows (block_numbers 7534068, 7036937,
+// 7036948 on the subnets coldkey at 180d). This walker fetches the same
+// endpoint our cache uses, bypasses iter-127 memo + DB cache + retry wrapper,
+// and reports whether each paid_only block_number appears in the raw response.
+async function rawTransferV1Walk(coldkey, maxPages) {
+  const key = process.env.TAOSTATS_API_KEY;
+  if (!key) {
+    return { ok: false, error: 'TAOSTATS_API_KEY env var unset' };
+  }
+  const allRows = [];
+  let paginationTotal = null;
+  let pagesWalked = 0;
+  let stopReason = null;
+  for (let page = 1; page <= maxPages; page++) {
+    const qs = new URLSearchParams({ address: coldkey, limit: '200', page: String(page) }).toString();
+    const url = `${TAOSTATS_BASE}/api/transfer/v1?${qs}`;
+    const t0 = Date.now();
+    let r;
+    try {
+      r = await fetch(url, { headers: { Authorization: key, Accept: 'application/json' } });
+    } catch (e) {
+      stopReason = `transport_error page ${page}: ${e.message}`;
+      break;
+    }
+    pagesWalked = page;
+    if (!r.ok) {
+      const body = await r.text();
+      stopReason = `http_${r.status} page ${page}: ${body.slice(0, 120)}`;
+      break;
+    }
+    const j = await r.json();
+    const pageRows = Array.isArray(j?.data) ? j.data : [];
+    if (paginationTotal == null) {
+      paginationTotal = j?.pagination?.total_items ?? j?.pagination?.total ?? null;
+    }
+    allRows.push(...pageRows);
+    if (pageRows.length === 0) { stopReason = `empty_page_${page}`; break; }
+    if (pageRows.length < 200) { stopReason = `short_page_${page}_${pageRows.length}rows`; break; }
+    // small sleep between pages to avoid bursting the free-tier rate limit
+    if (page < maxPages) await new Promise((res) => setTimeout(res, 250));
+  }
+  return {
+    ok: true,
+    pages_walked: pagesWalked,
+    total_rows: allRows.length,
+    pagination_total: paginationTotal,
+    stop_reason: stopReason,
+    rows: allRows,
+  };
+}
 
 function transferKey(direction, dateStr, amountTao) {
   const rounded = Math.round(Number(amountTao || 0) * AMOUNT_KEY_PRECISION);
@@ -130,12 +188,13 @@ export async function GET(req) {
     );
   }
   const days = Math.max(1, Math.min(730, Number(url.searchParams.get('days') || 180)));
+  const includeRawWalk = url.searchParams.get('include_raw_walk') === '1';
 
   const endD = new Date();
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 137,
+    iter: 138,
     coldkey,
     days,
     startIso: startD.toISOString(),
@@ -212,6 +271,55 @@ export async function GET(req) {
       paid_only: paidOnly.length > ROW_CAP,
       free_only: freeOnly.length > ROW_CAP,
     };
+
+    // iter 138: when ?include_raw_walk=1, fetch /api/transfer/v1?address=coldkey
+    // directly (bypassing iter-127 transfers cache + lib/taostats.js retry
+    // wrapper) and check whether the paid_only block_numbers appear in the
+    // raw API response. The cache walk uses the same endpoint via taoGet, so
+    // any block_number in paid_only that DOES appear here means the bug is in
+    // our cache layer (iter-127 transfers cache poisoned, classification dropping
+    // the row, etc.); a block_number that DOESN'T appear here means /transfer/v1
+    // simply doesn't surface this transfer kind and the reconstruction needs a
+    // different data source (e.g. /api/account/history/v1 balance deltas, or a
+    // staking endpoint for transfers that route through Subtensor's staking pallet).
+    if (includeRawWalk) {
+      const tw = Date.now();
+      const walk = await rawTransferV1Walk(coldkey, 5);
+      out.raw_walk = {
+        ok: walk.ok,
+        ms: Date.now() - tw,
+        pages_walked: walk.pages_walked,
+        total_rows: walk.total_rows,
+        pagination_total: walk.pagination_total,
+        stop_reason: walk.stop_reason,
+        error: walk.error || null,
+      };
+      if (walk.ok) {
+        // Extract block_numbers from paid_only rows (they have raw.block_number)
+        const paidOnlyBlocks = paidOnly
+          .map((r) => r?.raw?.block_number)
+          .filter((b) => b != null);
+        // Index raw walk rows by block_number for fast lookup
+        const rawByBlock = new Map();
+        for (const row of walk.rows) {
+          const bn = row.block_number ?? row.extrinsic?.block_number ?? null;
+          if (bn != null) rawByBlock.set(String(bn), row);
+        }
+        out.raw_walk.paid_only_block_lookup = paidOnlyBlocks.map((bn) => {
+          const found = rawByBlock.get(String(bn));
+          return {
+            block_number: bn,
+            found_in_raw: !!found,
+            raw_row: found ? found : null,
+          };
+        });
+        // Also surface a small sample of the raw walk's row shape so we can see
+        // exactly what fields /api/transfer/v1 returns (the iter-127 walker
+        // reads t.to?.ss58 || t.to and t.from?.ss58 || t.from — confirm the
+        // shape matches).
+        out.raw_walk.sample_rows = walk.rows.slice(0, 5);
+      }
+    }
   }
 
   return NextResponse.json(out, { headers: { 'cache-control': 'no-store' } });
