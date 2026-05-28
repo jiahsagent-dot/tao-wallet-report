@@ -100,6 +100,27 @@ function diffField(paid, free) {
   };
 }
 
+// iter 136: the iter-134 paid_at_free_window re-probe is structurally critical
+// — without it, every fallback-oldest-divergent row stays stuck on `divergent`
+// and the FREE_PNL=1 flip decision can't see the reclassification signal. But
+// the re-probe is a SECOND paid /api/accounting/tax/v1 walk fired ~1s after
+// the first one (which was itself in the same request), so it's the most
+// 429-prone call in the sweep. Live verify against the real subnets coldkey at
+// 180d returned exactly this: paid_at_free_window.ok=false, error="429: Rate
+// Limited", verdict stayed `divergent`. Retry once after a 5s backoff so a
+// single transient 429 doesn't block the reclassification. Only retry on 429
+// (the deterministic recoverable case); other errors bubble immediately.
+async function retryOn429(fn, { backoffMs = 5000 } = {}) {
+  try {
+    return await fn();
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (!/429|Rate Limited/i.test(msg)) throw e;
+    await new Promise((r) => setTimeout(r, backoffMs));
+    return await fn();
+  }
+}
+
 async function probeOne(coldkey, days, currentBalanceTao) {
   const endD = new Date();
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
@@ -159,7 +180,9 @@ async function probeOne(coldkey, days, currentBalanceTao) {
         const narrowStartD = new Date(row.free.first_snapshot_date);
         if (!Number.isNaN(narrowStartD.getTime())) {
           const t0 = Date.now();
-          const narrowPaidRows = await getTaxReportRangePaid(coldkey, narrowStartD, endD);
+          const narrowPaidRows = await retryOn429(() =>
+            getTaxReportRangePaid(coldkey, narrowStartD, endD)
+          );
           const narrowAgg = aggregate(narrowPaidRows, currentBalanceTao);
           const narrowDiff = {
             current_balance: diffField(narrowAgg.current_balance, row.free.current_balance),
@@ -249,7 +272,7 @@ export async function GET(req) {
   const windowsDays = parseWindows(url);
 
   const out = {
-    iter: 134,
+    iter: 136,
     input: {
       coldkeys,
       windows_days: windowsDays,
