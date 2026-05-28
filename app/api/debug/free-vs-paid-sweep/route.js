@@ -20,6 +20,18 @@ export const maxDuration = 300;
 // top-level worst_verdict so the FREE_PNL=1 prod flip decision has full-matrix
 // derisk, not point-estimate derisk.
 //
+// iter 134: divergent-by-retention reclassification. iter 133 surfaced a 2.556τ
+// divergence at 180d on the subnets coldkey, but on inspection it's a
+// window-mismatch artifact, not a math bug: free's effective window is ~168d
+// (capped by history/v1 retention), so free is computing PnL-since-snapshot
+// while paid is computing PnL-over-180d. Comparing those numbers directly is
+// apples-to-oranges. iter 134 detects when fallback-oldest fired and runs a
+// SECOND paid call at free's effective window (windowStart = first_snapshot_date)
+// — if THAT comparison shows parity, free's reconstruction is honest for the
+// window it can see and the divergence is just relabeling. New verdict tier
+// `divergent-by-retention` separates "free is buggy" from "free is honestly
+// answering a different question because the API can't see further back".
+//
 // Sequential by design — the iter-121/124/127 burst-429 vector means even
 // paid/free in parallel within one request can rate-limit on Vercel's shared
 // outbound IP. 4 windows × N coldkeys × 2 paths is run strictly serially.
@@ -132,18 +144,65 @@ async function probeOne(coldkey, days, currentBalanceTao) {
     row.verdict = Object.values(row.diff).every((d) => d.within_tolerance === true)
       ? 'parity'
       : 'divergent';
+
+    // iter 134: when fallback-oldest fired on the free path AND the verdict is
+    // divergent, the divergence may just be a window-mismatch (free is computing
+    // PnL-since-snapshot, paid is computing PnL-over-requested-window). Re-run
+    // paid at free's effective window (windowStart = first_snapshot_date) to
+    // test like-for-like. If THAT comparison shows parity, free's reconstruction
+    // is honest for the window it can actually see — reclassify as
+    // divergent-by-retention so the FREE_PNL=1 flip decision isn't blocked by
+    // what is effectively a labeling artifact.
+    const fallbackFired = (row.free.first_snapshot_source || '').includes('fallback-oldest');
+    if (row.verdict === 'divergent' && fallbackFired && row.free.first_snapshot_date) {
+      try {
+        const narrowStartD = new Date(row.free.first_snapshot_date);
+        if (!Number.isNaN(narrowStartD.getTime())) {
+          const t0 = Date.now();
+          const narrowPaidRows = await getTaxReportRangePaid(coldkey, narrowStartD, endD);
+          const narrowAgg = aggregate(narrowPaidRows, currentBalanceTao);
+          const narrowDiff = {
+            current_balance: diffField(narrowAgg.current_balance, row.free.current_balance),
+            starting_balance: diffField(narrowAgg.starting_balance, row.free.starting_balance),
+            transfers_in: diffField(narrowAgg.transfers_in, row.free.transfers_in),
+            transfers_out: diffField(narrowAgg.transfers_out, row.free.transfers_out),
+            net_profit: diffField(narrowAgg.net_profit, row.free.net_profit),
+          };
+          const narrowParity = Object.values(narrowDiff).every((d) => d.within_tolerance === true);
+          row.paid_at_free_window = {
+            ok: true,
+            ms: Date.now() - t0,
+            days: Math.round((endD.getTime() - narrowStartD.getTime()) / (24 * 3600 * 1000)),
+            startIso: narrowStartD.toISOString(),
+            row_count: narrowPaidRows.length,
+            ...narrowAgg,
+            diff: narrowDiff,
+            parity: narrowParity,
+          };
+          if (narrowParity) {
+            row.verdict = 'divergent-by-retention';
+          }
+        }
+      } catch (e) {
+        row.paid_at_free_window = { ok: false, error: String(e?.message || e) };
+      }
+    }
   } else {
     row.verdict = 'incomplete';
   }
   return row;
 }
 
-// Worst-case verdict: incomplete > divergent > parity (any incomplete bubbles
-// up to incomplete; any divergent without incomplete bubbles up to divergent;
-// only all-parity is parity).
+// Worst-case verdict: incomplete > divergent > divergent-by-retention > parity.
+// iter 134 adds divergent-by-retention — free's reconstruction is internally
+// consistent for the window it can see (paid agrees when re-run at the same
+// effective window), the divergence is purely free-tier API retention truncating
+// the requested window. Treat it as "honest, just answering a shorter question"
+// — load-bearing for the FREE_PNL=1 flip decision.
 function rollup(verdicts) {
   if (verdicts.includes('incomplete')) return 'incomplete';
   if (verdicts.includes('divergent')) return 'divergent';
+  if (verdicts.includes('divergent-by-retention')) return 'divergent-by-retention';
   return 'parity';
 }
 
@@ -190,7 +249,7 @@ export async function GET(req) {
   const windowsDays = parseWindows(url);
 
   const out = {
-    iter: 133,
+    iter: 134,
     input: {
       coldkeys,
       windows_days: windowsDays,
