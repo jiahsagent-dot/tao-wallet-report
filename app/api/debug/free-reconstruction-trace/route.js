@@ -61,6 +61,14 @@ const TAOSTATS_BASE = 'https://api.taostats.io';
 // endpoint our cache uses, bypasses iter-127 memo + DB cache + retry wrapper,
 // and reports whether each paid_only block_number appears in the raw response.
 async function rawTransferV1Walk(coldkey, maxPages) {
+  return rawTaoWalk('/api/transfer/v1', { address: coldkey }, maxPages);
+}
+
+// iter 139: shared raw walker so the new history-delta probe can hit
+// /api/account/history/v1 the same uncached way the iter-138 transfer probe
+// hits /api/transfer/v1 — bypassing the iter-125 memo + DB cache + lib retry
+// wrapper. Sequential, 250ms-paced between pages.
+async function rawTaoWalk(path, baseParams, maxPages) {
   const key = process.env.TAOSTATS_API_KEY;
   if (!key) {
     return { ok: false, error: 'TAOSTATS_API_KEY env var unset' };
@@ -70,9 +78,8 @@ async function rawTransferV1Walk(coldkey, maxPages) {
   let pagesWalked = 0;
   let stopReason = null;
   for (let page = 1; page <= maxPages; page++) {
-    const qs = new URLSearchParams({ address: coldkey, limit: '200', page: String(page) }).toString();
-    const url = `${TAOSTATS_BASE}/api/transfer/v1?${qs}`;
-    const t0 = Date.now();
+    const qs = new URLSearchParams({ ...baseParams, limit: '200', page: String(page) }).toString();
+    const url = `${TAOSTATS_BASE}${path}?${qs}`;
     let r;
     try {
       r = await fetch(url, { headers: { Authorization: key, Accept: 'application/json' } });
@@ -94,7 +101,6 @@ async function rawTransferV1Walk(coldkey, maxPages) {
     allRows.push(...pageRows);
     if (pageRows.length === 0) { stopReason = `empty_page_${page}`; break; }
     if (pageRows.length < 200) { stopReason = `short_page_${page}_${pageRows.length}rows`; break; }
-    // small sleep between pages to avoid bursting the free-tier rate limit
     if (page < maxPages) await new Promise((res) => setTimeout(res, 250));
   }
   return {
@@ -105,6 +111,51 @@ async function rawTransferV1Walk(coldkey, maxPages) {
     stop_reason: stopReason,
     rows: allRows,
   };
+}
+
+// iter 139: rootOnly formula matching lib/taostats.js getTaxReportRangeFree
+// L559-563 — balance_free + balance_reserved + balance_staked_root, all in
+// planck, returned as TAO. This is the field the iter-109 fallback-oldest
+// reconstruction reads as the snapshot's `total_balance`. A balance-delta
+// reconstruction would walk these and net out transfers, so the right question
+// to ask the data is: "does rootOnly jump by ~2.556τ between the snapshots
+// straddling block 7534068?". If yes → balance-delta reconstruction WOULD
+// capture the 2.556τ stake-credit event and we can fix lib/taostats.js without
+// adding a new endpoint. If no → the event happens entirely inside
+// balance_staked_alpha and balance-delta on rootOnly misses it just as much as
+// /api/transfer/v1 does → next iter needs a staking-specific endpoint.
+const RAO = 1e9;
+function rootOnlyTao(row) {
+  return (
+    (Number(row?.balance_free || 0) +
+      Number(row?.balance_reserved || 0) +
+      Number(row?.balance_staked_root || 0)) /
+    RAO
+  );
+}
+function totalTao(row) {
+  return Number(row?.balance_total || 0) / RAO;
+}
+
+// For each target block, find the latest snapshot with block_number <= target
+// (the "before") and the earliest with block_number > target (the "after").
+// Snapshots in history/v1 are ~12 rows/day (epoch frequency), so the gap is
+// typically a few thousand blocks (~7s blocks ≈ minutes apart) — small enough
+// that the delta is dominated by the event at the target block, not by
+// background income.
+function findSnapshotPair(snapshotsAsc, targetBlock) {
+  let before = null;
+  let after = null;
+  for (const s of snapshotsAsc) {
+    const bn = s.block_number;
+    if (bn == null) continue;
+    if (bn <= targetBlock) {
+      if (!before || bn > before.block_number) before = s;
+    } else {
+      if (!after || bn < after.block_number) after = s;
+    }
+  }
+  return { before, after };
 }
 
 function transferKey(direction, dateStr, amountTao) {
@@ -189,12 +240,13 @@ export async function GET(req) {
   }
   const days = Math.max(1, Math.min(730, Number(url.searchParams.get('days') || 180)));
   const includeRawWalk = url.searchParams.get('include_raw_walk') === '1';
+  const includeBalanceDeltaProbe = url.searchParams.get('include_balance_delta_probe') === '1';
 
   const endD = new Date();
   const startD = new Date(endD.getTime() - days * 24 * 3600 * 1000);
 
   const out = {
-    iter: 138,
+    iter: 139,
     coldkey,
     days,
     startIso: startD.toISOString(),
@@ -318,6 +370,134 @@ export async function GET(req) {
         // reads t.to?.ss58 || t.to and t.from?.ss58 || t.from — confirm the
         // shape matches).
         out.raw_walk.sample_rows = walk.rows.slice(0, 5);
+      }
+    }
+
+    // iter 139: balance-delta probe. For each paid_only row with a block_number,
+    // fetch /api/account/history/v1 uncached (bypassing iter-125 memo + DB cache),
+    // find the snapshots straddling the target block, and report the rootOnly +
+    // total_balance delta. Decides between two fix paths for the iter-138 miss:
+    //   (i)  rootOnly delta ≈ paid_only.amount_tao  →  balance-delta reconstruction
+    //        on /api/account/history/v1 (which lib already walks) would catch the
+    //        event; fix is in-lib, no new endpoint.
+    //   (ii) rootOnly delta ≈ 0 but total_balance delta ≈ amount  →  event lives
+    //        entirely inside balance_staked_alpha_as_tao; rootOnly walk misses it
+    //        but balance_total walk catches it (semantic shift: PnL would include
+    //        alpha-as-tao on starting too).
+    //   (iii) both deltas ≈ 0  →  history/v1 doesn't see this event at all → must
+    //         use staking-specific endpoint (/api/dtao/stake_balance_change/v1
+    //         or similar).
+    if (includeBalanceDeltaProbe) {
+      const th = Date.now();
+      // 20 pages × 200 rows ≈ enough for ~6 months of 12-rows/day history.
+      const histWalk = await rawTaoWalk('/api/account/history/v1', { address: coldkey }, 20);
+      out.balance_delta_probe = {
+        ok: histWalk.ok,
+        ms: Date.now() - th,
+        pages_walked: histWalk.pages_walked,
+        total_rows: histWalk.total_rows,
+        pagination_total: histWalk.pagination_total,
+        stop_reason: histWalk.stop_reason,
+        error: histWalk.error || null,
+      };
+      if (histWalk.ok) {
+        const snapshotsAsc = [...histWalk.rows]
+          .filter((r) => r.block_number != null)
+          .sort((a, b) => Number(a.block_number) - Number(b.block_number));
+        const oldestBlock = snapshotsAsc[0]?.block_number ?? null;
+        const newestBlock = snapshotsAsc[snapshotsAsc.length - 1]?.block_number ?? null;
+        out.balance_delta_probe.oldest_block = oldestBlock;
+        out.balance_delta_probe.newest_block = newestBlock;
+
+        const TOLERANCE_TAO = 0.05; // 5τ-cents tolerance for the "matches" verdict
+        out.balance_delta_probe.results = paidOnly.map((r) => {
+          const targetBlock = r?.raw?.block_number;
+          if (targetBlock == null) {
+            return { target: r, error: 'no block_number on paid_only row' };
+          }
+          if (oldestBlock != null && targetBlock < oldestBlock) {
+            return {
+              target_block: targetBlock,
+              target_date: r.date,
+              target_amount_tao: r.amount_tao,
+              target_direction: r.direction,
+              verdict: 'pre_history_retention',
+              note: `target block ${targetBlock} is older than oldest history snapshot ${oldestBlock}`,
+            };
+          }
+          if (newestBlock != null && targetBlock > newestBlock) {
+            return {
+              target_block: targetBlock,
+              target_date: r.date,
+              target_amount_tao: r.amount_tao,
+              target_direction: r.direction,
+              verdict: 'post_history_newest',
+              note: `target block ${targetBlock} is newer than newest history snapshot ${newestBlock}`,
+            };
+          }
+          const { before, after } = findSnapshotPair(snapshotsAsc, targetBlock);
+          if (!before || !after) {
+            return {
+              target_block: targetBlock,
+              target_date: r.date,
+              target_amount_tao: r.amount_tao,
+              target_direction: r.direction,
+              verdict: 'no_snapshot_pair',
+              before_present: !!before,
+              after_present: !!after,
+            };
+          }
+          const beforeRoot = rootOnlyTao(before);
+          const afterRoot = rootOnlyTao(after);
+          const beforeTotal = totalTao(before);
+          const afterTotal = totalTao(after);
+          const deltaRoot = afterRoot - beforeRoot;
+          const deltaTotal = afterTotal - beforeTotal;
+          // Signed expected delta — inbound transfer credits balance, outbound debits.
+          const expected = r.direction === 'in' ? r.amount_tao : -r.amount_tao;
+          const rootMatches = Math.abs(deltaRoot - expected) <= TOLERANCE_TAO;
+          const totalMatches = Math.abs(deltaTotal - expected) <= TOLERANCE_TAO;
+          let verdict;
+          if (rootMatches) verdict = 'root_delta_matches'; // fix path (i)
+          else if (totalMatches) verdict = 'total_delta_matches_only'; // fix path (ii)
+          else if (Math.abs(deltaRoot) < TOLERANCE_TAO && Math.abs(deltaTotal) < TOLERANCE_TAO)
+            verdict = 'no_balance_delta'; // fix path (iii)
+          else verdict = 'delta_present_but_unmatched';
+          return {
+            target_block: targetBlock,
+            target_date: r.date,
+            target_amount_tao: r.amount_tao,
+            target_direction: r.direction,
+            expected_signed_delta: expected,
+            before_block: before.block_number,
+            after_block: after.block_number,
+            before_gap_blocks: targetBlock - Number(before.block_number),
+            after_gap_blocks: Number(after.block_number) - targetBlock,
+            before_timestamp: before.timestamp,
+            after_timestamp: after.timestamp,
+            before_root_tao: beforeRoot,
+            after_root_tao: afterRoot,
+            delta_root_tao: deltaRoot,
+            before_total_tao: beforeTotal,
+            after_total_tao: afterTotal,
+            delta_total_tao: deltaTotal,
+            verdict,
+          };
+        });
+        // Roll-up verdict so the wake-script doesn't have to scan the array.
+        const verdicts = out.balance_delta_probe.results
+          .map((x) => x?.verdict)
+          .filter(Boolean);
+        const has = (v) => verdicts.includes(v);
+        out.balance_delta_probe.rollup =
+          has('delta_present_but_unmatched') ? 'mixed' :
+          (verdicts.length > 0 && verdicts.every((v) => v === 'root_delta_matches')) ? 'all_root_match' :
+          (verdicts.length > 0 && verdicts.every((v) => v === 'no_balance_delta')) ? 'all_invisible_to_history' :
+          (has('root_delta_matches') && has('total_delta_matches_only')) ? 'mixed_root_and_total' :
+          has('root_delta_matches') ? 'some_root_match' :
+          has('total_delta_matches_only') ? 'some_total_only_match' :
+          has('no_balance_delta') ? 'some_invisible_to_history' :
+          'unclassified';
       }
     }
   }
