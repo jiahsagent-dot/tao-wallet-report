@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getOrBuildReport } from '../../../lib/report.js';
-import { buildInsights, peekCachedInsights } from '../../../lib/ai-insights.js';
+import {
+  buildInsights,
+  buildVerdictFallback,
+  peekCachedInsights,
+} from '../../../lib/ai-insights.js';
 
 export const runtime = 'nodejs';
 // Pollinations reasoning model can take 30-45s on long prompts; bump to 60s.
@@ -50,12 +54,37 @@ export async function POST(req) {
   try {
     report = await getOrBuildReport(coldkey);
   } catch (e) {
+    // No report = no fallback verdicts available (the verdicts live on
+    // report.*). Return an empty array anyway so the client sees a
+    // consistent shape and its Array.isArray defensive check passes.
     return NextResponse.json(
-      { error: `Couldn't fetch report data: ${String(e.message || e).slice(0, 200)}` },
+      {
+        available: false,
+        error: `Couldn't fetch report data: ${String(e.message || e).slice(0, 200)}`,
+        verdictFallback: [],
+      },
       { status: 502 },
     );
   }
 
-  const insights = await buildInsights(report, { force });
-  return NextResponse.json({ ...insights, cached: false });
+  // Iter 136 — wrap buildInsights so any internal throw (provider exception,
+  // validation crash, etc.) still hands the client a verdictFallback. Without
+  // this, a thrown buildInsights returns 500 with no JSON body, the client's
+  // r.json() rejects, the .catch path runs without a fallback, and the §0
+  // error card surfaces the heading + body but not the deterministic verdict
+  // tree from iter 135. Returning 200 with available:false keeps the client's
+  // success-shape branch (.then) running so verdictFallback lands in state.
+  try {
+    const insights = await buildInsights(report, { force });
+    return NextResponse.json({ ...insights, cached: false });
+  } catch (e) {
+    return NextResponse.json(
+      {
+        available: false,
+        error: `Insights build failed: ${String(e.message || e).slice(0, 200)}`,
+        verdictFallback: buildVerdictFallback(report),
+      },
+      { status: 200 },
+    );
+  }
 }
