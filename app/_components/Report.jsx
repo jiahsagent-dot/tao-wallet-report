@@ -719,6 +719,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                         <td className="num">
                           {isSynthetic ? '—' : fmt(pos.alphaPriceTao, 6)}
                           {(() => {
+                            if (isSynthetic) return null;
                             const ps = perSubnetMap.get(pos.netuid);
                             if (!ps || !(pos.alphaHeld > 0) || !(pos.alphaPriceTao > 0)) return null;
                             const netSpent = (ps.spentTao || 0) - (ps.soldTao || 0);
@@ -755,6 +756,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                             return null;
                           })()}
                           {(() => {
+                            if (isSynthetic) return null;
                             const apyAgg = perNetuidApy.get(pos.netuid);
                             if (!apyAgg || !(apyAgg.den > 0)) return null;
                             const apy = apyAgg.num / apyAgg.den;
