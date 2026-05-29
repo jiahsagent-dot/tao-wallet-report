@@ -310,13 +310,41 @@ function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ar
   );
 }
 
-function Section({ title, n, children }) {
+// iter 5: optional collapsible=true wraps the body in a <details> closed by
+// default so heavy sections (e.g. §6 Broader market — same content on every
+// coldkey, lots of vertical real-estate on mobile) don't dominate the scroll.
+// When the URL hash points at us (deep link, nav tab click, popstate) we
+// auto-open so the user lands on visible content, not a closed disclosure.
+function Section({ title, n, children, collapsible, collapsibleLabel }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!collapsible || typeof window === 'undefined') return;
+    const sync = () => {
+      if (window.location.hash === `#sec-${n}`) setOpen(true);
+    };
+    sync();
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, [collapsible, n]);
   return (
     <section className="card" id={`sec-${n}`}>
       <h2>
         <span className="num">§{n}</span> {title}
       </h2>
-      {children}
+      {collapsible ? (
+        <details
+          className="section-collapse"
+          open={open}
+          onToggle={(e) => setOpen(e.currentTarget.open)}
+        >
+          <summary className="section-collapse-summary">
+            {collapsibleLabel || 'Show details'}
+          </summary>
+          <div className="section-collapse-body">{children}</div>
+        </details>
+      ) : (
+        children
+      )}
     </section>
   );
 }
@@ -1962,7 +1990,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
         <p className="disclaimer">{r.disclaimer}</p>
       </Section>
 
-      <Section n="6" title="Broader market">
+      <Section n="6" title="Broader market" collapsible collapsibleLabel="Show market context">
         <div className="stats">
           <Stat label="TAO/USD" value={`$${fmt(b.taoPrice, 2)}`} />
           <Stat label="Subnets" value={b.subnetCount} />

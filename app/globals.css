@@ -2928,3 +2928,40 @@ pre.copy-block-body {
   color: var(--muted);
   opacity: 0.5;
 }
+
+/* iter 5 — collapsible section disclosure. Heavy sections (e.g. §6 Broader
+   market, identical across coldkeys) hide behind a chevron pill so mobile
+   readers don't have to scroll past them every visit. Tab nav auto-opens. */
+.section-collapse { margin-top: 4px; }
+.section-collapse-summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 500;
+  list-style: none;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 120ms, border-color 120ms, background 120ms;
+}
+.section-collapse-summary::-webkit-details-marker { display: none; }
+.section-collapse-summary::before {
+  content: '▸';
+  font-size: 10px;
+  color: var(--accent);
+  transition: transform 150ms;
+}
+.section-collapse[open] > .section-collapse-summary::before {
+  transform: rotate(90deg);
+}
+.section-collapse-summary:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg2));
+}
+.section-collapse-body { padding-top: 16px; }

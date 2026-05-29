@@ -15,7 +15,7 @@ Status legend: ⏳ queued · 🔨 in-flight · ✅ done
 - ✅ iter 4 — SectionNav refactor (polish/sectionnav-iter4): replaced scroll listener with IntersectionObserver, added smooth-scroll on tab click via scrollIntoView, restored active tab + scroll position from URL hash on mount + hashchange (back/forward, deep links). hash written via replaceState so tab taps don't clutter history.
 
 ## Queue
-- ⏳ iter 5 — collapse §6 Broader market by default behind a "Show market context" disclosure (it's the same content for every coldkey; clutter on mobile).
+- ✅ iter 5 — collapsed §6 Broader market behind a "Show market context" disclosure (polish/market-collapse-iter5). Section() now takes optional `collapsible` + `collapsibleLabel` props; renders the body inside a native `<details>` closed by default. Auto-opens when URL hash matches `#sec-N` (tab nav click, hashchange, popstate) so deep links land on visible content. CSS chevron pill matches the section-nav-tab look.
 - ⏳ iter 6 — owner-only `/me` deep link with auto-refresh every 5 min (revalidate). Pin to PWA home screen.
 - ⏳ iter 7 — share card: `/report/<coldkey>/og` already exists; surface a "Copy share image" button on Report.
 - ⏳ iter 8 — TAO price source consistency: confirm Taostats price is used everywhere (CoinGecko drifted 25%+ historically — see Jai's memory `feedback_tao_price_source.md`).
