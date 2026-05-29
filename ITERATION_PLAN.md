@@ -8,12 +8,13 @@ Status legend: ⏳ queued · 🔨 in-flight · ✅ done
 
 - ✅ iter 1 — mobile sparkline overflow (fix/mobile-sparkline-overflow)
 - ✅ iter 1 — app-shell: sticky tabbed section nav + "Quick open" wallet shortcuts (fix/app-shell-iter1)
+- ✅ iter 2 — `/me` aggregated route + per-wallet stacked reports (feat/me-aggregated-iter2). Done on a separate branch off iter 1.
+- ✅ iter 3 — "report incorrect" audit (audit/numbers-iter3): identified headline `portfolio.totalTao` only sums alpha positions, silently excludes root-staked + free TAO. lib/AUDIT.md captures field-by-field deltas.
+- ✅ iter 3.5 — fixed headline totalTao (fix/portfolio-total-iter3.5): sourced from `latestBalance.totalTao` (balance_total / RAO); synthetic Root + Liquid §1 rows added. Branch stays for Jai's review (data semantics).
+- ✅ iter 3.6 — polished synthetic rows (polish/synthetic-rows-iter3.6): ROOT/WALLET pill badges, hidden α-held/α-price for non-alpha rows, gated cost-basis + APY chips off synthetic rows, dropped phantom netuid-0 ghost row from alpha-shares feed.
+- ✅ iter 4 — SectionNav refactor (polish/sectionnav-iter4): replaced scroll listener with IntersectionObserver, added smooth-scroll on tab click via scrollIntoView, restored active tab + scroll position from URL hash on mount + hashchange (back/forward, deep links). hash written via replaceState so tab taps don't clutter history.
 
 ## Queue
-
-- ⏳ iter 2 — `/me` aggregated route: fetch both Jai coldkeys (5Cnz1juP root + 5EKFph3D subnets), sum balances per subnet, combine PnL streams, single header showing total TAO across wallets. Lib helper `lib/aggregator.js`.
-- ⏳ iter 3 — "report incorrect" diagnosis: compare live report numbers against Taostats screener + tax/v1. Capture deltas in `lib/AUDIT.md`. Top candidates: iter140 free-PnL balance-total walk (currently draft branch `iter140-balance-total-walk-draft`), stale subnet labels, dust-position filtering.
-- ⏳ iter 4 — section nav active-state polish: smooth-scroll, IntersectionObserver instead of scroll listener, restore tab on back/forward.
 - ⏳ iter 5 — collapse §6 Broader market by default behind a "Show market context" disclosure (it's the same content for every coldkey; clutter on mobile).
 - ⏳ iter 6 — owner-only `/me` deep link with auto-refresh every 5 min (revalidate). Pin to PWA home screen.
 - ⏳ iter 7 — share card: `/report/<coldkey>/og` already exists; surface a "Copy share image" button on Report.

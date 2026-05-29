@@ -323,25 +323,79 @@ function Section({ title, n, children }) {
 
 // Sticky tab-bar that anchor-jumps to each Section. Sections are
 // rendered with id="sec-N" — see Section() above. The "AI" tab targets
-// the AIInsights block (#ai-insights).
+// the AIInsights block at #sec-0.
+//
+// iter 4: replaced the scroll listener with IntersectionObserver (less
+// jank, fires only when sections cross the viewport), added smooth-scroll
+// on tab click via scrollIntoView, and made the active tab restore from
+// the URL hash on mount + back/forward navigation. hash is written via
+// replaceState so tab clicks don't pile up history entries.
 function SectionNav({ sections }) {
-  const [active, setActive] = useState(sections[0]?.id);
+  const [active, setActive] = useState(() => {
+    if (typeof window === 'undefined') return sections[0]?.id;
+    const hash = window.location.hash.slice(1);
+    return sections.find((s) => s.id === hash)?.id || sections[0]?.id;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
+    // Track intersection ratio per id; pick the topmost section currently
+    // visible (>0 ratio) as active so the highlight matches what the user
+    // is reading rather than what last scrolled past a fixed threshold.
+    const visibility = new Map(sections.map((s) => [s.id, 0]));
+    const pickActive = () => {
+      for (const s of sections) {
+        if ((visibility.get(s.id) || 0) > 0) return s.id;
+      }
+      return sections[0]?.id;
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) visibility.set(e.target.id, e.intersectionRatio);
+        setActive(pickActive());
+      },
+      // Negative top margin keeps a section from counting as active until
+      // it has cleared the sticky nav strip (~70px). Negative bottom margin
+      // pulls the activation boundary up so the next section takes over
+      // when its header reaches the upper third of the viewport.
+      { rootMargin: '-72px 0px -55% 0px', threshold: [0, 0.1, 0.4, 0.8, 1] },
+    );
+    const els = sections.map((s) => document.getElementById(s.id)).filter(Boolean);
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [sections]);
+
+  // Sync active tab + smooth-scroll to target whenever the URL hash
+  // changes from outside (back/forward, deep link paste, sharable link).
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const ids = sections.map((s) => s.id);
-    const onScroll = () => {
-      const fromTop = window.scrollY + 120;
-      let current = ids[0];
-      for (const id of ids) {
-        const el = document.getElementById(id);
-        if (el && el.offsetTop <= fromTop) current = id;
-      }
-      setActive(current);
+    const sync = () => {
+      const hash = window.location.hash.slice(1);
+      const match = sections.find((s) => s.id === hash);
+      if (!match) return;
+      setActive(match.id);
+      const el = document.getElementById(match.id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
+    // On mount, honour any incoming hash so /report/<key>#sec-3 lands
+    // at §3 instead of the page top.
+    if (window.location.hash) sync();
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
   }, [sections]);
+
+  const onTabClick = useCallback((e, id) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // replaceState (not pushState) keeps the back button useful — repeated
+    // tab clicks don't clutter history with one entry per tab tap.
+    if (typeof window !== 'undefined' && window.history) {
+      window.history.replaceState(null, '', `#${id}`);
+    }
+    setActive(id);
+  }, []);
+
   return (
     <nav className="section-nav" aria-label="Report sections">
       <div className="section-nav-scroll">
@@ -349,6 +403,7 @@ function SectionNav({ sections }) {
           <a
             key={s.id}
             href={`#${s.id}`}
+            onClick={(e) => onTabClick(e, s.id)}
             className={`section-nav-tab${active === s.id ? ' is-active' : ''}`}
           >
             {s.label}
