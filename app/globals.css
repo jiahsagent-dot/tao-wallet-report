@@ -978,6 +978,9 @@ tfoot tr.tfoot-totals td {
   background: color-mix(in srgb, var(--accent) 3%, transparent);
   font-variant-numeric: tabular-nums;
   cursor: help;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .sparkline-lbl {
   color: var(--muted);
