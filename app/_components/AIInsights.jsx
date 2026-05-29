@@ -149,7 +149,11 @@ export default function AIInsights({ coldkey }) {
         .then(({ ok, j }) => {
           if (cancelled) return;
           if (!ok || !j.available) {
-            setState({ status: 'error', error: j.error || 'unavailable' });
+            setState({
+              status: 'error',
+              error: j.error || 'unavailable',
+              verdictFallback: Array.isArray(j.verdictFallback) ? j.verdictFallback : [],
+            });
             return;
           }
           setState({ status: 'ready', data: j });
@@ -210,11 +214,14 @@ export default function AIInsights({ coldkey }) {
   }, [fetchInsights]);
 
   if (state.status === 'error') {
-    // Iter 134 — preserve §0 in the DOM on LLM failure instead of returning
-    // null. A silent-vanish meant every KB→§0 bridge from iters 117-132 was
-    // invisible whenever Pollinations timed out (e.g. iter 133 verify). Keep
-    // the heading + offer a retry so the page structure stays intact and the
-    // user has a recovery path. Deterministic verdict fallback is iter 135.
+    // Iter 134 preserved §0 in the DOM on LLM failure. Iter 135 takes the next
+    // step: render the deterministic verdict tree (iter 117-132 KB→§0 bridges)
+    // inside the error card so users get the structured deliverables in
+    // degraded form, not just an empty "narrative unavailable" message. The
+    // fallback rides along on every /api/insights response — the server-side
+    // verdict helpers don't depend on Pollinations so they survive the failure
+    // path the LLM does not.
+    const fallback = Array.isArray(state.verdictFallback) ? state.verdictFallback : [];
     return (
       <section ref={sectionRef} className="card ai-insights ai-insights-error">
         <h2>
@@ -234,6 +241,24 @@ export default function AIInsights({ coldkey }) {
           (§1–§6) still has every number. Click <strong>Retry</strong> to try
           again; the LLM provider occasionally times out on long prompts.
         </p>
+        {fallback.length > 0 && (
+          <>
+            <p className="ai-verdict-fallback-lede">
+              Structured verdicts (computed without the LLM):
+            </p>
+            <ul className="ai-verdict-fallback">
+              {fallback.map((v) => (
+                <li key={v.key} className="ai-verdict-row">
+                  <span className="ai-verdict-label">{v.label}:</span>{' '}
+                  <code className="ai-verdict-tag">{v.verdict}</code>
+                  {v.interpretation ? (
+                    <span className="ai-verdict-interp"> — {v.interpretation}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
     );
   }

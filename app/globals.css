@@ -2172,6 +2172,42 @@ pre.copy-block-body {
   color: var(--fg-muted, #aaa);
   margin: 12px 0 4px;
 }
+/* Iter 135 — deterministic verdict fallback inside the error card. Lifts the
+   iter 117-132 KB→§0 verdict-tree outputs into degraded form so users get the
+   structured deliverables even when Pollinations is down. Sits below the
+   muted error body, visually quiet so it reads as a recovery surface not a
+   replacement narrative. */
+.ai-verdict-fallback-lede {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dim, #888);
+  margin: 14px 0 6px;
+}
+.ai-verdict-fallback {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.ai-verdict-row {
+  margin: 0 0 6px;
+  color: var(--fg, #ddd);
+}
+.ai-verdict-label {
+  color: var(--fg, #ddd);
+  font-weight: 600;
+}
+.ai-verdict-tag {
+  font-size: 12px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  background: rgba(249, 168, 38, 0.10);
+  color: var(--accent, #f9a826);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.ai-verdict-interp { color: var(--fg-muted, #aaa); }
 
 .ai-markdown { font-size: 14px; line-height: 1.6; }
 .ai-markdown .ai-h2 {
