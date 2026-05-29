@@ -2852,3 +2852,30 @@ pre.copy-block-body {
   color: var(--muted);
   opacity: 0.5;
 }
+
+/* iter 3.6 — badges for synthetic §1 rows (Root / Wallet liquid) so the
+   row labels stop pointing at broken Taostats subnet URLs and read more
+   honestly as "this isn't a subnet, it's root-staked / unstaked TAO". */
+.synth-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  color: var(--dim);
+  cursor: help;
+}
+.synth-badge.synth-root {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 38%, var(--line));
+  background: color-mix(in srgb, var(--green) 8%, var(--bg2));
+}
+.synth-badge.synth-liquid {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg2));
+}

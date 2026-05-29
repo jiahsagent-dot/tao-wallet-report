@@ -13,9 +13,10 @@ Status legend: ⏳ queued · 🔨 in-flight · ✅ done
 
 - ✅ iter 3.5 — fixed portfolio.totalTao (fix/portfolio-total-iter3.5). Headline τ now sourced from `getLatestBalance(coldkey).totalTao` (balance_total / RAO). Synthetic "Root" (netuid 0) and "Liquid" (netuid -1) rows added to §1 holdings table from `balance_staked_root` and `balance_free + balance_reserved`. emissionAlignment denominator preserved as alpha-only sum so iter-125 verdict thresholds keep their meaning. getLatestBalance call also de-duped (was fetched twice). Cosmetic: SubnetLink for synthetic rows links to broken Taostats URLs — flag for iter 3.6 polish.
 
+- ✅ iter 3.6 — polished synthetic rows (polish/synthetic-rows-iter3.6). §1 table now branches on `pos.kind === 'root' || 'liquid'`: replaces SubnetLink with a `ROOT` (green) / `WALLET` (orange) pill badge carrying a title-tip ("Root-staked TAO — earns ~9% APR" / "Liquid wallet balance — not earning yield"), and renders `—` for netuid + α held + α price cells since those are meaningless for non-alpha rows. Cost-basis chip and APY chip already self-gate (perSubnet/perNetuidApy don't carry entries for netuid 0/-1), so no extra guards needed.
+
 ## Queue
 
-- ⏳ iter 3.6 — polish synthetic Root/Liquid rows: gate SubnetLink to alpha-only rows (skip for netuid ≤ 0), hide alphaPriceTao cell for synthetic rows, add a small "ROOT" / "WALLET" badge instead of the broken subnet link.
 - ⏳ iter 4 — section nav active-state polish: smooth-scroll, IntersectionObserver instead of scroll listener, restore tab on back/forward.
 - ⏳ iter 5 — collapse §6 Broader market by default behind a "Show market context" disclosure (it's the same content for every coldkey; clutter on mobile).
 - ⏳ iter 6 — owner-only `/me` deep link with auto-refresh every 5 min (revalidate). Pin to PWA home screen.

@@ -690,20 +690,34 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   {p.top10.map((pos) => {
                     const rgb1d = (pos.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                     const rgb7d = (pos.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                    const isSynthetic = pos.kind === 'root' || pos.kind === 'liquid';
                     return (
                       <tr key={pos.netuid}>
-                        <td>{pos.netuid}</td>
+                        <td>{isSynthetic ? '—' : pos.netuid}</td>
                         <td>
-                          <SubnetLink
-                            netuid={pos.netuid}
-                            name={pos.name}
-                            info={subnetLookup.get(pos.netuid)}
-                            href={`https://taostats.io/subnets/${pos.netuid}/metagraph`}
-                          />
+                          {isSynthetic ? (
+                            <span
+                              className={`synth-badge synth-${pos.kind}`}
+                              title={
+                                pos.kind === 'root'
+                                  ? 'Root-staked TAO (netuid 0) — earns ~9% APR by validating root subnet inflation.'
+                                  : 'Liquid wallet balance — unstaked TAO (free + reserved). Not earning yield.'
+                              }
+                            >
+                              {pos.kind === 'root' ? 'ROOT' : 'WALLET'}
+                            </span>
+                          ) : (
+                            <SubnetLink
+                              netuid={pos.netuid}
+                              name={pos.name}
+                              info={subnetLookup.get(pos.netuid)}
+                              href={`https://taostats.io/subnets/${pos.netuid}/metagraph`}
+                            />
+                          )}
                         </td>
-                        <td className="num">{fmt(pos.alphaHeld)}</td>
+                        <td className="num">{isSynthetic ? '—' : fmt(pos.alphaHeld)}</td>
                         <td className="num">
-                          {fmt(pos.alphaPriceTao, 6)}
+                          {isSynthetic ? '—' : fmt(pos.alphaPriceTao, 6)}
                           {(() => {
                             const ps = perSubnetMap.get(pos.netuid);
                             if (!ps || !(pos.alphaHeld > 0) || !(pos.alphaPriceTao > 0)) return null;
