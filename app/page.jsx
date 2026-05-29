@@ -113,6 +113,9 @@ export default function Page() {
 
       <div className="featured-wallets" aria-label="Featured wallets">
         <span className="featured-wallets-label">Quick open</span>
+        <a href="/me" className="featured-wallet-chip featured-wallet-chip-link" title="Combined view across all wallets">
+          ∑ All wallets
+        </a>
         {FEATURED_WALLETS.map((w) => (
           <button
             key={w.coldkey}

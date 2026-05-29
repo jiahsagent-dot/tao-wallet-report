@@ -8,10 +8,11 @@ Status legend: ⏳ queued · 🔨 in-flight · ✅ done
 
 - ✅ iter 1 — mobile sparkline overflow (fix/mobile-sparkline-overflow)
 - ✅ iter 1 — app-shell: sticky tabbed section nav + "Quick open" wallet shortcuts (fix/app-shell-iter1)
+- ✅ iter 2 — `/me` aggregated route: combined-total header + per-subnet aggregate table + per-wallet stacked reports (feat/me-aggregated-iter2). Did NOT merge PnL/drawdown/yield because cost-basis differs per wallet — semantic merge would mislead, so left those wallet-scoped.
 
 ## Queue
 
-- ⏳ iter 2 — `/me` aggregated route: fetch both Jai coldkeys (5Cnz1juP root + 5EKFph3D subnets), sum balances per subnet, combine PnL streams, single header showing total TAO across wallets. Lib helper `lib/aggregator.js`.
+- ⏳ iter 2.5 — replace stacked per-wallet reports on /me with a tabbed surface (Combined / Root / Subnets) so the long scroll collapses. Reuses SectionNav pattern from iter 1.
 - ⏳ iter 3 — "report incorrect" diagnosis: compare live report numbers against Taostats screener + tax/v1. Capture deltas in `lib/AUDIT.md`. Top candidates: iter140 free-PnL balance-total walk (currently draft branch `iter140-balance-total-walk-draft`), stale subnet labels, dust-position filtering.
 - ⏳ iter 4 — section nav active-state polish: smooth-scroll, IntersectionObserver instead of scroll listener, restore tab on back/forward.
 - ⏳ iter 5 — collapse §6 Broader market by default behind a "Show market context" disclosure (it's the same content for every coldkey; clutter on mobile).

@@ -312,6 +312,11 @@ a:hover { text-decoration: underline; }
 }
 .featured-wallet-chip:active:not(:disabled) { transform: scale(0.97); }
 .featured-wallet-chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.featured-wallet-chip-link {
+  text-decoration: none;
+  display: inline-block;
+}
+.featured-wallet-chip-link:hover { text-decoration: none; }
 
 .watch-strip {
   margin: 14px 0 4px;
@@ -2927,4 +2932,68 @@ pre.copy-block-body {
 .pnl-income-breakdown .pib-sep {
   color: var(--muted);
   opacity: 0.5;
+}
+
+/* /me aggregated view — combined header + per-wallet stacked reports. */
+.me-summary h2 .num {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg2));
+  border-color: var(--accent);
+}
+.me-unique { color: var(--dim); font-size: 11px; font-weight: 400; margin-left: 4px; }
+.me-wallet-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.me-wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg2);
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 13px;
+  transition: border-color 120ms, background 120ms;
+}
+.me-wallet-pill:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg2));
+}
+.me-wallet-label { font-weight: 600; color: var(--accent); }
+.me-wallet-amt { font-variant-numeric: tabular-nums; }
+.me-wallet-share { color: var(--dim); font-size: 11px; }
+.me-positions { margin-top: 24px; }
+.me-positions-title {
+  font-size: 13px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.me-wallet-report { margin-top: 32px; scroll-margin-top: 70px; }
+.me-wallet-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: -8px;
+}
+.me-wallet-tag {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg2));
+  border: 1px solid var(--accent);
+  color: var(--fg);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.me-wallet-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--dim);
+  text-transform: none;
+  letter-spacing: 0;
 }
