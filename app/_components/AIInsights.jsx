@@ -210,8 +210,32 @@ export default function AIInsights({ coldkey }) {
   }, [fetchInsights]);
 
   if (state.status === 'error') {
-    // Soft-fail — never block the deterministic report on AI hiccups.
-    return null;
+    // Iter 134 — preserve §0 in the DOM on LLM failure instead of returning
+    // null. A silent-vanish meant every KB→§0 bridge from iters 117-132 was
+    // invisible whenever Pollinations timed out (e.g. iter 133 verify). Keep
+    // the heading + offer a retry so the page structure stays intact and the
+    // user has a recovery path. Deterministic verdict fallback is iter 135.
+    return (
+      <section ref={sectionRef} className="card ai-insights ai-insights-error">
+        <h2>
+          <span className="num">§0</span> AI Insights
+          <span className="ai-beta">beta</span>
+          <button
+            type="button"
+            className="ai-regenerate"
+            onClick={() => fetchInsights({ force: true })}
+            title="Retry the AI narrative pass (or press R)"
+          >
+            ↻ Retry
+          </button>
+        </h2>
+        <p className="ai-error-body">
+          AI narrative unavailable right now — the deterministic report below
+          (§1–§6) still has every number. Click <strong>Retry</strong> to try
+          again; the LLM provider occasionally times out on long prompts.
+        </p>
+      </section>
+    );
   }
 
   const isLoading = state.status === 'loading';
