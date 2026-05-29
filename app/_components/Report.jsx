@@ -1182,6 +1182,20 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   </>
                 )}
               </div>
+              {dd.underwaterRunCount > 0 && dd.ddDurationP50 != null && (
+                <div
+                  className="dd-stat"
+                  title={`Across ${dd.windowDays}d of daily snapshots, ${dd.underwaterRunCount} contiguous underwater stretch${dd.underwaterRunCount === 1 ? '' : 'es'} (balance below prior running peak). Median (p50) gives typical stretch length; p90 gives the slow-recovery tail. The CURRENT stretch is included if still open. Compare against “Days since peak” above to see if the live dip is shorter, typical, or beyond the historical tail.`}
+                >
+                  <div className="dd-lbl">Underwater stretches</div>
+                  <div className="dd-val dd-window">
+                    p50 {dd.ddDurationP50}d · p90 {dd.ddDurationP90}d
+                  </div>
+                  <div className="dd-sub">
+                    max {dd.ddDurationMax}d · {dd.underwaterRunCount} stretch{dd.underwaterRunCount === 1 ? '' : 'es'} over {dd.windowDays}d
+                  </div>
+                </div>
+              )}
             </div>
             {dd.sparkline90d && dd.sparkline90d.str && (
               <div
