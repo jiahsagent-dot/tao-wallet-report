@@ -15,6 +15,14 @@ import ColdkeySearch from './_components/ColdkeySearch.jsx';
 const TIP = process.env.NEXT_PUBLIC_TIP_WALLET_ADDRESS || '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH';
 const DEMO_COLDKEY = '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd';
 
+// Shortcut chips for the app owner's own wallets. Coldkeys are public on
+// Taostats so listing them here is harmless. Iter 2 will replace this with
+// a single aggregated /me route.
+const FEATURED_WALLETS = [
+  { coldkey: '5Cnz1juP8ZovhWkujaaHFZ1rJw2nyUsKf8s8543PbkSLbinH', label: 'Root' },
+  { coldkey: '5EKFph3D839fxdbQwhAHyM4CQzBHNpLSecUAteNZKqW1G5cd', label: 'Subnets' },
+];
+
 // Deterministic per-hour rotation so server + client agree (no hydration
 // mismatch) and visitors who reload at different times see variety.
 const PLACEHOLDERS = [
@@ -101,6 +109,22 @@ export default function Page() {
           ▸ Try a demo report
         </button>
         <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
+      </div>
+
+      <div className="featured-wallets" aria-label="Featured wallets">
+        <span className="featured-wallets-label">Quick open</span>
+        {FEATURED_WALLETS.map((w) => (
+          <button
+            key={w.coldkey}
+            type="button"
+            className="featured-wallet-chip"
+            onClick={() => { setColdkey(w.coldkey); runReport(w.coldkey); }}
+            disabled={loading}
+            title={w.coldkey}
+          >
+            {w.label}
+          </button>
+        ))}
       </div>
 
       <PinnedColdkeys />

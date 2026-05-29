@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import AIInsights from './AIInsights.jsx';
 import SubnetLink, { buildSubnetLookup } from './SubnetLink.jsx';
 
@@ -312,12 +312,50 @@ function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ar
 
 function Section({ title, n, children }) {
   return (
-    <section className="card">
+    <section className="card" id={`sec-${n}`}>
       <h2>
         <span className="num">§{n}</span> {title}
       </h2>
       {children}
     </section>
+  );
+}
+
+// Sticky tab-bar that anchor-jumps to each Section. Sections are
+// rendered with id="sec-N" — see Section() above. The "AI" tab targets
+// the AIInsights block (#ai-insights).
+function SectionNav({ sections }) {
+  const [active, setActive] = useState(sections[0]?.id);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ids = sections.map((s) => s.id);
+    const onScroll = () => {
+      const fromTop = window.scrollY + 120;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop <= fromTop) current = id;
+      }
+      setActive(current);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [sections]);
+  return (
+    <nav className="section-nav" aria-label="Report sections">
+      <div className="section-nav-scroll">
+        {sections.map((s) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className={`section-nav-tab${active === s.id ? ' is-active' : ''}`}
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -479,6 +517,18 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <span className="top-nudge-arrow">→</span>
         </a>
       )}
+
+      <SectionNav
+        sections={[
+          { id: 'sec-0', label: 'AI' },
+          { id: 'sec-1', label: '§1 Portfolio' },
+          { id: 'sec-2', label: '§2 PnL' },
+          { id: 'sec-3', label: '§3 Yield' },
+          { id: 'sec-4', label: '§4 Flags' },
+          { id: 'sec-5', label: '§5 Recs' },
+          { id: 'sec-6', label: '§6 Market' },
+        ]}
+      />
 
       <AIInsights coldkey={data.coldkey} />
 

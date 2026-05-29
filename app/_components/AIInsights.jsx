@@ -225,7 +225,7 @@ export default function AIInsights({ coldkey }) {
   }
 
   return (
-    <section ref={sectionRef} className="card ai-insights">
+    <section ref={sectionRef} className="card ai-insights" id="sec-0">
       <h2>
         <span className="num">§0</span> AI Insights
         <span className="ai-beta">beta</span>
