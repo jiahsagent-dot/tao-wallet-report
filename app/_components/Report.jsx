@@ -1687,23 +1687,55 @@ export default function Report({ data, showSubscribeNudge = true }) {
                             </span>
                           )}
                           {(() => {
+                            // iter 130: visual surfacing of the 1h × 1d × 7d × 30d yield quartet
+                            // (KB iter 128, deterministic §0 iter 129). Subnet-median fallback
+                            // rows are skipped — single-snapshot noise per iter 116.
                             if (p.apyIsFallback) return null;
-                            if (p.apy1d == null || p.apy30d == null) return null;
-                            const deltaPp = (p.apy1d - p.apy30d) * 100;
-                            const tier =
-                              deltaPp >= 1 ? 'up' : deltaPp <= -1 ? 'down' : 'flat';
-                            const arrow =
-                              tier === 'up' ? '↗' : tier === 'down' ? '↘' : '→';
-                            const sign = deltaPp >= 0 ? '+' : '';
-                            const title = `30d ${(p.apy30d * 100).toFixed(2)}% · 7d ${p.apy7d != null ? `${(p.apy7d * 100).toFixed(2)}%` : '—'} · 1d ${(p.apy1d * 100).toFixed(2)}% (1d vs 30d Δ ${sign}${deltaPp.toFixed(2)}pp)`;
+                            if (p.apy7d == null || p.apy30d == null) return null;
+                            const a1h = p.apy1h;
+                            const a1d = p.apy1d;
+                            const a7d = p.apy7d;
+                            const a30d = p.apy30d;
+                            const isStray = (x) => {
+                              if (x == null) return false;
+                              const off7 = a7d > 0 && (x > a7d * 2 || x < a7d * 0.4);
+                              const off30 = a30d > 0 && (x > a30d * 2 || x < a30d * 0.4);
+                              return off7 && off30;
+                            };
+                            const stray1h = isStray(a1h);
+                            const stray1d = isStray(a1d);
+                            let dirCls = 'qw-stable';
+                            let dirLbl = 'stable';
+                            if (a30d > 0) {
+                              const ratio = a7d / a30d;
+                              if (ratio >= 1.15) { dirCls = 'qw-improving'; dirLbl = 'improving (7d>30d)'; }
+                              else if (ratio <= 0.85) { dirCls = 'qw-regressing'; dirLbl = 'regressing (7d<30d)'; }
+                            }
+                            const fmtPct = (v) => v != null ? `${(v * 100).toFixed(1)}%` : '—';
+                            const title =
+                              `1h × 1d × 7d × 30d yield quartet. ` +
+                              `7d = planning window, 30d = durability check. ` +
+                              `Direction: ${dirLbl}. ` +
+                              `Greyed windows are stray-epoch sampling artefacts (KB iter 128) — ignore.`;
                             return (
-                              <span
-                                className={`apy-trend-chip apy-trend-${tier}`}
-                                title={title}
-                              >
-                                {' '}
-                                {arrow} {sign}{deltaPp.toFixed(1)}pp
-                              </span>
+                              <div className="apy-quartet" title={title}>
+                                <span className={`qw ${stray1h ? 'qw-stray' : ''}`}>
+                                  <span className="qw-lbl">1h</span>
+                                  <span className="qw-val">{fmtPct(a1h)}</span>
+                                </span>
+                                <span className={`qw ${stray1d ? 'qw-stray' : ''}`}>
+                                  <span className="qw-lbl">1d</span>
+                                  <span className="qw-val">{fmtPct(a1d)}</span>
+                                </span>
+                                <span className={`qw ${dirCls}`}>
+                                  <span className="qw-lbl">7d</span>
+                                  <span className="qw-val">{fmtPct(a7d)}</span>
+                                </span>
+                                <span className="qw">
+                                  <span className="qw-lbl">30d</span>
+                                  <span className="qw-val">{fmtPct(a30d)}</span>
+                                </span>
+                              </div>
                             );
                           })()}
                         </td>

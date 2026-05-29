@@ -416,6 +416,54 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--line);
 }
 
+/* iter 130: §3 visual surfacing of the 1h × 1d × 7d × 30d yield quartet.
+   7d carries the planning-window direction class (improving/regressing/stable
+   per KB iter 128). 1h/1d get qw-stray when they're sampling artefacts
+   relative to BOTH 7d and 30d. */
+.apy-quartet {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  flex-wrap: nowrap;
+}
+.qw {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.qw-lbl { font-size: 9.5px; opacity: 0.7; font-weight: 600; }
+.qw-val { font-weight: 600; }
+.qw-improving {
+  background: color-mix(in srgb, var(--green) 12%, var(--bg));
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+}
+.qw-regressing {
+  background: color-mix(in srgb, var(--red) 12%, var(--bg));
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 35%, var(--line));
+}
+.qw-stable {
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+.qw-stray {
+  opacity: 0.42;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
 .weighted-apy-trend {
   margin: 12px 0 6px;
   padding: 10px 14px;
