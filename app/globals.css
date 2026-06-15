@@ -2125,6 +2125,163 @@ pre.copy-block-body {
   background: rgba(248, 113, 113, 0.08);
 }
 
+/* Saved wallets — first-class card grid above the search input. Each card
+   shows a friendly label, short SS58, and (when cached) last-known balance +
+   PnL straight from localStorage — no API call needed on revisit. */
+.saved-wallets {
+  margin: 12px 0 18px;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(249, 168, 38, 0.25);
+  border-radius: 12px;
+  background: var(--bg2);
+}
+.saved-wallets-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.saved-wallets-title {
+  font-size: 13px;
+  margin: 0;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  font-weight: 600;
+}
+.saved-wallets-add {
+  background: transparent;
+  border: 1px solid rgba(249, 168, 38, 0.35);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.saved-wallets-add:hover {
+  background: rgba(249, 168, 38, 0.08);
+  border-color: var(--accent);
+}
+.saved-wallets-empty {
+  margin: 0;
+  color: var(--dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.saved-wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.saved-wallet-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  overflow: hidden;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.saved-wallet-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.saved-wallet-link {
+  display: block;
+  padding: 10px 12px 8px;
+  color: var(--fg);
+  border-bottom: none;
+  text-decoration: none;
+  flex: 1;
+}
+.saved-wallet-link:hover {
+  text-decoration: none;
+}
+.saved-wallet-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.saved-wallet-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.saved-wallet-label-empty {
+  color: var(--dim);
+  font-style: italic;
+  font-weight: 400;
+}
+.saved-wallet-addr {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--dim);
+}
+.saved-wallet-snap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.saved-wallet-snap-empty {
+  color: var(--dim);
+  font-size: 12px;
+  font-style: italic;
+}
+.saved-wallet-balance {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.saved-wallet-pnl {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--dim);
+}
+.saved-wallet-pnl.pos { color: var(--green, #4ade80); }
+.saved-wallet-pnl.neg { color: var(--red, #f87171); }
+.saved-wallet-pnl-pct {
+  font-size: 12px;
+  opacity: 0.85;
+}
+.saved-wallet-age {
+  font-size: 10.5px;
+  color: var(--dim);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+.saved-wallet-actions {
+  display: flex;
+  border-top: 1px solid var(--line);
+}
+.saved-wallet-action {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-size: 11px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.saved-wallet-action + .saved-wallet-action {
+  border-left: 1px solid var(--line);
+}
+.saved-wallet-action:hover {
+  color: var(--accent);
+  background: rgba(249, 168, 38, 0.05);
+}
+.saved-wallet-action-del:hover {
+  color: var(--red);
+  background: rgba(248, 113, 113, 0.06);
+}
+
 .back-link {
   display: inline-block;
   color: var(--dim);

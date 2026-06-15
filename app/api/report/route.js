@@ -3,7 +3,7 @@ import { getOrBuildReport, peekCachedReport, buildAndCacheReport } from '../../.
 import { rpc } from '../../../lib/supabase.js';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // Bittensor SS58 addresses are 48 chars, prefix '5', base58 alphabet.
 const SS58_RE = /^5[a-km-zA-HJ-NP-Z1-9]{47}$/;

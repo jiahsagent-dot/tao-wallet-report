@@ -15,7 +15,7 @@ const SS58_RE = /^5[a-km-zA-HJ-NP-Z1-9]{47}$/;
 // so even if the function instance cold-starts, the CDN can still serve.
 export const revalidate = 300;
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 function shortKey(k) {
   return `${k.slice(0, 6)}…${k.slice(-6)}`;
@@ -98,7 +98,7 @@ export default async function ReportPermalinkPage({ params, searchParams }) {
       ) : (
         <>
           <div className="share-row">
-            <PinButton coldkey={coldkey} />
+            <PinButton coldkey={coldkey} pnl={report?.pnlGroundTruth} />
             <ShareToXButton coldkey={coldkey} pnl={report?.pnlGroundTruth} />
           </div>
           <Report data={report} showSubscribeNudge={true} />

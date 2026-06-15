@@ -1,9 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addPin, removePin, isPinned } from './PinnedColdkeys.jsx';
+import { addPin, removePin, isPinned, updatePinSnapshot } from './PinnedColdkeys.jsx';
 
-export default function PinButton({ coldkey }) {
+function snapshotFromPnl(pnl) {
+  if (!pnl || typeof pnl !== 'object' || !pnl.available) return null;
+  const snap = {};
+  if (typeof pnl.currentPortfolioTao === 'number') snap.currentPortfolioTao = pnl.currentPortfolioTao;
+  if (typeof pnl.profitTao === 'number') snap.profitTao = pnl.profitTao;
+  if (typeof pnl.returnPct === 'number') snap.returnPct = pnl.returnPct;
+  return Object.keys(snap).length > 0 ? snap : null;
+}
+
+export default function PinButton({ coldkey, pnl }) {
   const [pinned, setPinned] = useState(false);
 
   useEffect(() => {
@@ -20,17 +29,27 @@ export default function PinButton({ coldkey }) {
     };
   }, [coldkey]);
 
+  // Whenever the current report's PnL data lands AND this coldkey is already
+  // pinned, refresh its cached balance/PnL snapshot so the saved-wallet card
+  // shows current numbers on the next visit. Cheap no-op when nothing changed.
+  useEffect(() => {
+    if (!pinned) return;
+    const snap = snapshotFromPnl(pnl);
+    if (snap) updatePinSnapshot(coldkey, snap);
+  }, [coldkey, pinned, pnl]);
+
   function toggle() {
     if (pinned) {
       removePin(coldkey);
       return;
     }
-    const note = window.prompt(
-      'Pin this report. Add an optional note (e.g. "watching SN21 closely"), or leave blank:',
+    const label = window.prompt(
+      'Save this wallet. Label it (e.g. Subnets, Mantat, Root) or leave blank:',
       '',
     );
-    if (note === null) return; // cancelled
-    addPin(coldkey, note);
+    if (label === null) return; // cancelled
+    const snap = snapshotFromPnl(pnl) || {};
+    addPin(coldkey, { label, ...snap });
   }
 
   return (
@@ -38,11 +57,11 @@ export default function PinButton({ coldkey }) {
       type="button"
       className={`pin-btn${pinned ? ' pinned' : ''}`}
       onClick={toggle}
-      title={pinned ? 'Unpin this report' : 'Pin this report (and add an optional note)'}
+      title={pinned ? 'Forget this wallet' : 'Save this wallet for instant access'}
       aria-pressed={pinned}
     >
       <span className="pin-icon">{pinned ? '★' : '☆'}</span>
-      <span>{pinned ? 'Pinned' : 'Pin this report'}</span>
+      <span>{pinned ? 'Saved' : 'Save wallet'}</span>
     </button>
   );
 }

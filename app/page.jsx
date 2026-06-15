@@ -77,6 +77,8 @@ export default function Page() {
         <UsageBadge />
       </header>
 
+      <PinnedColdkeys />
+
       <form onSubmit={onSubmit} className="form">
         <ColdkeySearch
           value={coldkey}
@@ -103,7 +105,6 @@ export default function Page() {
         <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
       </div>
 
-      <PinnedColdkeys />
       <RecentColdkeys />
 
       {error && <div className="err">⚠ {error}</div>}
@@ -114,7 +115,7 @@ export default function Page() {
         <>
           <div className="share-row">
             <ShareButton coldkey={report.coldkey} />
-            <PinButton coldkey={report.coldkey} />
+            <PinButton coldkey={report.coldkey} pnl={report?.pnlGroundTruth} />
             <a className="share-permalink" href={`/report/${report.coldkey}`}>
               Open permalink page →
             </a>
