@@ -2282,6 +2282,126 @@ pre.copy-block-body {
   background: rgba(248, 113, 113, 0.06);
 }
 
+/* Tao app shell — minimal left-nav modelled on bittensor-tracker.app. First
+   live tab is "Personalised Report" (hosts the wallet report engine); other
+   tabs land in subsequent iters. */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.app-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  padding: 18px 0 24px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.app-brand {
+  padding: 0 18px 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+.app-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: none;
+}
+.app-brand-link:hover {
+  text-decoration: none;
+  color: var(--accent);
+}
+.app-brand-mark {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249, 168, 38, 0.12);
+  border: 1px solid rgba(249, 168, 38, 0.35);
+  border-radius: 8px;
+}
+.app-brand-name {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+}
+.app-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  color: var(--dim);
+  font-size: 13.5px;
+  text-decoration: none;
+  border-bottom: none;
+  border-radius: 7px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.app-nav-item:hover {
+  color: var(--fg);
+  background: rgba(249, 168, 38, 0.06);
+  text-decoration: none;
+}
+.app-nav-item.active {
+  color: var(--accent);
+  background: rgba(249, 168, 38, 0.10);
+  font-weight: 600;
+}
+.app-nav-icon {
+  font-size: 14px;
+  line-height: 1;
+  width: 18px;
+  display: inline-flex;
+  justify-content: center;
+}
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .app-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 12px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .app-brand {
+    padding: 0 14px 10px;
+    margin-bottom: 8px;
+  }
+  .app-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0 12px;
+  }
+  .app-nav-item {
+    white-space: nowrap;
+  }
+}
+
 .back-link {
   display: inline-block;
   color: var(--dim);
