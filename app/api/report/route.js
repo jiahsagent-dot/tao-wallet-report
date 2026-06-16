@@ -70,7 +70,16 @@ export async function POST(req) {
   const querySkip = (() => {
     try { return new URL(req.url).searchParams.get('skipCache') === '1'; } catch { return false; }
   })();
-  const skipCache = body?.skipCache === true || querySkip;
+  // Iter 170 — ?shadow=1 forces the FREE_PNL_SHADOW path for THIS request only,
+  // surfacing pnlGroundTruth.shadowFreeApi without touching the Vercel env. We
+  // imply skipCache so a cached non-shadow payload doesn't short-circuit the
+  // shadow build, and buildAndCacheReport refuses to cache the shadow result
+  // (see lib/report.js iter-170 comment) so plain calls afterwards don't read
+  // leaked shadow data.
+  const queryShadow = (() => {
+    try { return new URL(req.url).searchParams.get('shadow') === '1'; } catch { return false; }
+  })();
+  const skipCache = body?.skipCache === true || querySkip || queryShadow;
   if (!skipCache) {
     const cached = peekCachedReport(coldkey);
     if (cached) {
@@ -89,7 +98,9 @@ export async function POST(req) {
   }
 
   try {
-    const report = skipCache ? await buildAndCacheReport(coldkey) : await getOrBuildReport(coldkey);
+    const report = skipCache
+      ? await buildAndCacheReport(coldkey, { shadow: queryShadow })
+      : await getOrBuildReport(coldkey);
     // Fire-and-forget usage bump — don't block the response on it.
     rpc('bump_tao_usage').catch((e) => console.error('bump_tao_usage:', e));
     return NextResponse.json(report);
