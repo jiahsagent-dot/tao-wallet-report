@@ -57,7 +57,20 @@ export async function POST(req) {
     );
   }
 
-  const skipCache = body?.skipCache === true;
+  // Accept skipCache from BOTH the JSON body and the URL query string.
+  // Iter 166: every verify wake since iter 162 was sending `?skipCache=1` as a
+  // URL param and the route only read `body.skipCache`, so the cache was never
+  // bypassed and a single poisoned entry (e.g. a 504-timeout result cached
+  // under tax_fetch_failed) would silently fail every subsequent smoke until
+  // the cache TTL expired. The iter 165 verify "regression" (Subnets
+  // tax_fetch_failed across two probes) was this exact failure mode — the
+  // underlying app was healthy (39s body-skipCache probe returned
+  // verdict=matched immediately). Accept ?skipCache=1 as well so future verify
+  // smokes can't be fooled by stale cache.
+  const querySkip = (() => {
+    try { return new URL(req.url).searchParams.get('skipCache') === '1'; } catch { return false; }
+  })();
+  const skipCache = body?.skipCache === true || querySkip;
   if (!skipCache) {
     const cached = peekCachedReport(coldkey);
     if (cached) {
