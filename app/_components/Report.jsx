@@ -450,7 +450,7 @@ function StakingIncomeSparkline({ series, width = 200, height = 36 }) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, drawdownVerdict: ddv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -1156,7 +1156,28 @@ export default function Report({ data, showSubscribeNudge = true }) {
         {dd && dd.available && (
           <div className="drawdown-panel">
             <div className="drawdown-head">
-              <h3 className="dd-head-title">Drawdown &amp; recovery</h3>
+              <h3 className="dd-head-title">
+                Drawdown &amp; recovery
+                {/* iter 196: drawdownVerdict token already computed in
+                    lib/report.js (one of at_peak / resilient_absorb / recovered
+                    / beyond_historical_tail / flag_worthy / within_typical_stretch
+                    / recent_deep_dip / shallow_but_extended / recent_noise /
+                    material_dip) and consumed by §0 AI Insights since iter 121,
+                    but never rendered to the user. Same "data already computed,
+                    never shown" pattern as iter 193 emission chip — surface the
+                    label inline next to the §2 header so the user sees the same
+                    verdict the AI sees. Tooltip carries verdictReason. Tiered
+                    opacity only; severity colour reserved for §0 narrative. */}
+                {ddv && ddv.available && ddv.verdict && (
+                  <span
+                    className={`dd-verdict-chip dd-verdict-${ddv.verdict.replace(/_/g, '-')}`}
+                    title={ddv.verdictReason || `Drawdown verdict: ${ddv.verdict}`}
+                  >
+                    {' · '}
+                    {ddv.verdict.replace(/_/g, ' ')}
+                  </span>
+                )}
+              </h3>
               {Array.isArray(dd.series) && dd.series.length > 0 && (
                 <CopyCsvButton
                   getCsv={() => buildDrawdownCsv(dd)}
