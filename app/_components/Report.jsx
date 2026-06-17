@@ -1742,6 +1742,33 @@ export default function Report({ data, showSubscribeNudge = true }) {
                       <tr key={`${p.netuid}-${p.hotkey || i}`}>
                         <td>
                           sn{p.netuid} {p.subnetName}
+                          {(() => {
+                            // iter 195: symmetric emission chip in §3 yield-table
+                            // subnet column, mirrors the §1 portfolio chip from
+                            // iter 193 (reframed iter 194 with snapshot caveat).
+                            // Same fields, same tier classifier, same (epoch)
+                            // glyph so both surfaces teach the same per-epoch
+                            // semantics: tao.app screener emission_pct is a
+                            // snapshot (Yuma rotates per ~72min tempo), not a
+                            // sustained metric.
+                            if (p.emissionPct == null || !Number.isFinite(p.emissionPct)) return null;
+                            const tier =
+                              p.emissionPct >= 1.0 ? 'emit-high'
+                              : p.emissionPct === 0 ? 'emit-off-epoch'
+                              : 'emit-fair';
+                            const tierLabel =
+                              tier === 'emit-high' ? 'above 1.0% high-emission threshold in this epoch snapshot (≈1.3× fair share of 1/128)'
+                              : tier === 'emit-off-epoch' ? 'no emission share in this epoch snapshot — Yuma consensus rotates validator weight per ~72min tempo, over 24h most active subnets receive some share'
+                              : 'below the 1.0% high-emission threshold but above zero in this epoch snapshot';
+                            return (
+                              <span
+                                className={`subnet-emit-chip ${tier}`}
+                                title={`Network emission share for sn${p.netuid}: ${p.emissionPct.toFixed(2)}% — ${tierLabel}. tao.app screener emission_pct is a per-epoch SNAPSHOT (sums to 100 across subnets; rotates per ~72min Yuma tempo); fair share at 128 subnets ≈ 0.78%. Read as "this epoch" not "sustained".`}
+                              >
+                                {' · '}{p.emissionPct.toFixed(2)}% emit (epoch)
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td title={p.hotkey || ''}>{validatorShort}</td>
                         <td>{fmt(p.alphaTokens, 2)}</td>
