@@ -489,6 +489,22 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="AUD" value={`A$${fmt(p.totalAud)}`} />
           <Stat label="Positions" value={p.positionCount} />
         </div>
+        {p.canonicalSource === 'free-api-fallback' && Number.isFinite(p.canonicalTao) && (
+          <p
+            className="canonical-footnote"
+            title={`Taostats canonical PnL feed degraded (${p.canonicalReason || 'rate_limited'}). Free-API substrate RPC reports ${p.canonicalTao.toFixed(6)} τ for this coldkey — surfaced here as the graduating canonical number while the paid feed recovers.`}
+            style={{
+              fontSize: '0.85em',
+              color: 'var(--muted, #8a93a3)',
+              marginTop: '6px',
+              marginBottom: 0,
+            }}
+          >
+            <span aria-hidden="true">ℹ️</span>{' '}
+            free-API source ({fmt(p.canonicalTao, 4)} τ via substrate RPC) —
+            Taostats canonical {p.canonicalReason === 'delegation_rate_limited' ? '/delegation rate-limited' : 'degraded'} this snapshot
+          </p>
+        )}
         {p.sparkline30d && p.sparkline30d.str && (
           <div
             className="sparkline-row"
