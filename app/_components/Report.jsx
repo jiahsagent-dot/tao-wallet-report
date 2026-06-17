@@ -450,7 +450,7 @@ function StakingIncomeSparkline({ series, width = 200, height = 36 }) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, drawdownVerdict: ddv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, drawdownVerdict: ddv, stakingFlowVerdict: sfv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -1119,6 +1119,32 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </p>
               </div>
             )}
+            {/* iter 197: stakingFlowVerdict token chip surfaces inline next
+                to a new "Staking flows" h3 above the Transfers in/out stats
+                grid. Same "data already computed, never rendered" pattern as
+                iter 196 ddv chip — sfv has been computed in lib/report.js
+                stakingFlowVerdict() since iter 123 (8 verdict labels:
+                hands_off / passive / rebalancing / self_funding /
+                accumulation / capitalising / harvesting / distribution) and
+                consumed by §0 AI Insights, but never rendered to the user.
+                Three opacity tiers: "quiet" no-flow labels (hands_off,
+                passive, rebalancing, self_funding) read italic 0.7;
+                "active" directional labels (accumulation, capitalising,
+                harvesting) read base 0.85; "cautionary" distribution
+                reads 500-weight 0.95. Tooltip = verdictReason. No green/red
+                — §0 narrative owns severity, chip is information-only. */}
+            <h3 className="sub-h sf-head-title">
+              Staking flows
+              {sfv && sfv.available && sfv.verdict && (
+                <span
+                  className={`sf-verdict-chip sf-verdict-${sfv.verdict.replace(/_/g, '-')}`}
+                  title={sfv.verdictReason || `Staking-flow verdict: ${sfv.verdict}`}
+                >
+                  {' · '}
+                  {sfv.verdict.replace(/_/g, ' ')}
+                </span>
+              )}
+            </h3>
             <div className="stats">
               <Stat label="Starting balance" value={`${fmt(gt.startingBalanceTao, 6)} τ`} />
               <Stat label="Transfers in" value={`${fmt(gt.transferInTao, 6)} τ`} />

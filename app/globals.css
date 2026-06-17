@@ -771,6 +771,37 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 197: quiet staking-flow verdict token chip next to the new §2
+   "Staking flows" h3 sub-header. Same "data already computed, never
+   rendered" pattern as iter 196 dd-verdict-chip — sfv has shipped to §0
+   AI Insights since iter 123 but never surfaced to the user. Three
+   opacity tiers: "quiet" no-flow labels (hands_off, passive,
+   rebalancing, self_funding) read italic 0.7; "active" directional
+   labels (accumulation, capitalising, harvesting) read base 0.85;
+   "cautionary" distribution reads 500-weight 0.95 — distribution is the
+   one label whose presence may warrant user attention. No green/red —
+   §0 narrative owns severity. */
+.sf-verdict-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.sf-verdict-chip.sf-verdict-hands-off,
+.sf-verdict-chip.sf-verdict-passive,
+.sf-verdict-chip.sf-verdict-rebalancing,
+.sf-verdict-chip.sf-verdict-self-funding {
+  opacity: 0.7;
+  font-style: italic;
+}
+.sf-verdict-chip.sf-verdict-distribution {
+  opacity: 0.95;
+  font-weight: 500;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;
