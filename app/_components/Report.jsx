@@ -718,20 +718,25 @@ export default function Report({ data, showSubscribeNudge = true }) {
                           />
                           {(() => {
                             if (pos.emissionPct == null || !Number.isFinite(pos.emissionPct)) return null;
+                            // iter 194 — emission_pct is a per-epoch SNAPSHOT, not a sustained signal.
+                            // Yuma consensus rotates validator weight per ~72min tempo (360 blocks); at any
+                            // instant ~90/128 subnets show 0 (rotation), the other ~38 share emission.
+                            // Renamed tier "emit-starved" → "emit-off-epoch" + glyph carries `(epoch)`
+                            // suffix so users read the chip as "this epoch" not "permanent state".
                             const tier =
                               pos.emissionPct >= 1.0 ? 'emit-high'
-                              : pos.emissionPct === 0 ? 'emit-starved'
+                              : pos.emissionPct === 0 ? 'emit-off-epoch'
                               : 'emit-fair';
                             const tierLabel =
-                              tier === 'emit-high' ? 'above 1.0% high-emission threshold (≈1.3× fair share of 1/128)'
-                              : tier === 'emit-starved' ? 'zero network emission this epoch — validator weights routed elsewhere'
-                              : 'below the 1.0% high-emission threshold but above starved';
+                              tier === 'emit-high' ? 'above 1.0% high-emission threshold in this epoch snapshot (≈1.3× fair share of 1/128)'
+                              : tier === 'emit-off-epoch' ? 'no emission share in this epoch snapshot — Yuma consensus rotates validator weight per ~72min tempo, over 24h most active subnets receive some share'
+                              : 'below the 1.0% high-emission threshold but above zero in this epoch snapshot';
                             return (
                               <span
                                 className={`subnet-emit-chip ${tier}`}
-                                title={`Network emission share for sn${pos.netuid}: ${pos.emissionPct.toFixed(2)}% — ${tierLabel}. (tao.app screener emission_pct sums to 100 across all subnets; fair share at 128 subnets ≈ 0.78%.)`}
+                                title={`Network emission share for sn${pos.netuid}: ${pos.emissionPct.toFixed(2)}% — ${tierLabel}. tao.app screener emission_pct is a per-epoch SNAPSHOT (sums to 100 across subnets; rotates per ~72min Yuma tempo); fair share at 128 subnets ≈ 0.78%. Read as "this epoch" not "sustained".`}
                               >
-                                {' · '}{pos.emissionPct.toFixed(2)}% emit
+                                {' · '}{pos.emissionPct.toFixed(2)}% emit (epoch)
                               </span>
                             );
                           })()}

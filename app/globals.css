@@ -733,7 +733,10 @@ a:hover { text-decoration: underline; }
   opacity: 0.85;
 }
 .subnet-emit-chip.emit-high { opacity: 0.95; font-weight: 500; }
-.subnet-emit-chip.emit-starved { opacity: 0.7; font-style: italic; }
+/* iter 194: rename emit-starved → emit-off-epoch. The 0% tier reads as a
+   snapshot ("this epoch") not a permanent state — Yuma consensus rotates
+   validator weight per ~72min tempo; ~90/128 subnets show 0 at any instant. */
+.subnet-emit-chip.emit-off-epoch { opacity: 0.7; font-style: italic; }
 .deleg-ops {
   list-style: none;
   padding: 0;
