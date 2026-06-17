@@ -1682,6 +1682,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     const apyPct = p.apy != null ? `${fmt(p.apy * 100, 2)}%` : '—';
                     const bestPct =
                       p.subnetBestApy != null ? `${fmt(p.subnetBestApy * 100, 2)}%` : '—';
+                    // iter 192: surface subnet field shape (median + validator
+                    // count) under the "Subnet best" cell so the user reads
+                    // best as outlier-or-par against a typed field, not an
+                    // absolute target. Δ to best stays the actionable column;
+                    // the median line is anchoring context for the gap.
+                    const medianPct =
+                      p.subnetMedianApy != null
+                        ? `${fmt(p.subnetMedianApy * 100, 2)}%`
+                        : null;
+                    const fieldValStr =
+                      p.subnetValidatorCount > 0
+                        ? `${p.subnetValidatorCount} val`
+                        : null;
                     const deltaPp =
                       p.deltaToBest != null ? p.deltaToBest * 100 : null;
                     const deltaStr =
@@ -1769,7 +1782,21 @@ export default function Report({ data, showSubscribeNudge = true }) {
                             );
                           })()}
                         </td>
-                        <td>{bestPct}</td>
+                        <td>
+                          {bestPct}
+                          {medianPct && fieldValStr && (
+                            <span
+                              className="subnet-field"
+                              title={`Subnet field across ${p.subnetValidatorCount} validators: best ${bestPct}, median ${medianPct}. Read Δ to best in context — a gap to best on a thin field (median ≈ best) is real lift; on a wide field where median sits below you, "best" is an outlier and the lift may not sustain.`}
+                            >
+                              <br />
+                              <span className="field-lbl">median</span>{' '}
+                              <span className="field-val">{medianPct}</span>
+                              {' · '}
+                              <span className="field-lbl">{fieldValStr}</span>
+                            </span>
+                          )}
+                        </td>
                         <td className={`yield-delta ${deltaCls}`}>
                           {deltaStr}
                           {(() => {
