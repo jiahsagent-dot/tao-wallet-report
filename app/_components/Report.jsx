@@ -716,6 +716,25 @@ export default function Report({ data, showSubscribeNudge = true }) {
                             info={subnetLookup.get(pos.netuid)}
                             href={`https://taostats.io/subnets/${pos.netuid}/metagraph`}
                           />
+                          {(() => {
+                            if (pos.emissionPct == null || !Number.isFinite(pos.emissionPct)) return null;
+                            const tier =
+                              pos.emissionPct >= 1.0 ? 'emit-high'
+                              : pos.emissionPct === 0 ? 'emit-starved'
+                              : 'emit-fair';
+                            const tierLabel =
+                              tier === 'emit-high' ? 'above 1.0% high-emission threshold (≈1.3× fair share of 1/128)'
+                              : tier === 'emit-starved' ? 'zero network emission this epoch — validator weights routed elsewhere'
+                              : 'below the 1.0% high-emission threshold but above starved';
+                            return (
+                              <span
+                                className={`subnet-emit-chip ${tier}`}
+                                title={`Network emission share for sn${pos.netuid}: ${pos.emissionPct.toFixed(2)}% — ${tierLabel}. (tao.app screener emission_pct sums to 100 across all subnets; fair share at 128 subnets ≈ 0.78%.)`}
+                              >
+                                {' · '}{pos.emissionPct.toFixed(2)}% emit
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="num">{fmt(pos.alphaHeld)}</td>
                         <td className="num">

@@ -719,6 +719,21 @@ a:hover { text-decoration: underline; }
 }
 .subnet-field .field-lbl { opacity: 0.75; }
 .subnet-field .field-val { font-weight: 500; }
+/* iter 193: quiet subnet emission-share chip beside subnet name in §1 top-10
+   table. Mirrors the iter 192 "data already computed, never rendered" pattern
+   — emissionPct lives on every position row but only §0 EMISSION_ALIGNMENT
+   (iter 186) consumed it. Surfaces network emission share inline so the user
+   sees structural ceiling context next to subnet name. Tiered opacity only,
+   never green/red — §0 narrative owns the verdict. */
+.subnet-emit-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.subnet-emit-chip.emit-high { opacity: 0.95; font-weight: 500; }
+.subnet-emit-chip.emit-starved { opacity: 0.7; font-style: italic; }
 .deleg-ops {
   list-style: none;
   padding: 0;
