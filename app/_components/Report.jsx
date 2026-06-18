@@ -450,7 +450,7 @@ function StakingIncomeSparkline({ series, width = 200, height = 36 }) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, pnlDecomp: pnlDec, drawdown: dd, drawdownVerdict: ddv, stakingFlowVerdict: sfv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, pnlDecomp: pnlDec, drawdown: dd, drawdownVerdict: ddv, stakingFlowVerdict: sfv, apyTrend: apyt, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -1705,6 +1705,48 @@ export default function Report({ data, showSubscribeNudge = true }) {
             <Stat label="Worst" value={`sn${y.worst.netuid} @ ${fmt(y.worst.apy * 100, 2)}%`} />
           )}
         </div>
+
+        {/* iter 201: apyTrendVerdict token chip surfaces inline next to a new
+            §3 "APY trend" h3 sub-header, placed between the Weighted APY stats
+            grid and the existing .weighted-apy-trend mini-chart. The 9-label
+            verdict from lib/report.js apyTrendVerdict() (accelerating_climb /
+            accelerating_fade / peaking / recovering / climbing / fading /
+            recent_lift / recent_dip / stable) classifies the weighted-APY
+            trajectory across the 30d/7d/1d window triple — has been computed
+            by lib/report.js:498 since iter 119 and consumed by §0 AI Insights
+            via lib/ai-insights.js:267 ("Verdict: {verdict} — {verdictReason}"),
+            but never rendered to the user. NINTH iter in the surface-symmetry
+            sweep across major verdict classifiers (validatorConcentration
+            iter 192, EMISSION_ALIGNMENT chips iter 193+194+195, drawdownVerdict
+            iter 196, stakingFlowVerdict iter 197, multiWindowDurabilityVerdict
+            iter 198, annualVsApyVerdict iter 199, pnlDecomp.verdict iter 200,
+            apyTrendVerdict iter 201). Payload at apyTrend top-level per
+            lib/report.js:2840. verdictReason per branch carries the threshold-
+            citing rationale verbatim (lines 532/535/538/541/544/547/550/553/
+            556) — chip title=apyt.verdictReason directly (same iter 196/197/
+            198/200 pattern where the user sees the same threshold the AI sees).
+            Three opacity tiers: "quiet" stable reads italic 0.7 (yield is
+            flat — no signal worth narrating); "cautionary" deteriorating
+            labels (fading / accelerating_fade / recent_dip / peaking) read
+            500-weight 0.95 — APY decline is the actionable signal worth user
+            eyes; "active" positive-motion labels (climbing / accelerating_climb
+            / recovering / recent_lift) fall through to base 0.85 — yield
+            building is positive context but not warning. NO green/red — §0
+            narrative owns severity. Surface placement: between .stats grid
+            and .weighted-apy-trend mini-chart — chip is the verdict header
+            for the chart that follows (verdict then visual proof). */}
+        {apyt && apyt.available && apyt.verdict && (
+          <h3 className="sub-h apyt-head-title">
+            APY trend
+            <span
+              className={`apyt-verdict-chip apyt-verdict-${apyt.verdict.replace(/_/g, '-')}`}
+              title={apyt.verdictReason || `APY trend verdict: ${apyt.verdict}`}
+            >
+              {' · '}
+              {apyt.verdict.replace(/_/g, ' ')}
+            </span>
+          </h3>
+        )}
 
         {(() => {
           const series = Array.isArray(y.weightedApySeries) ? y.weightedApySeries : [];

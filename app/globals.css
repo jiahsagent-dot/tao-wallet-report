@@ -896,6 +896,36 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 201: apyTrendVerdict 9-label chip — three opacity tiers tracking
+   APY-trajectory semantics. Quiet (stable) reads italic 0.7 — yield is
+   flat is the baseline expectation, no signal worth narrating. Cautionary
+   (fading / accelerating_fade / recent_dip / peaking) reads 500-weight 0.95
+   — APY decline is the actionable signal worth user eyes whether sustained,
+   accelerating, fresh, or topping out. Active (climbing / accelerating_climb
+   / recovering / recent_lift) falls through to the base 0.85 — yield
+   building is positive context but not warning. NO green/red — §0 narrative
+   owns severity. */
+.apyt-verdict-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.apyt-verdict-chip.apyt-verdict-stable {
+  opacity: 0.7;
+  font-style: italic;
+}
+.apyt-verdict-chip.apyt-verdict-fading,
+.apyt-verdict-chip.apyt-verdict-accelerating-fade,
+.apyt-verdict-chip.apyt-verdict-recent-dip,
+.apyt-verdict-chip.apyt-verdict-peaking {
+  opacity: 0.95;
+  font-weight: 500;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;
