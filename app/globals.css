@@ -862,6 +862,40 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 200: pnlDecomp.verdict token chip — inline next to the new §2
+   "Driver of return" h3 between AU tax-year-breakdown and the iter 197
+   Staking flows h3. Base 11px tabular-nums at opacity 0.85 (matches iter
+   197/198/199 chip base). Three opacity tiers across 7 verdict labels:
+   "quiet" low-narrative labels (stalled / windfall / price_tailwind)
+   read italic 0.7 — stalled has no momentum to narrate, windfall and
+   price_tailwind both say "don't extrapolate the headline" so they
+   should not draw attention; "cautionary" yield-not-landing labels
+   (price_headwind / underperforming) read 500-weight 0.95 — both signal
+   structural weakness worth user investigation; "active" labels
+   (yield_driven / balanced) fall through to the base 0.85 — these are
+   the healthy steady-state reads where the staking strategy is doing
+   its job. NO green/red — §0 narrative owns severity. */
+.pnlv-verdict-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.pnlv-verdict-chip.pnlv-verdict-stalled,
+.pnlv-verdict-chip.pnlv-verdict-windfall,
+.pnlv-verdict-chip.pnlv-verdict-price-tailwind {
+  opacity: 0.7;
+  font-style: italic;
+}
+.pnlv-verdict-chip.pnlv-verdict-price-headwind,
+.pnlv-verdict-chip.pnlv-verdict-underperforming {
+  opacity: 0.95;
+  font-weight: 500;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;

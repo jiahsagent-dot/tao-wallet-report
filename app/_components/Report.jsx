@@ -1119,6 +1119,47 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </p>
               </div>
             )}
+            {/* iter 200: pnlDecomp.verdict token chip surfaces inline next
+                to a new §2 "Driver of return" h3 sub-header, between the AU
+                tax-year-breakdown and the iter 197 Staking flows h3. The
+                7-label verdict (stalled / price_headwind / underperforming /
+                yield_driven / windfall / price_tailwind / balanced) is the
+                PARENT verdict from pnlDecomposition() — classifies the
+                staking-vs-price contribution mix of the headline PnL.
+                Computed at lib/report.js:438-462, emits its own verdictReason
+                per branch (lines 442/445/448/451/458/461). Payload at
+                pnlDecomp top-level (line 2839). Consumed by §0 AI Insights
+                via lib/ai-insights.js:175 ("Verdict: {verdict} — {verdictReason}")
+                since iter ~117 but never rendered to the user. EIGHTH iter
+                in the surface-symmetry sweep across major verdict classifiers
+                (validatorConcentration iter 192, EMISSION_ALIGNMENT chips
+                iter 193+194+195, drawdownVerdict iter 196, stakingFlowVerdict
+                iter 197, multiWindowDurabilityVerdict iter 198,
+                annualVsApyVerdict iter 199, pnlDecomp.verdict iter 200). pnlDec
+                already destructured iter 199. Title = pnlDec.verdictReason
+                verbatim (producer emits the threshold-citing string per
+                label — same iter 196/197/198 pattern). Three opacity tiers:
+                "quiet" low-narrative labels (stalled / windfall /
+                price_tailwind) read italic 0.7 — stalled has no momentum to
+                narrate, windfall/price_tailwind both say "don't extrapolate
+                the headline"; "cautionary" yield-not-landing labels
+                (price_headwind / underperforming) read 500-weight 0.95 —
+                both signal weakness worth user eyes; "active" labels
+                (yield_driven / balanced) fall through to base 0.85 — these
+                are the healthy steady-state reads. NO green/red — §0
+                narrative owns severity, chip is information-only. */}
+            <h3 className="sub-h pnlv-head-title">
+              Driver of return
+              {pnlDec && pnlDec.available && pnlDec.verdict && (
+                <span
+                  className={`pnlv-verdict-chip pnlv-verdict-${pnlDec.verdict.replace(/_/g, '-')}`}
+                  title={pnlDec.verdictReason || `PnL decomposition verdict: ${pnlDec.verdict}`}
+                >
+                  {' · '}
+                  {pnlDec.verdict.replace(/_/g, ' ')}
+                </span>
+              )}
+            </h3>
             {/* iter 197: stakingFlowVerdict token chip surfaces inline next
                 to a new "Staking flows" h3 above the Transfers in/out stats
                 grid. Same "data already computed, never rendered" pattern as
