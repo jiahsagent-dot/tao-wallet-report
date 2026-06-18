@@ -450,7 +450,7 @@ function StakingIncomeSparkline({ series, width = 200, height = 36 }) {
 }
 
 export default function Report({ data, showSubscribeNudge = true }) {
-  const { portfolio: p, pnl, pnlGroundTruth: gt, drawdown: dd, drawdownVerdict: ddv, stakingFlowVerdict: sfv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
+  const { portfolio: p, pnl, pnlGroundTruth: gt, pnlDecomp: pnlDec, drawdown: dd, drawdownVerdict: ddv, stakingFlowVerdict: sfv, volatility: vol, taxYear: ty, yield: y, flags: f, recommendations: r, broader: b } = data;
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
@@ -1604,6 +1604,53 @@ export default function Report({ data, showSubscribeNudge = true }) {
       </Section>
 
       <Section n="3" title="Yield">
+        {/* iter 199: annualVsApyVerdict token chip surfaces inline next to a new
+            §3 "Realised vs structural" h3 sub-header. The 3-label verdict
+            (far_above_structural / roughly_structural / below_structural)
+            compares the wallet's IMPLIED ANNUALISED RETURN (from realised
+            window PnL) to the weighted-APY structural rate. Has been computed
+            by lib/report.js pnlDecomposition() since iter ~115 and consumed by
+            §0 AI Insights via lib/ai-insights.js (line 192 — "gap ±Xpp →
+            verdict") but never rendered to the user. SEVENTH iter in the
+            surface-symmetry sweep (validatorConcentration iter 192,
+            EMISSION_ALIGNMENT chips iter 193+194+195, drawdownVerdict iter 196,
+            stakingFlowVerdict iter 197, multiWindowDurabilityVerdict iter 198,
+            annualVsApyVerdict iter 199), completes the major-verdict pass.
+            Producer at lib/report.js:465 (3 thresholds: gap > 20pp →
+            far_above_structural, gap < -10pp → below_structural, else
+            roughly_structural). Payload at pnlDecomp top-level per line 2839.
+            verdictReason not produced server-side — synthesized inline from
+            pnlDec fields (impliedAnnualReturn / weightedApy / gap). Three
+            opacity tiers: "quiet" roughly_structural reads italic 0.7 (this
+            IS the expected state, no signal); "active" far_above_structural
+            falls through to base 0.85 (positive, doesn't need alarm — high
+            return is good but call out it's a windfall not yield-driven);
+            "cautionary" below_structural reads 500-weight 0.95 (yield not
+            landing at structural rate is the one label worth user eyes).
+            NO green/red — §0 narrative owns severity. */}
+        {pnlDec && pnlDec.available && pnlDec.annualVsApyVerdict && (
+          <h3 className="sub-h aav-head-title">
+            Realised vs structural
+            <span
+              className={`aav-verdict-chip aav-verdict-${pnlDec.annualVsApyVerdict.replace(/_/g, '-')}`}
+              title={(() => {
+                const imp = pnlDec.impliedAnnualReturn != null ? `${(pnlDec.impliedAnnualReturn * 100).toFixed(1)}%` : '—';
+                const apy = pnlDec.weightedApy != null ? `${(pnlDec.weightedApy * 100).toFixed(1)}%` : '—';
+                const gap = pnlDec.annualVsApyGapPp != null ? `${pnlDec.annualVsApyGapPp >= 0 ? '+' : ''}${pnlDec.annualVsApyGapPp.toFixed(1)}pp` : '—';
+                const explain =
+                  pnlDec.annualVsApyVerdict === 'far_above_structural'
+                    ? 'gap > +20pp — non-yield drivers (price tailwind, windfall) carried return above structural; treat headline as non-repeatable'
+                    : pnlDec.annualVsApyVerdict === 'below_structural'
+                    ? 'gap < -10pp — yield delivery dragged by price headwinds, fee leakage, or sub-optimal validators; structural rate not landing'
+                    : 'gap within -10pp to +20pp band — realised annualised return tracking structural yield as expected';
+                return `realised annualised return ${imp} vs weighted APY ${apy} (gap ${gap}) — ${explain}`;
+              })()}
+            >
+              {' · '}
+              {pnlDec.annualVsApyVerdict.replace(/_/g, ' ')}
+            </span>
+          </h3>
+        )}
         <div className="stats">
           <Stat
             label="Weighted APY"

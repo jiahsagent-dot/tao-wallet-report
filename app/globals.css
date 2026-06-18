@@ -835,6 +835,33 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 199: annualVsApyVerdict chip on §3 "Realised vs structural" h3.
+   3 verdict labels from lib/report.js pnlDecomposition() at line 465:
+   - far_above_structural (gap > +20pp) → active tier, base 0.85
+   - roughly_structural (gap in -10pp to +20pp band) → quiet italic 0.7
+     (this IS the expected state, no signal worth narrating)
+   - below_structural (gap < -10pp) → cautionary 500-weight 0.95
+     (yield not landing at structural rate is the one label worth user
+     eyes — drag, leakage, or sub-optimal validator selection). NO
+     green/red — §0 narrative owns severity. */
+.aav-verdict-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.aav-verdict-chip.aav-verdict-roughly-structural {
+  opacity: 0.7;
+  font-style: italic;
+}
+.aav-verdict-chip.aav-verdict-below-structural {
+  opacity: 0.95;
+  font-weight: 500;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;
