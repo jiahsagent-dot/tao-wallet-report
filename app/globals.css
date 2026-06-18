@@ -802,6 +802,39 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 198: multiWindowDurabilityVerdict token chip — second chip on the
+   .sf-head-title h3 next to sfv chip (iter 197). Long-arc layer on top of
+   the single-window stakingFlow per iter 137 lineage. Same "computed
+   since iter 137, never rendered" pattern as iter 192/193/195/196/197.
+   Three opacity tiers: "quiet" low-signal labels (dormant_harvest_only,
+   flat, fading_flow, one_off_spike) read italic 0.7; "cautionary"
+   reversals (recent_reversal_to_accumulation, recent_reversal_to_distribution)
+   read 500-weight 0.95 — the pattern JUST FLIPPED, worth attention;
+   "active" directional labels (sustained_accumulation,
+   sustained_distribution, mixed) fall through to base 0.85. No green/red —
+   §0 narrative owns severity. */
+.mwd-verdict-chip {
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.mwd-verdict-chip.mwd-verdict-dormant-harvest-only,
+.mwd-verdict-chip.mwd-verdict-flat,
+.mwd-verdict-chip.mwd-verdict-fading-flow,
+.mwd-verdict-chip.mwd-verdict-one-off-spike {
+  opacity: 0.7;
+  font-style: italic;
+}
+.mwd-verdict-chip.mwd-verdict-recent-reversal-to-accumulation,
+.mwd-verdict-chip.mwd-verdict-recent-reversal-to-distribution {
+  opacity: 0.95;
+  font-weight: 500;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;

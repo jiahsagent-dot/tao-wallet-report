@@ -1133,6 +1133,26 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 harvesting) read base 0.85; "cautionary" distribution
                 reads 500-weight 0.95. Tooltip = verdictReason. No green/red
                 — §0 narrative owns severity, chip is information-only. */}
+            {/* iter 198: multiWindowDurabilityVerdict token chip — second chip
+                on the .sf-head-title h3 next to the sfv chip from iter 197.
+                The durability frame is the LONG ARC (30d/90d/180d/365d window
+                arc per iter 137 lineage) layered on top of the single-window
+                stakingFlowVerdict. Same "data already computed since iter 137,
+                consumed by §0 AI Insights via lib/ai-insights.js, never
+                rendered to the user" pattern as iter 192/193/195/196/197 —
+                sixth iter in the surface-symmetry sweep across major verdict
+                classifiers. Payload attached at sfv.multiWindowDurability per
+                lib/report.js line 2828. Nine verdict labels: dormant_harvest_only
+                / flat / one_off_spike / fading_flow / recent_reversal_to_accumulation
+                / recent_reversal_to_distribution / sustained_accumulation /
+                sustained_distribution / mixed. Three opacity tiers: "quiet"
+                low-signal labels (dormant_harvest_only / flat / fading_flow /
+                one_off_spike) read italic 0.7; "cautionary" reversals
+                (recent_reversal_to_accumulation / recent_reversal_to_distribution)
+                read 500-weight 0.95 — the pattern JUST FLIPPED, worth user
+                attention; "active" directional labels (sustained_accumulation
+                / sustained_distribution / mixed) fall through to base 0.85.
+                NO green/red — §0 narrative owns severity. */}
             <h3 className="sub-h sf-head-title">
               Staking flows
               {sfv && sfv.available && sfv.verdict && (
@@ -1142,6 +1162,15 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 >
                   {' · '}
                   {sfv.verdict.replace(/_/g, ' ')}
+                </span>
+              )}
+              {sfv && sfv.multiWindowDurability && sfv.multiWindowDurability.available && sfv.multiWindowDurability.verdict && (
+                <span
+                  className={`mwd-verdict-chip mwd-verdict-${sfv.multiWindowDurability.verdict.replace(/_/g, '-')}`}
+                  title={sfv.multiWindowDurability.verdictReason || `Multi-window durability verdict: ${sfv.multiWindowDurability.verdict}`}
+                >
+                  {' · '}
+                  {sfv.multiWindowDurability.verdict.replace(/_/g, ' ')}
                 </span>
               )}
             </h3>
