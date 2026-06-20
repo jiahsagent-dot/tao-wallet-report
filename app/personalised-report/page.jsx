@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Report from '../_components/Report.jsx';
 import TipJar from '../_components/TipJar.jsx';
 import WeeklyEmailCTA from '../_components/WeeklyEmailCTA.jsx';
@@ -28,6 +28,20 @@ export default function PersonalisedReportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
+  const autoRanRef = useRef(false);
+
+  useEffect(() => {
+    if (autoRanRef.current) return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const ck = params.get('coldkey');
+    if (ck && /^5[1-9A-HJ-NP-Za-km-z]{47}$/.test(ck.trim())) {
+      autoRanRef.current = true;
+      setColdkey(ck.trim());
+      runReport(ck.trim());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function runReport(rawKey) {
     const key = rawKey.trim();
