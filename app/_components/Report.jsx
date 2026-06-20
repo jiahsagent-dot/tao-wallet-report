@@ -312,12 +312,97 @@ function CopyCsvButton({ rows, getCsv, coldkey, filenamePrefix = 'portfolio', ar
 
 function Section({ title, n, children }) {
   return (
-    <section className="card">
+    <section id={`sec-${n}`} className="card">
       <h2>
         <span className="num">§{n}</span> {title}
       </h2>
       {children}
     </section>
+  );
+}
+
+// Hero banner — large header with coldkey, AEST refresh timestamp, TAO price,
+// AUD equivalent, and USD→AUD FX. Replaces the dense `.meta` one-liner so the
+// report opens with the same "headline numbers up top" rhythm as the weekly
+// Bittensor doc, without any emoji glyphs (Jai's preference).
+function ReportHero({ data }) {
+  const ts = data.generatedAt ? new Date(data.generatedAt) : null;
+  const aestStr = ts
+    ? ts.toLocaleString('en-AU', {
+        timeZone: 'Australia/Melbourne',
+        weekday: 'short', day: 'numeric', month: 'short',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }) + ' AEST'
+    : '—';
+  const taoUsd = data.taoPriceUsd;
+  const usdAud = data.usdAud;
+  const taoAud = taoUsd != null && usdAud != null ? taoUsd * usdAud : null;
+  const ck = data.coldkey || '';
+  const shortCk = ck ? `${ck.slice(0, 6)}…${ck.slice(-6)}` : '—';
+  return (
+    <section className="report-hero" aria-label="Report header">
+      <div className="rh-top">
+        <div className="rh-id">
+          <div className="rh-label">Bittensor coldkey</div>
+          <div className="rh-addr-row">
+            <code className="rh-addr" title={ck}>{shortCk}</code>
+            <a
+              className="rh-verify"
+              href={`https://taostats.io/account/${ck}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              verify on Taostats <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+        <div className="rh-refresh">
+          <div className="rh-label">Last refresh</div>
+          <div className="rh-refresh-val">{aestStr}</div>
+        </div>
+      </div>
+      <div className="rh-stats">
+        <div className="rh-stat">
+          <div className="rh-label">TAO price</div>
+          <div className="rh-val">${fmt(taoUsd, 2)}</div>
+          <div className="rh-sub">{taoAud != null ? `A$${fmt(taoAud, 2)}` : '—'}</div>
+        </div>
+        <div className="rh-stat">
+          <div className="rh-label">USD → AUD</div>
+          <div className="rh-val">{usdAud != null ? fmt(usdAud, 4) : '—'}</div>
+          <div className="rh-sub">spot</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Sticky-ish TOC under the hero — six anchor links to the report sections,
+// keyboard-navigable. Order matches the Section render order in Report below.
+const REPORT_TOC = [
+  { n: 1, title: 'Portfolio' },
+  { n: 2, title: 'PnL' },
+  { n: 3, title: 'Yield' },
+  { n: 4, title: 'Flags' },
+  { n: 5, title: 'Recommendations' },
+  { n: 6, title: 'Broader market' },
+];
+
+function ReportTOC() {
+  return (
+    <nav className="report-toc" aria-label="Report sections">
+      <span className="rt-lead">Jump to</span>
+      <ul>
+        {REPORT_TOC.map((s) => (
+          <li key={s.n}>
+            <a href={`#sec-${s.n}`}>
+              <span className="rt-num">§{s.n}</span>
+              <span className="rt-title">{s.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 
@@ -454,19 +539,8 @@ export default function Report({ data, showSubscribeNudge = true }) {
   const subnetLookup = buildSubnetLookup(data);
   return (
     <div className="report">
-      <p className="meta">
-        Coldkey <code className="addr small">{data.coldkey}</code>{' '}
-        <a
-          className="taostats-link"
-          href={`https://taostats.io/account/${data.coldkey}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Verify this coldkey's holdings on Taostats"
-        >
-          verify on Taostats ↗
-        </a>{' '}· TAO ${fmt(data.taoPriceUsd, 2)} ·
-        Generated {new Date(data.generatedAt).toUTCString()}
-      </p>
+      <ReportHero data={data} />
+      <ReportTOC />
 
       <DeltaStrip data={data} />
 
