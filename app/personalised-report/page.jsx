@@ -28,12 +28,22 @@ export default function PersonalisedReportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
+  // Iter 203 (BACKLOG iter 166): ?embed=1 (set by the bittensor-tracker iframe
+  // src) hides the page's own chrome (h1, sub, UsageBadge, paste form, demo
+  // row, PinnedColdkeys, RecentColdkeys, share-row, WeeklyEmailCTA, TipJar,
+  // footer) — the embedding tracker already supplies the tab title + selected
+  // wallet, so re-rendering them inside the iframe produces "tracker chrome
+  // wrapping report chrome". Layout.jsx strips the sidebar via Sec-Fetch-Dest;
+  // page.jsx strips its own header surface via ?embed=1. Either signal
+  // independently produces a chrome-free embed body.
+  const [isEmbed, setIsEmbed] = useState(false);
   const autoRanRef = useRef(false);
 
   useEffect(() => {
     if (autoRanRef.current) return;
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
+    if (params.get('embed') === '1') setIsEmbed(true);
     const ck = params.get('coldkey');
     if (ck && /^5[1-9A-HJ-NP-Za-km-z]{47}$/.test(ck.trim())) {
       autoRanRef.current = true;
@@ -79,45 +89,51 @@ export default function PersonalisedReportPage() {
   const placeholder = PLACEHOLDERS[new Date().getUTCHours() % PLACEHOLDERS.length];
 
   return (
-    <main className="wrap">
-      <header className="head">
-        <h1>Personalised Report</h1>
-        <p className="sub">
-          Paste any Bittensor coldkey. Get a personalised report with portfolio, PnL,
-          yield, flags, and rule-based recommendations. Free, instant, public data only.
-        </p>
-        <UsageBadge />
-      </header>
+    <main className={`wrap${isEmbed ? ' wrap-embed' : ''}`}>
+      {!isEmbed && (
+        <header className="head">
+          <h1>Personalised Report</h1>
+          <p className="sub">
+            Paste any Bittensor coldkey. Get a personalised report with portfolio, PnL,
+            yield, flags, and rule-based recommendations. Free, instant, public data only.
+          </p>
+          <UsageBadge />
+        </header>
+      )}
 
-      <PinnedColdkeys />
+      {!isEmbed && <PinnedColdkeys />}
 
-      <form onSubmit={onSubmit} className="form">
-        <ColdkeySearch
-          value={coldkey}
-          onChange={setColdkey}
-          onPick={(k) => { setColdkey(k); runReport(k); }}
-          placeholder={placeholder}
-          disabled={loading}
-        />
-        <button className="btn" type="submit" disabled={loading || !coldkey.trim()}>
-          {loading ? 'Building…' : 'Generate report'}
-        </button>
-      </form>
+      {!isEmbed && (
+        <form onSubmit={onSubmit} className="form">
+          <ColdkeySearch
+            value={coldkey}
+            onChange={setColdkey}
+            onPick={(k) => { setColdkey(k); runReport(k); }}
+            placeholder={placeholder}
+            disabled={loading}
+          />
+          <button className="btn" type="submit" disabled={loading || !coldkey.trim()}>
+            {loading ? 'Building…' : 'Generate report'}
+          </button>
+        </form>
+      )}
 
-      <div className="demo-row">
-        <button
-          type="button"
-          className="demo-btn"
-          onClick={onDemo}
-          disabled={loading}
-          title="Run a sample report against a known-good coldkey"
-        >
-          ▸ Try a demo report
-        </button>
-        <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
-      </div>
+      {!isEmbed && (
+        <div className="demo-row">
+          <button
+            type="button"
+            className="demo-btn"
+            onClick={onDemo}
+            disabled={loading}
+            title="Run a sample report against a known-good coldkey"
+          >
+            ▸ Try a demo report
+          </button>
+          <span className="demo-hint">no coldkey? we'll load a sample wallet</span>
+        </div>
+      )}
 
-      <RecentColdkeys />
+      {!isEmbed && <RecentColdkeys />}
 
       {error && <div className="err">⚠ {error}</div>}
 
@@ -125,39 +141,43 @@ export default function PersonalisedReportPage() {
 
       {report && (
         <>
-          <div className="share-row">
-            <ShareButton coldkey={report.coldkey} />
-            <PinButton coldkey={report.coldkey} pnl={report?.pnlGroundTruth} />
-            <a className="share-permalink" href={`/report/${report.coldkey}`}>
-              Open permalink page →
-            </a>
-          </div>
+          {!isEmbed && (
+            <div className="share-row">
+              <ShareButton coldkey={report.coldkey} />
+              <PinButton coldkey={report.coldkey} pnl={report?.pnlGroundTruth} />
+              <a className="share-permalink" href={`/report/${report.coldkey}`}>
+                Open permalink page →
+              </a>
+            </div>
+          )}
           <Report data={report} />
         </>
       )}
 
-      {report && <WeeklyEmailCTA defaultColdkey={coldkey.trim()} />}
+      {!isEmbed && report && <WeeklyEmailCTA defaultColdkey={coldkey.trim()} />}
 
-      <TipJar address={TIP} />
+      {!isEmbed && <TipJar address={TIP} />}
 
-      <footer className="foot">
-        <p>
-          Built on <a href="https://taostats.io" target="_blank" rel="noopener">Taostats</a>{' '}
-          + <a href="https://tao.app" target="_blank" rel="noopener">tao.app</a> public data.
-          Not financial advice.
-        </p>
-        <p>
-          <a href="/about">How it works</a>
-          {' · '}
-          <a href="/press">Press kit</a>
-          {' · '}
-          <a href="/changelog">Changelog</a>
-          {' · '}
-          <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener">
-            Open source on GitHub
-          </a>
-        </p>
-      </footer>
+      {!isEmbed && (
+        <footer className="foot">
+          <p>
+            Built on <a href="https://taostats.io" target="_blank" rel="noopener">Taostats</a>{' '}
+            + <a href="https://tao.app" target="_blank" rel="noopener">tao.app</a> public data.
+            Not financial advice.
+          </p>
+          <p>
+            <a href="/about">How it works</a>
+            {' · '}
+            <a href="/press">Press kit</a>
+            {' · '}
+            <a href="/changelog">Changelog</a>
+            {' · '}
+            <a href="https://github.com/jiahsagent-dot/tao-wallet-report" target="_blank" rel="noopener">
+              Open source on GitHub
+            </a>
+          </p>
+        </footer>
+      )}
     </main>
   );
 }
