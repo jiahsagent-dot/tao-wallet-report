@@ -502,7 +502,12 @@ export default function Report({ data, showSubscribeNudge = true }) {
           >
             <span aria-hidden="true">ℹ️</span>{' '}
             free-API source ({fmt(p.canonicalTao, 4)} τ via substrate RPC) —
-            Taostats canonical {p.canonicalReason === 'delegation_rate_limited' ? '/delegation rate-limited' : 'degraded'} this snapshot
+            Taostats canonical {
+              p.canonicalReason === 'delegation_rate_limited' ? '/delegation rate-limited' :
+              p.canonicalReason === 'holdings_rate_limited' ? '/holdings rate-limited' :
+              p.canonicalReason === 'holdings_and_delegation_rate_limited' ? '/holdings + /delegation rate-limited' :
+              'degraded'
+            } this snapshot
           </p>
         )}
         {p.sparkline30d && p.sparkline30d.str && (
