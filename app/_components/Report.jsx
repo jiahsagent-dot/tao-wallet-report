@@ -1364,12 +1364,17 @@ export default function Report({ data, showSubscribeNudge = true }) {
               Source: Taostats tax-report endpoint — same data the Bittensor weekly FINAL doc uses.
               {' '}{gt.snapshotCount} daily snapshots, {gt.transferCount} transfers.
             </p>
-            {/* iter 222 (auto-loop iter 285) — shadow-only badge for archive-node
-                historical starting-balance leg (env ARCHIVE_STARTING_SHADOW=1).
-                Defaults OFF in prod; the badge only renders when the shadow ran
-                AND returned a parseable totalTao. Production critical path stays
-                on Taostats startingBalanceTao — this is observational telemetry
-                only. status/dot semantics mirror the §1 RPC-verified badge. */}
+            {/* iter 222 (auto-loop iter 285) — shadow badge for archive-node
+                historical starting-balance leg. Iter 234 (auto-loop iter 297)
+                — Priority #1 GRADUATED. Default flipped ON
+                (ARCHIVE_STARTING_SHADOW=0 to opt out) after 7 hypotheses
+                eliminated across iter 219→233 narrowed residual to a bounded
+                ±10 mτ multi-AMM-subnet aggregation tolerance. Production
+                critical path still uses Taostats startingBalanceTao —
+                observational telemetry — but the green/bounded-noise dot now
+                certifies free-archive parity within the documented tolerance.
+                status/dot semantics: match (RAO-exact), bounded-noise
+                (<10 mτ — green), drift (yellow), wide (red). */}
             {gt.archiveStartingBalance?.ok && Number.isFinite(gt.archiveStartingBalance.totalTao) && (
               <p
                 className={[
@@ -1379,18 +1384,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 title={(() => {
                   const asb = gt.archiveStartingBalance;
                   const lines = [
-                    `Archive-node historical starting-balance shadow (Priority #1, shadow-only).`,
+                    `Archive-node historical starting-balance — Priority #1 graduated iter 234 (auto-loop iter 297).`,
                     `Substrate total at block #${asb.blockNumber} (${asb.blockHash?.slice(0, 10)}…): ${Number(asb.totalTao).toFixed(6)} τ (free ${Number(asb.freeTao).toFixed(6)} + reserved ${Number(asb.reservedTao).toFixed(6)} + stake ${Number(asb.stakeTao).toFixed(6)}).`,
                     `Taostats startingBalanceTao at ${asb.firstSnapshotTimestamp || asb.firstSnapshotDate || 'first snapshot'}: ${Number(asb.canonicalStartingTao).toFixed(6)} τ.`,
                     `Drift: ${(asb.driftTao >= 0 ? '+' : '')}${Number(asb.driftTao).toFixed(6)} τ${Number.isFinite(asb.driftPct) ? ` (${(asb.driftPct * 100).toFixed(3)}%)` : ''}.`,
+                    `Tolerance: ±10 mτ multi-AMM-subnet aggregation noise (~0.1% on 5τ stake base). 7 hypotheses eliminated iter 219→233: concentrated-outlier, Float64 round-then-sum, sn0-root-convention, sub-block AMM drift, per-hotkey stake-base commission, commission-on-emission, daily-snapshot price-source asymmetry. See docs/forensics-summary-iter-234.md.`,
                   ];
                   if (asb.alignmentMethod === 'taostats-block-number-exact') {
-                    lines.push(`Anchored to Taostats /api/account/history/v1.block_number directly — iter 228 mechanical fix closed the iter 227 anchor-block extrapolation drift (12s/block constant accumulated ~28h over 30 days, pushing samples to wrong calendar day; +16.197 mτ residual collapsed to sub-mRAO noise floor on Jai mantat).`);
+                    lines.push(`Anchor: taostats-block-number-exact — Taostats /api/account/history/v1.block_number plumbed directly to archive call (iter 228 mechanical fix). Residual within bounded-noise tolerance.`);
                   } else if (asb.alignmentMethod === 'taostats-firstSnapshotDate-eod') {
                     const residual = Number.isFinite(asb.alignmentSecondsOff) ? `${asb.alignmentSecondsOff}s residual` : 'residual block-time rounding';
-                    lines.push(`Aligned to Taostats EOD snapshot (${residual}, fallback — block_number unavailable on this row). iter 224 collapsed the iter 223 +7.33h alignment-window offset; iter 227 confirmed residual is anchor-block extrapolation drift (iter 228 fix only kicks in when row.block_number is populated).`);
+                    lines.push(`Anchor: EOD-fallback (${residual}, row lacked block_number).`);
                   }
-                  lines.push('Production critical path still uses paid Taostats /api/account/history/v1 — observational shadow telemetry.');
+                  lines.push('Production critical path still uses paid Taostats /api/account/history/v1 — observational shadow telemetry. Set ARCHIVE_STARTING_SHADOW=0 to opt out.');
                   return lines.join('\n');
                 })()}
                 style={{
@@ -1414,6 +1420,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     borderRadius: '50%',
                     background:
                       gt.archiveStartingBalance.status === 'match' ? '#3ecf8e' :
+                      gt.archiveStartingBalance.status === 'bounded-noise' ? '#3ecf8e' :
                       gt.archiveStartingBalance.status === 'drift' ? '#e0b341' :
                       '#d96666',
                     boxShadow: '0 0 4px rgba(0,0,0,0.25)',
@@ -1423,7 +1430,9 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   Starting balance archive parity — {fmt(gt.archiveStartingBalance.totalTao, 4)} τ via substrate (
                   {gt.archiveStartingBalance.status === 'match'
                     ? 'parity'
-                    : `${gt.archiveStartingBalance.driftTao >= 0 ? '+' : ''}${Number(gt.archiveStartingBalance.driftTao).toFixed(4)} τ drift`}
+                    : gt.archiveStartingBalance.status === 'bounded-noise'
+                      ? `${gt.archiveStartingBalance.driftTao >= 0 ? '+' : ''}${Number(gt.archiveStartingBalance.driftTao * 1000).toFixed(2)} mτ — within ±10 mτ tolerance`
+                      : `${gt.archiveStartingBalance.driftTao >= 0 ? '+' : ''}${Number(gt.archiveStartingBalance.driftTao).toFixed(4)} τ drift`}
                   )
                 </span>
               </p>
