@@ -1,12 +1,14 @@
-// iter 224 alignment-aware re-sweep — same 4 coldkeys as iter 223, but archive
-// sample point derived from Taostats firstSnapshotDate EOD instead of
-// (now - 30d). Validates that the +7.33h alignment offset surfaced by
-// iter 223 collapses to sub-mRAO once archive sample is aligned to the
-// daily-snapshot boundary (lessons_taostats_account_endpoints: Taostats
-// /api/account/history/v1 daily snapshots land at EOD UTC ~23:59:48).
+// iter 228 mechanical-fix re-sweep — same 4 coldkeys as iter 223/224, but
+// archive sample point now anchors to Taostats /api/account/history/v1.block_number
+// directly via getHistoricalColdkeyBalance opts.anchorBlock (iter 228 addition)
+// instead of secondsAgo→block extrapolation. Validates iter 227's true-anchor
+// finding (Jai mantat residual collapsed +16.197 mτ → +0.378 mτ) on the full
+// 4-wallet basket.
 //
-// Decision: if alignment-fixed sweep MATCHES (drift < 0.001τ) on >=3 of 4,
-// flip ARCHIVE_STARTING_SHADOW default-on in iter 224 commit.
+// Decision: if all 4 wallets MATCH (drift < 0.001τ), flip ARCHIVE_STARTING_SHADOW
+// default-on in iter 228 commit → Priority #1 starting-balance leg graduation.
+// If any wallet ≥5 mτ, ship the fix WITHOUT flag-flip and queue iter 229
+// per-wallet diagnostic.
 //
 // Run: TAOSTATS_API_KEY=... node scripts/probe-parity-sweep-aligned.mjs
 
@@ -62,6 +64,7 @@ async function taostatsHistory(coldkey) {
       balance_total: toTao(best.balance_total),
       balance_free: toTao(best.balance_free),
       balance_staked: toTao(best.balance_staked),
+      blockNumber: best.block_number != null ? Number(best.block_number) : null,
       raw: best,
     },
     ms,
@@ -90,17 +93,23 @@ async function sweepOne(wallet) {
     return { wallet, taostats, error: 'no taostats rows in window', wallClockMs: Date.now() - tStart };
   }
 
-  // 2. Derive aligned secondsAgo from firstSnapshotDate EOD.
+  // 2. Derive aligned secondsAgo from firstSnapshotDate EOD (kept for logging).
   // Taostats `timestamp` field is the actual EOD instant; use as-is.
   const alignedSampleTsS = Math.floor(ts.ts);
   const alignedSecondsAgo = Math.floor(Date.now() / 1000) - alignedSampleTsS;
 
-  // 3. Fire archive at aligned secondsAgo.
+  // 3. iter 228 — anchor archive at Taostats's own block_number from the
+  //    /account/history row instead of extrapolating from secondsAgo. Closes
+  //    the iter 227 ~28h drift caused by the 12s/block constant assumption.
+  const anchorBlock = ts.blockNumber;
+  if (!Number.isFinite(anchorBlock) || anchorBlock <= 0) {
+    return { wallet, taostats, error: `taostats row missing block_number`, alignedSecondsAgo, wallClockMs: Date.now() - tStart };
+  }
   let archive;
   try {
-    archive = await getHistoricalColdkeyBalance(wallet.coldkey, alignedSecondsAgo);
+    archive = await getHistoricalColdkeyBalance(wallet.coldkey, alignedSecondsAgo, { anchorBlock });
   } catch (e) {
-    return { wallet, taostats, error: `archive: ${e.message}`, alignedSecondsAgo, wallClockMs: Date.now() - tStart };
+    return { wallet, taostats, error: `archive: ${e.message}`, alignedSecondsAgo, anchorBlock, wallClockMs: Date.now() - tStart };
   }
 
   // 4. Drift attribution.
@@ -120,10 +129,12 @@ async function sweepOne(wallet) {
       reservedTao: archive.reservedTao,
       stakeTao: archive.stakeTao,
       blockNumber: archive.blockNumber,
+      anchorSource: archive.anchorSource,
       blockHash: archive.blockHash,
       secondsAgo: archive.secondsAgo,
       latencyMs: archive.latencyMs?.total ?? null,
     },
+    taostatsAnchor: { blockNumber: anchorBlock },
     taostats: {
       startingBalanceTao: ts.balance_total,
       free: ts.balance_free,
@@ -143,8 +154,9 @@ async function sweepOne(wallet) {
 }
 
 async function main() {
-  console.error(`aligned parity sweep (iter 224): ${WALLETS.length} coldkeys × ${WINDOW_DAYS}d window`);
-  console.error(`alignment: archive blockHash @ Taostats firstSnapshot.timestamp (EOD UTC ~${EOD_OFFSET_S}s into day)`);
+  console.error(`anchored parity sweep (iter 228): ${WALLETS.length} coldkeys × ${WINDOW_DAYS}d window`);
+  console.error(`anchor: archive blockHash @ Taostats /api/account/history/v1.block_number (exact, via opts.anchorBlock)`);
+  console.error(`alignment fallback (logging only): firstSnapshot.timestamp (EOD UTC ~${EOD_OFFSET_S}s into day)`);
 
   const t0 = Date.now();
   const results = [];

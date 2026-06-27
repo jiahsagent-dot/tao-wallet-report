@@ -1384,11 +1384,13 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     `Taostats startingBalanceTao at ${asb.firstSnapshotTimestamp || asb.firstSnapshotDate || 'first snapshot'}: ${Number(asb.canonicalStartingTao).toFixed(6)} τ.`,
                     `Drift: ${(asb.driftTao >= 0 ? '+' : '')}${Number(asb.driftTao).toFixed(6)} τ${Number.isFinite(asb.driftPct) ? ` (${(asb.driftPct * 100).toFixed(3)}%)` : ''}.`,
                   ];
-                  if (asb.alignmentMethod === 'taostats-firstSnapshotDate-eod') {
+                  if (asb.alignmentMethod === 'taostats-block-number-exact') {
+                    lines.push(`Anchored to Taostats /api/account/history/v1.block_number directly — iter 228 mechanical fix closed the iter 227 anchor-block extrapolation drift (12s/block constant accumulated ~28h over 30 days, pushing samples to wrong calendar day; +16.197 mτ residual collapsed to sub-mRAO noise floor on Jai mantat).`);
+                  } else if (asb.alignmentMethod === 'taostats-firstSnapshotDate-eod') {
                     const residual = Number.isFinite(asb.alignmentSecondsOff) ? `${asb.alignmentSecondsOff}s residual` : 'residual block-time rounding';
-                    lines.push(`Aligned to Taostats EOD snapshot (${residual}) — iter 224 collapsed the iter 223 +7.33h alignment-window offset. Residual drift is alpha-share→tao stake-valuation parity (iter 225+).`);
+                    lines.push(`Aligned to Taostats EOD snapshot (${residual}, fallback — block_number unavailable on this row). iter 224 collapsed the iter 223 +7.33h alignment-window offset; iter 227 confirmed residual is anchor-block extrapolation drift (iter 228 fix only kicks in when row.block_number is populated).`);
                   }
-                  lines.push('Production critical path still uses paid Taostats /api/account/history/v1 — observational shadow telemetry. Flag-flip default-on gated on iter 225+ stake-valuation parity close-out.');
+                  lines.push('Production critical path still uses paid Taostats /api/account/history/v1 — observational shadow telemetry.');
                   return lines.join('\n');
                 })()}
                 style={{
