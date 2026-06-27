@@ -118,6 +118,24 @@ async function probeAt(label, blockHash, blockNum) {
   console.log('');
 }
 
+async function probeComposer(label, secAgo) {
+  const { getHistoricalColdkeyBalance } = await import('../lib/freeRpc.js');
+  console.log(`--- COMPOSER ${label} (secAgo=${secAgo}) ---`);
+  try {
+    const t0 = Date.now();
+    const r = await getHistoricalColdkeyBalance(COLDKEY, secAgo);
+    const wall = Date.now() - t0;
+    console.log(`  block #${r.blockNumber} ${r.blockHash.slice(0, 18)}…`);
+    console.log(`  freeTao=${r.freeTao.toFixed(6)}τ reservedTao=${r.reservedTao.toFixed(6)}τ stakeTao=${r.stakeTao.toFixed(4)}τ`);
+    console.log(`  totalTao=${r.totalTao.toFixed(4)}τ across ${r.byNetuid.length} subnets`);
+    console.log(`  latency: head=${r.latencyMs.head}ms hash=${r.latencyMs.blockHash}ms legsParallel=${r.latencyMs.legsParallel}ms (free=${r.latencyMs.free}ms stake=${r.latencyMs.stake}ms) total=${r.latencyMs.total}ms`);
+    console.log(`  wall-clock: ${wall}ms, rpcCalls=${r.rpcCalls}`);
+  } catch (e) {
+    console.log(`  FAIL: ${e.message}`);
+  }
+  console.log('');
+}
+
 async function main() {
   console.log(`# Archive stake-leg probe: ${ARCHIVE}`);
   console.log(`# Coldkey: ${COLDKEY}`);
@@ -138,6 +156,13 @@ async function main() {
     const blockNum = t.secAgo === 0 ? headNum : Math.max(1, Math.floor(headNum - t.secAgo / BLOCK_TIME_S));
     const hash = await rpc('chain_getBlockHash', [blockNum]);
     await probeAt(t.label, hash.result, blockNum);
+  }
+
+  // iter 221 composer probe: getHistoricalColdkeyBalance ties iter 219 free + iter 220 stake at a shared blockHash.
+  console.log('# Iter 221 composer probe (getHistoricalColdkeyBalance: free + reserved + stakeTao at single archive blockHash)');
+  console.log('');
+  for (const t of targets) {
+    await probeComposer(t.label, t.secAgo);
   }
 }
 
