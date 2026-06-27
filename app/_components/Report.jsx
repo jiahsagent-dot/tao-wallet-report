@@ -510,6 +510,45 @@ export default function Report({ data, showSubscribeNudge = true }) {
             } this snapshot
           </p>
         )}
+        {p.shadowVerified && Number.isFinite(p.shadowVerified.totalTao) && (
+          <p
+            className={`rpc-verified rpc-${p.shadowVerified.status}`}
+            title={`Substrate-RPC parallel total: ${p.shadowVerified.totalTao.toFixed(6)} τ via finney RPC (System.Account SCALE u64 decode). Drift vs Taostats canonical (${fmt(p.totalTao, 6)} τ): ${(p.shadowVerified.driftTao >= 0 ? '+' : '')}${Number(p.shadowVerified.driftTao).toFixed(6)} τ${Number.isFinite(p.shadowVerified.driftPct) ? ` (${(p.shadowVerified.driftPct * 100).toFixed(3)}%)` : ''}. Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, no paid API required.`}
+            style={{
+              fontSize: '0.78em',
+              color: 'var(--muted, #8a93a3)',
+              marginTop: '4px',
+              marginBottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="rpc-dot"
+              style={{
+                display: 'inline-block',
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background:
+                  p.shadowVerified.status === 'match' ? '#3ecf8e' :
+                  p.shadowVerified.status === 'drift' ? '#e0b341' :
+                  '#d96666',
+                boxShadow: '0 0 4px rgba(0,0,0,0.25)',
+              }}
+            />
+            <span>
+              RPC verified — {fmt(p.shadowVerified.totalTao, 4)} τ via substrate (
+              {p.shadowVerified.status === 'match'
+                ? 'parity'
+                : `${p.shadowVerified.driftTao >= 0 ? '+' : ''}${Number(p.shadowVerified.driftTao).toFixed(4)} τ drift`}
+              )
+            </span>
+          </p>
+        )}
         {p.sparkline30d && p.sparkline30d.str && (
           <div
             className="sparkline-row"
