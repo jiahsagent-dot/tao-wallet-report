@@ -535,8 +535,24 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   lines.push('Drift hits both legs — possible substrate finalized-head lag vs Taostats snapshot tick.');
                 }
               }
+              // iter 207 — independent substrate cross-check via bittensor-tracker
+              // sweep endpoint. When ok, names which source the second substrate
+              // witness agrees with, attributing blame for the drift.
+              if (sv.crossCheck?.ok && Number.isFinite(sv.crossCheck.freeTao)) {
+                lines.push('');
+                const verdict = sv.crossCheck.agreesWithSubstrate
+                  ? 'agrees with substrate (Taostats is the outlier)'
+                  : sv.crossCheck.agreesWithTaostats
+                    ? 'agrees with Taostats (substrate may be lagging)'
+                    : 'diverges from both — investigate';
+                lines.push(`• Cross-check: bittensor-tracker.app sweep reports free=${Number(sv.crossCheck.freeTao).toFixed(6)} τ — ${verdict}.`);
+              }
               lines.push('');
-              lines.push('Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, no paid API required.');
+              lines.push(
+                sv.crossCheck?.ok
+                  ? 'Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, cross-checked by independent sweep, no paid API required.'
+                  : 'Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, no paid API required.',
+              );
               return lines.join('\n');
             })()}
             style={{
