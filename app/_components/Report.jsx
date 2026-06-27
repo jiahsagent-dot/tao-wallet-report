@@ -520,31 +520,45 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 `Drift vs Taostats canonical (${fmt(p.totalTao, 6)} τ): ${(sv.driftTao >= 0 ? '+' : '')}${Number(sv.driftTao).toFixed(6)} τ${Number.isFinite(sv.driftPct) ? ` (${(sv.driftPct * 100).toFixed(3)}%)` : ''}.`,
               ];
               // Iter 206 — per-leg attribution. Shows free + stake leg drifts
-              // separately so a single-leg gap traces to the actual culprit
-              // (e.g. stale Taostats /coldkey_alpha_shares vs substrate decode).
+              // separately so a single-leg gap traces to the actual culprit.
+              // Iter 208 fix — canonicalFreeTao now reads Taostats balance_free
+              // directly (was derived as totalTao - stakedTao, which silently
+              // folded balance_reserved into "free" and fabricated a constant
+              // +0.093 τ fake free-leg drift on every wallet with reserved >0;
+              // iter 268 NOTES proved it RAO-exact against substrate on 4
+              // wallets). Reserved is now its own line so the breakdown is
+              // honest about all three Taostats components.
               if (Number.isFinite(sv.freeTao) && Number.isFinite(sv.stakeTao) &&
                   Number.isFinite(sv.canonicalFreeTao) && Number.isFinite(sv.canonicalStakeTao)) {
                 lines.push('');
                 lines.push(`• Free leg: ${Number(sv.freeTao).toFixed(6)} τ substrate vs ${Number(sv.canonicalFreeTao).toFixed(6)} τ Taostats (${(sv.freeDriftTao >= 0 ? '+' : '')}${Number(sv.freeDriftTao).toFixed(6)} τ).`);
+                if (Number.isFinite(sv.canonicalReservedTao) && sv.canonicalReservedTao > 0) {
+                  lines.push(`• Reserved leg: ${Number(sv.canonicalReservedTao).toFixed(6)} τ Taostats (no substrate parallel — existential deposit / coldkey reservation).`);
+                }
                 lines.push(`• Stake leg: ${Number(sv.stakeTao).toFixed(6)} τ substrate vs ${Number(sv.canonicalStakeTao).toFixed(6)} τ Taostats (${(sv.stakeDriftTao >= 0 ? '+' : '')}${Number(sv.stakeDriftTao).toFixed(6)} τ).`);
                 if (sv.driftLeg === 'stake') {
                   lines.push('Drift is concentrated in the stake/alpha leg — likely stale Taostats /coldkey_alpha_shares snapshot, not a substrate decode error.');
                 } else if (sv.driftLeg === 'free') {
-                  lines.push('Drift is concentrated in the free balance leg — worth a substrate-vs-Taostats /account/latest cross-check.');
+                  lines.push('Drift is concentrated in the free balance leg — unusual, Taostats balance_free historically matches substrate RAO-exact.');
                 } else if (sv.driftLeg === 'both') {
                   lines.push('Drift hits both legs — possible substrate finalized-head lag vs Taostats snapshot tick.');
                 }
               }
               // iter 207 — independent substrate cross-check via bittensor-tracker
-              // sweep endpoint. When ok, names which source the second substrate
-              // witness agrees with, attributing blame for the drift.
+              // sweep endpoint. Names which source the second substrate witness
+              // agrees with for the free leg. iter 208 — after the canonicalFreeTao
+              // fix, the typical outcome is THREE-way agreement on free (both
+              // substrate witnesses + Taostats balance_free all RAO-exact); the
+              // remaining drift, if any, lives in the stake leg.
               if (sv.crossCheck?.ok && Number.isFinite(sv.crossCheck.freeTao)) {
                 lines.push('');
-                const verdict = sv.crossCheck.agreesWithSubstrate
-                  ? 'agrees with substrate (Taostats is the outlier)'
-                  : sv.crossCheck.agreesWithTaostats
-                    ? 'agrees with Taostats (substrate may be lagging)'
-                    : 'diverges from both — investigate';
+                const verdict = sv.crossCheck.agreesWithSubstrate && sv.crossCheck.agreesWithTaostats
+                  ? 'agrees with both substrate and Taostats (three sources concur on free leg — any drift sits in stake)'
+                  : sv.crossCheck.agreesWithSubstrate
+                    ? 'agrees with substrate (Taostats free-leg outlier)'
+                    : sv.crossCheck.agreesWithTaostats
+                      ? 'agrees with Taostats (this report\'s substrate decode may be lagging)'
+                      : 'diverges from both — investigate';
                 lines.push(`• Cross-check: bittensor-tracker.app sweep reports free=${Number(sv.crossCheck.freeTao).toFixed(6)} τ — ${verdict}.`);
               }
               lines.push('');
