@@ -512,12 +512,19 @@ export default function Report({ data, showSubscribeNudge = true }) {
         )}
         {p.shadowVerified && Number.isFinite(p.shadowVerified.totalTao) && (
           <p
-            className={`rpc-verified rpc-${p.shadowVerified.status}${p.shadowVerified.driftLeg ? ` rpc-leg-${p.shadowVerified.driftLeg}` : ''}`}
+            className={[
+              'rpc-verified',
+              `rpc-${p.shadowVerified.status}`,
+              p.shadowVerified.driftLeg ? `rpc-leg-${p.shadowVerified.driftLeg}` : null,
+            ].filter(Boolean).join(' ')}
             title={(() => {
               const sv = p.shadowVerified;
+              const canonicalParen = Number.isFinite(sv.canonicalTao)
+                ? `${fmt(sv.canonicalTao, 6)} τ`
+                : `${fmt(p.totalTao, 6)} τ`;
               const lines = [
                 `Substrate-RPC parallel total: ${Number(sv.totalTao).toFixed(6)} τ via finney RPC (System.Account SCALE u64 decode).`,
-                `Drift vs Taostats canonical (${fmt(p.totalTao, 6)} τ): ${(sv.driftTao >= 0 ? '+' : '')}${Number(sv.driftTao).toFixed(6)} τ${Number.isFinite(sv.driftPct) ? ` (${(sv.driftPct * 100).toFixed(3)}%)` : ''}.`,
+                `Drift vs Taostats canonical (${canonicalParen}): ${(sv.driftTao >= 0 ? '+' : '')}${Number(sv.driftTao).toFixed(6)} τ${Number.isFinite(sv.driftPct) ? ` (${(sv.driftPct * 100).toFixed(3)}%)` : ''}.`,
               ];
               // Iter 206 — per-leg attribution. Shows free + stake leg drifts
               // separately so a single-leg gap traces to the actual culprit.
