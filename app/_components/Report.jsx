@@ -1364,6 +1364,68 @@ export default function Report({ data, showSubscribeNudge = true }) {
               Source: Taostats tax-report endpoint — same data the Bittensor weekly FINAL doc uses.
               {' '}{gt.snapshotCount} daily snapshots, {gt.transferCount} transfers.
             </p>
+            {/* iter 222 (auto-loop iter 285) — shadow-only badge for archive-node
+                historical starting-balance leg (env ARCHIVE_STARTING_SHADOW=1).
+                Defaults OFF in prod; the badge only renders when the shadow ran
+                AND returned a parseable totalTao. Production critical path stays
+                on Taostats startingBalanceTao — this is observational telemetry
+                only. status/dot semantics mirror the §1 RPC-verified badge. */}
+            {gt.archiveStartingBalance?.ok && Number.isFinite(gt.archiveStartingBalance.totalTao) && (
+              <p
+                className={[
+                  'archive-starting-verified',
+                  `archive-starting-${gt.archiveStartingBalance.status || 'unknown'}`,
+                ].filter(Boolean).join(' ')}
+                title={(() => {
+                  const asb = gt.archiveStartingBalance;
+                  const lines = [
+                    `Archive-node historical starting-balance shadow (Priority #1, shadow-only).`,
+                    `Substrate total at block #${asb.blockNumber} (${asb.blockHash?.slice(0, 10)}…): ${Number(asb.totalTao).toFixed(6)} τ (free ${Number(asb.freeTao).toFixed(6)} + reserved ${Number(asb.reservedTao).toFixed(6)} + stake ${Number(asb.stakeTao).toFixed(6)}).`,
+                    `Taostats startingBalanceTao at ${asb.firstSnapshotDate || 'first snapshot'}: ${Number(asb.canonicalStartingTao).toFixed(6)} τ.`,
+                    `Drift: ${(asb.driftTao >= 0 ? '+' : '')}${Number(asb.driftTao).toFixed(6)} τ${Number.isFinite(asb.driftPct) ? ` (${(asb.driftPct * 100).toFixed(3)}%)` : ''}.`,
+                  ];
+                  if (Number.isFinite(asb.alignmentSecondsOff)) {
+                    const hours = (asb.alignmentSecondsOff / 3600).toFixed(1);
+                    lines.push(`Day-boundary alignment: archive sample sits ${hours}h relative to Taostats EOD snapshot — expect drift > 0 on active wallets from mid-window transactions.`);
+                  }
+                  lines.push('Production critical path still uses paid Taostats /api/account/history/v1 — this is observational shadow telemetry. iter 223+ flips the flag once parity validates on all 4 monitored coldkeys.');
+                  return lines.join('\n');
+                })()}
+                style={{
+                  fontSize: '0.78em',
+                  color: 'var(--muted, #8a93a3)',
+                  marginTop: '4px',
+                  marginBottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="archive-starting-dot"
+                  style={{
+                    display: 'inline-block',
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    background:
+                      gt.archiveStartingBalance.status === 'match' ? '#3ecf8e' :
+                      gt.archiveStartingBalance.status === 'drift' ? '#e0b341' :
+                      '#d96666',
+                    boxShadow: '0 0 4px rgba(0,0,0,0.25)',
+                  }}
+                />
+                <span>
+                  Starting balance archive parity — {fmt(gt.archiveStartingBalance.totalTao, 4)} τ via substrate (
+                  {gt.archiveStartingBalance.status === 'match'
+                    ? 'parity'
+                    : `${gt.archiveStartingBalance.driftTao >= 0 ? '+' : ''}${Number(gt.archiveStartingBalance.driftTao).toFixed(4)} τ drift`}
+                  )
+                </span>
+              </p>
+            )}
           </>
         ) : (
           <p className="hint">
