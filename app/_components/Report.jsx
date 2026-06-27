@@ -512,8 +512,33 @@ export default function Report({ data, showSubscribeNudge = true }) {
         )}
         {p.shadowVerified && Number.isFinite(p.shadowVerified.totalTao) && (
           <p
-            className={`rpc-verified rpc-${p.shadowVerified.status}`}
-            title={`Substrate-RPC parallel total: ${p.shadowVerified.totalTao.toFixed(6)} τ via finney RPC (System.Account SCALE u64 decode). Drift vs Taostats canonical (${fmt(p.totalTao, 6)} τ): ${(p.shadowVerified.driftTao >= 0 ? '+' : '')}${Number(p.shadowVerified.driftTao).toFixed(6)} τ${Number.isFinite(p.shadowVerified.driftPct) ? ` (${(p.shadowVerified.driftPct * 100).toFixed(3)}%)` : ''}. Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, no paid API required.`}
+            className={`rpc-verified rpc-${p.shadowVerified.status}${p.shadowVerified.driftLeg ? ` rpc-leg-${p.shadowVerified.driftLeg}` : ''}`}
+            title={(() => {
+              const sv = p.shadowVerified;
+              const lines = [
+                `Substrate-RPC parallel total: ${Number(sv.totalTao).toFixed(6)} τ via finney RPC (System.Account SCALE u64 decode).`,
+                `Drift vs Taostats canonical (${fmt(p.totalTao, 6)} τ): ${(sv.driftTao >= 0 ? '+' : '')}${Number(sv.driftTao).toFixed(6)} τ${Number.isFinite(sv.driftPct) ? ` (${(sv.driftPct * 100).toFixed(3)}%)` : ''}.`,
+              ];
+              // Iter 206 — per-leg attribution. Shows free + stake leg drifts
+              // separately so a single-leg gap traces to the actual culprit
+              // (e.g. stale Taostats /coldkey_alpha_shares vs substrate decode).
+              if (Number.isFinite(sv.freeTao) && Number.isFinite(sv.stakeTao) &&
+                  Number.isFinite(sv.canonicalFreeTao) && Number.isFinite(sv.canonicalStakeTao)) {
+                lines.push('');
+                lines.push(`• Free leg: ${Number(sv.freeTao).toFixed(6)} τ substrate vs ${Number(sv.canonicalFreeTao).toFixed(6)} τ Taostats (${(sv.freeDriftTao >= 0 ? '+' : '')}${Number(sv.freeDriftTao).toFixed(6)} τ).`);
+                lines.push(`• Stake leg: ${Number(sv.stakeTao).toFixed(6)} τ substrate vs ${Number(sv.canonicalStakeTao).toFixed(6)} τ Taostats (${(sv.stakeDriftTao >= 0 ? '+' : '')}${Number(sv.stakeDriftTao).toFixed(6)} τ).`);
+                if (sv.driftLeg === 'stake') {
+                  lines.push('Drift is concentrated in the stake/alpha leg — likely stale Taostats /coldkey_alpha_shares snapshot, not a substrate decode error.');
+                } else if (sv.driftLeg === 'free') {
+                  lines.push('Drift is concentrated in the free balance leg — worth a substrate-vs-Taostats /account/latest cross-check.');
+                } else if (sv.driftLeg === 'both') {
+                  lines.push('Drift hits both legs — possible substrate finalized-head lag vs Taostats snapshot tick.');
+                }
+              }
+              lines.push('');
+              lines.push('Free-API verification runs in parallel on every healthy report — Priority #1 ground-truth proof, no paid API required.');
+              return lines.join('\n');
+            })()}
             style={{
               fontSize: '0.78em',
               color: 'var(--muted, #8a93a3)',
@@ -547,6 +572,23 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 : `${p.shadowVerified.driftTao >= 0 ? '+' : ''}${Number(p.shadowVerified.driftTao).toFixed(4)} τ drift`}
               )
             </span>
+            {p.shadowVerified.driftLeg && (
+              <span
+                className={`rpc-leg-tag rpc-leg-tag-${p.shadowVerified.driftLeg}`}
+                style={{
+                  fontSize: '0.92em',
+                  opacity: 0.85,
+                  paddingLeft: '4px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {p.shadowVerified.driftLeg === 'stake'
+                  ? '(stake leg)'
+                  : p.shadowVerified.driftLeg === 'free'
+                    ? '(free leg)'
+                    : '(both legs)'}
+              </span>
+            )}
           </p>
         )}
         {p.sparkline30d && p.sparkline30d.str && (
