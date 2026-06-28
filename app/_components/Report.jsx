@@ -773,6 +773,26 @@ export default function Report({ data, showSubscribeNudge = true }) {
             </span>
             {(() => {
               const sp = p.sparkline30d;
+              const firstD = Number(sp.firstTao);
+              const lastD = Number(sp.lastTao);
+              if (!Number.isFinite(firstD) || !Number.isFinite(lastD)) return null;
+              if (!(firstD > 0.0001)) return null;
+              const delta = lastD - firstD;
+              if (!(Math.abs(delta) >= 0.001)) return null;
+              const pct = (delta / firstD) * 100;
+              const up = delta > 0;
+              const sign = up ? '+' : '−';
+              const absD = Math.abs(delta);
+              const tier = up ? 'up' : 'down';
+              const tip = `30d τ change: ${sign}${absD.toFixed(4)} τ (${sign}${Math.abs(pct).toFixed(2)}%) — sparkline endpoints ${firstD.toFixed(4)} τ (30d ago) → ${lastD.toFixed(4)} τ (now). Same 30d daily-snapshot endpoints as the sparkline above. Soft-omit on |Δ| < 0.001 τ (dust).`;
+              return (
+                <span className={`sparkline-30d-delta sparkline-30d-delta-${tier}`} title={tip}>
+                  · {sign}{absD.toFixed(2)} τ
+                </span>
+              );
+            })()}
+            {(() => {
+              const sp = p.sparkline30d;
               const min = Number(sp.minTao);
               const max = Number(sp.maxTao);
               const last = Number(sp.lastTao);
