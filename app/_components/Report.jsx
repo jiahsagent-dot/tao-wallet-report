@@ -771,6 +771,33 @@ export default function Report({ data, showSubscribeNudge = true }) {
             <span className="sparkline-meta">
               {p.sparkline30d.firstTao.toFixed(2)} → {p.sparkline30d.lastTao.toFixed(2)} τ
             </span>
+            {(() => {
+              const sp = p.sparkline30d;
+              const min = Number(sp.minTao);
+              const max = Number(sp.maxTao);
+              const last = Number(sp.lastTao);
+              if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(last)) return null;
+              const range = max - min;
+              if (!(range > 0.0001)) return null;
+              const newHigh = last >= max - 0.000001;
+              const newLow = last <= min + 0.000001;
+              const pos = (last - min) / range;
+              let tier, label;
+              if (newHigh) { tier = 'new-high'; label = 'new 30d high'; }
+              else if (newLow) { tier = 'new-low'; label = 'new 30d low'; }
+              else if (pos >= 0.95) { tier = 'near-high'; label = 'near 30d high'; }
+              else if (pos <= 0.05) { tier = 'near-low'; label = 'near 30d low'; }
+              else if (pos >= 0.7) { tier = 'upper'; label = 'upper 30d range'; }
+              else if (pos <= 0.3) { tier = 'lower'; label = 'lower 30d range'; }
+              else { tier = 'mid'; label = 'mid 30d range'; }
+              const pctPos = (pos * 100).toFixed(0);
+              const tip = `Current ${last.toFixed(4)} τ sits at ${pctPos}% of the 30d range [${min.toFixed(4)} τ low → ${max.toFixed(4)} τ high]. Bands: ≥95% → "near high"; ≥70% → "upper"; 30–70% → "mid"; ≤30% → "lower"; ≤5% → "near low"; exact min/max → "new low"/"new high". Same 30d daily-snapshot range that drives the sparkline.`;
+              return (
+                <span className={`sparkline-range-chip sparkline-range-${tier}`} title={tip}>
+                  · {label}
+                </span>
+              );
+            })()}
           </div>
         )}
         {(p.delta24h || p.delta7d) && (
