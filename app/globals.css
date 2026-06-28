@@ -1364,6 +1364,30 @@ tfoot tr.tfoot-totals td {
   font-weight: 600;
   opacity: 0.9;
 }
+.sparkline-regime-chip {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.9;
+  color: var(--muted);
+}
+.sparkline-regime-expanding-bull {
+  color: var(--accent, #f5a05a);
+  font-weight: 600;
+  opacity: 1;
+}
+.sparkline-regime-expanding-bear {
+  color: color-mix(in srgb, #d97b6c 65%, var(--muted) 35%);
+  font-weight: 500;
+}
+.sparkline-regime-compressing {
+  font-style: italic;
+  opacity: 0.75;
+}
+.sparkline-regime-ranging {
+  color: var(--muted);
+  opacity: 0.8;
+}
 .tfoot-lbl {
   color: var(--muted);
   font-weight: 600;

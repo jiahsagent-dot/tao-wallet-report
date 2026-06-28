@@ -798,6 +798,31 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 </span>
               );
             })()}
+            {(() => {
+              const sp = p.sparkline30d;
+              const minR = Number(sp.minTao);
+              const maxR = Number(sp.maxTao);
+              const firstR = Number(sp.firstTao);
+              const lastR = Number(sp.lastTao);
+              if (!Number.isFinite(minR) || !Number.isFinite(maxR) || !Number.isFinite(firstR) || !Number.isFinite(lastR)) return null;
+              const rangeR = maxR - minR;
+              if (!(rangeR > 0.0001)) return null;
+              if (!(firstR > 0.0001)) return null;
+              const vol = rangeR / firstR;
+              const upper = lastR >= (minR + maxR) / 2;
+              let rtier, rlabel;
+              if (vol >= 0.4 && upper) { rtier = 'expanding-bull'; rlabel = 'expanding bull'; }
+              else if (vol >= 0.4) { rtier = 'expanding-bear'; rlabel = 'expanding bear'; }
+              else if (vol < 0.15) { rtier = 'compressing'; rlabel = 'compressing'; }
+              else { rtier = 'ranging'; rlabel = 'ranging'; }
+              const volPct = (vol * 100).toFixed(1);
+              const rtip = `30d realised-vol regime: range ${rangeR.toFixed(4)} τ vs 30d-ago base ${firstR.toFixed(4)} τ → ${volPct}% range-to-base. Bands: ≥40% with last in upper half → "expanding bull"; ≥40% with last in lower half → "expanding bear"; <15% → "compressing"; 15–40% → "ranging". Range-to-base ratio measures realised volatility regime over the same 30d daily-snapshot window as the sparkline.`;
+              return (
+                <span className={`sparkline-regime-chip sparkline-regime-${rtier}`} title={rtip}>
+                  · {rlabel}
+                </span>
+              );
+            })()}
           </div>
         )}
         {(p.delta24h || p.delta7d) && (
