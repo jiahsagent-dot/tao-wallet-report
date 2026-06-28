@@ -1720,6 +1720,41 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     <div className="dd-sub">
                       still below {fmt(dd.maxDrawdownPeakTao, 2)} τ peak
                     </div>
+                    {(() => {
+                      // iter 246: drawdown duration percentiles verdict chip.
+                      // Compares the CURRENT underwater stretch length against
+                      // the historical p50/p90 of past stretches (already
+                      // computed lib/report.js:1080-1082 since iter 121,
+                      // stats-rendered in the next dd-stat tile since iter 121
+                      // followup, but never compared to live as a verdict).
+                      if (!(dd.underwaterRunCount > 0)) return null;
+                      const p50 = Number(dd.ddDurationP50);
+                      const p90 = Number(dd.ddDurationP90);
+                      const days = Number(dd.daysUnderwater);
+                      if (!(p50 > 0) || !(days > 0)) return null;
+                      let cls, label;
+                      if (Number.isFinite(p90) && p90 > 0 && days > p90) {
+                        cls = 'dd-stretch-tail';
+                        label = 'beyond typical tail';
+                      } else if (days > p50 * 1.3) {
+                        cls = 'dd-stretch-long';
+                        label = 'longer than typical';
+                      } else if (days < p50 * 0.7) {
+                        cls = 'dd-stretch-short';
+                        label = 'shorter than typical';
+                      } else {
+                        cls = 'dd-stretch-typical';
+                        label = 'typical dd stretch';
+                      }
+                      const rel = (days / p50 - 1) * 100;
+                      const stretches = dd.underwaterRunCount;
+                      const tooltip = `Currently ${days}d underwater · historical p50 stretch ${p50}d · p90 ${Number.isFinite(p90) && p90 > 0 ? `${p90}d` : 'n/a'} (across ${stretches} contiguous underwater stretch${stretches === 1 ? '' : 'es'} in ${dd.windowDays}d of daily snapshots). Live dip is ${rel >= 0 ? '+' : ''}${rel.toFixed(0)}% of the median stretch length. Bands: within ±30% of p50 → "typical"; > p50 × 1.3 → "longer"; > p90 → "beyond tail"; < p50 × 0.7 → "shorter". Recovery time on past stretches gives the reference distribution.`;
+                      return (
+                        <div className={`dd-stretch-chip ${cls}`} title={tooltip}>
+                          · {label}
+                        </div>
+                      );
+                    })()}
                   </>
                 ) : (
                   <>

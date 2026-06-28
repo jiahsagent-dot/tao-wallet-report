@@ -1015,6 +1015,26 @@ a:hover { text-decoration: underline; }
 .apy-vs-median-chip.apy-vs-median-above { color: var(--accent, #f5a05a); font-weight: 500; }
 .apy-vs-median-chip.apy-vs-median-below { color: var(--dim); opacity: 0.75; font-style: italic; }
 .apy-vs-median-chip.apy-vs-median-at { color: var(--muted, #8a93a3); opacity: 0.8; }
+/* iter 246: drawdown-stretch verdict chip. Sits in the §4 Recovery-time
+   dd-stat block below the "still below … peak" sub-line when the wallet is
+   currently underwater. Compares CURRENT daysUnderwater against the historical
+   p50/p90 of past underwater stretches (already computed lib/report.js since
+   iter 121, stats-rendered since iter 121 followup, never verdict-classified).
+   Same opacity tier pattern as iter 245 apy-vs-median-chip: tail (beyond p90)
+   = strong accent, long (> p50 × 1.3) = accent, short (< p50 × 0.7) = dim
+   italic, typical = neutral muted. Tints only — §0 narrative owns severity. */
+.dd-stretch-chip {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+.dd-stretch-chip.dd-stretch-tail { color: var(--accent, #f5a05a); font-weight: 600; opacity: 1; }
+.dd-stretch-chip.dd-stretch-long { color: var(--accent, #f5a05a); font-weight: 500; }
+.dd-stretch-chip.dd-stretch-short { color: var(--dim); opacity: 0.75; font-style: italic; }
+.dd-stretch-chip.dd-stretch-typical { color: var(--muted, #8a93a3); opacity: 0.8; }
 .deleg-ops {
   list-style: none;
   padding: 0;
