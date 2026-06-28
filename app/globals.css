@@ -758,6 +758,26 @@ a:hover { text-decoration: underline; }
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
 }
+/* iter 241: quiet §1 trim-anchor chip — surfaces mostOverweightLowEmission as
+   a single-line accent under the .stats grid. Same "data already computed,
+   never rendered" pattern as iter 193/196/238/239. Accent-orange tint matches
+   the .yield-delta.neg accent (mild structural-tail flag, not error). Quiet
+   weight, never green/red — §0 narrative still owns the recommendation. */
+.trim-anchor-chip {
+  font-size: 0.85em;
+  color: var(--muted, #8a93a3);
+  margin-top: 6px;
+  margin-bottom: 0;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.95;
+}
+.trim-anchor-chip .trim-anchor-lbl {
+  color: var(--accent, #f5a05a);
+  font-weight: 500;
+  opacity: 0.85;
+  letter-spacing: 0.01em;
+}
+.trim-anchor-chip .trim-anchor-val { font-weight: 400; }
 /* iter 196: quiet drawdown-verdict token chip next to the §2 "Drawdown &
    recovery" header. Same "data already computed, never rendered" pattern as
    iter 193 emission chip — drawdownVerdict has shipped to §0 AI Insights

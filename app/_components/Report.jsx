@@ -548,6 +548,35 @@ export default function Report({ data, showSubscribeNudge = true }) {
             );
           })()}
         </div>
+        {p.emissionAlignment?.available && p.emissionAlignment.mostOverweightLowEmission && (() => {
+          // iter 241 — surface the already-computed mostOverweightLowEmission as a
+          // §1 trim-anchor chip. Same "data already computed, never rendered"
+          // pattern as iter 193 (per-position emission chip), iter 196 (drawdown
+          // verdict chip), iter 238 (emission exposure headline). Field has
+          // shipped to §0 AI Insights since iter 186 (lib/ai-insights.js:597)
+          // as the "TRIM anchor" framing the model uses to write concrete
+          // "trim sn{N} from X% toward Y%" recommendations instead of generic
+          // "rebalance" prose — but the user couldn't see which position the
+          // §0 was about to flag without reading the full §4 narrative.
+          // Renders quiet (accent-orange tint, never green/red — §0 narrative
+          // still owns recommendations). Mirrors the iter 600 line copy from
+          // ai-insights so the chip and the §0 read the same anchor.
+          const mo = p.emissionAlignment.mostOverweightLowEmission;
+          const targetPct = Math.max(0, mo.pctOfPortfolio - 5);
+          const tip = [
+            `TRIM anchor — largest position with the weakest emission claim. Sets a concrete trim target in §0 AI Insights (frames as "trim sn${mo.netuid} from ${mo.pctOfPortfolio.toFixed(1)}% toward ${targetPct.toFixed(0)}%" not generic "rebalance").`,
+            `sn${mo.netuid} ${mo.name}: ${mo.pctOfPortfolio.toFixed(2)}% of portfolio at only ${mo.emissionPct.toFixed(2)}% network emission share (below the 1.0% high-emission threshold).`,
+            `tao.app screener emission_pct is a per-epoch SNAPSHOT (Yuma consensus rotates validator weight per ~72min tempo) — read as "this epoch", not sustained. Cross-check the position emission chip in the top-10 table below before acting.`,
+          ].join('\n\n');
+          return (
+            <p className="trim-anchor-chip" title={tip}>
+              <span className="trim-anchor-lbl">Trim anchor:</span>{' '}
+              <span className="trim-anchor-val">
+                sn{mo.netuid} {mo.name} · {mo.pctOfPortfolio.toFixed(1)}% of portfolio at {mo.emissionPct.toFixed(2)}% emission share
+              </span>
+            </p>
+          );
+        })()}
         {p.canonicalSource === 'free-api-fallback' && Number.isFinite(p.canonicalTao) && (
           <p
             className="canonical-footnote"
