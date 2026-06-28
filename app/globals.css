@@ -737,6 +737,22 @@ a:hover { text-decoration: underline; }
    snapshot ("this epoch") not a permanent state — Yuma consensus rotates
    validator weight per ~72min tempo; ~90/128 subnets show 0 at any instant. */
 .subnet-emit-chip.emit-off-epoch { opacity: 0.7; font-style: italic; }
+/* iter 243 — per-row emission-contribution rank chip. Ranks top10 by
+   taoValue × emissionPct and tags top/bottom quartile. Answers the
+   portfolio-internal "which positions are pulling the most/least emission
+   share into my wallet" question — orthogonal to .subnet-emit-chip (which
+   reads the subnet-external epoch share). Tints only, never green/red —
+   §0 narrative owns severity. Top quartile gets accent-orange (matches
+   .trim-anchor-chip / .yield-delta.neg accent — "this is your workhorse"),
+   bottom quartile gets muted-dim. */
+.emission-rank-chip {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+  opacity: 0.9;
+}
+.emission-rank-chip.rank-top { color: var(--accent, #f5a05a); font-weight: 500; }
+.emission-rank-chip.rank-bottom { color: var(--dim); opacity: 0.7; font-style: italic; }
 /* iter 238 — §1 Portfolio strip wallet emission-exposure headline (Stat val
    chip). Verdict-colored: aligned green, partial soft-green, mixed neutral,
    starved muted-red. Tints only — never punch-bright; the §0 narrative still

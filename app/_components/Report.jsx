@@ -888,6 +888,29 @@ export default function Report({ data, showSubscribeNudge = true }) {
             if (yp.apyIsFallback) prev.anyFallback = true;
             perNetuidApy.set(yp.netuid, prev);
           }
+          // iter 243 — per-position emission-contribution rank chip (Priority #3).
+          // Ranks top10 rows by emission contribution (taoValue × emissionPct) and
+          // tags the top/bottom quartile rows. Answers the portfolio-internal
+          // question "which positions are pulling the most/least network emission
+          // share into my wallet?" — orthogonal to the iter 193 per-row emit chip
+          // (which reads the subnet-external "this subnet's epoch emission share").
+          // Quartile only meaningful with ≥4 positions carrying valid emissionPct;
+          // suppressed otherwise. Top quartile gets an accent chip, bottom quartile
+          // a muted chip; mid rows render no chip to keep visual density low.
+          const emissionRankMap = (() => {
+            const eligible = p.top10
+              .filter((x) => x.emissionPct != null && Number.isFinite(x.emissionPct) && x.taoValue > 0)
+              .map((x) => ({ netuid: x.netuid, contribution: x.taoValue * x.emissionPct }));
+            if (eligible.length < 4) return null;
+            const sorted = eligible.slice().sort((a, b) => b.contribution - a.contribution);
+            const qSize = Math.max(1, Math.floor(sorted.length / 4));
+            const m = new Map();
+            sorted.slice(0, qSize).forEach((x) => m.set(x.netuid, { tier: 'top', contribution: x.contribution }));
+            sorted.slice(-qSize).forEach((x) => {
+              if (!m.has(x.netuid)) m.set(x.netuid, { tier: 'bottom', contribution: x.contribution });
+            });
+            return m;
+          })();
           // Aggregate yield + value totals across rendered top10 for the tfoot row.
           let totalTaoYr = 0;
           let wApyNum = 0;
@@ -993,6 +1016,23 @@ export default function Report({ data, showSubscribeNudge = true }) {
                                 title={`Network emission share for sn${pos.netuid}: ${pos.emissionPct.toFixed(2)}% — ${tierLabel}. tao.app screener emission_pct is a per-epoch SNAPSHOT (sums to 100 across subnets; rotates per ~72min Yuma tempo); fair share at 128 subnets ≈ 0.78%. Read as "this epoch" not "sustained".`}
                               >
                                 {' · '}{pos.emissionPct.toFixed(2)}% emit (epoch)
+                              </span>
+                            );
+                          })()}
+                          {(() => {
+                            if (!emissionRankMap) return null;
+                            const rank = emissionRankMap.get(pos.netuid);
+                            if (!rank) return null;
+                            const label = rank.tier === 'top' ? 'top emit' : 'bottom emit';
+                            const tipPrefix = rank.tier === 'top'
+                              ? `Top-quartile emission contributor for this wallet — sn${pos.netuid} ranks among the strongest absolute network-emission share captured (taoValue × emissionPct = ${rank.contribution.toFixed(4)} τ-emission-share units).`
+                              : `Bottom-quartile emission contributor for this wallet — sn${pos.netuid} pulls in the least absolute network-emission share among held positions (taoValue × emissionPct = ${rank.contribution.toFixed(4)} τ-emission-share units).`;
+                            return (
+                              <span
+                                className={`emission-rank-chip rank-${rank.tier}`}
+                                title={`${tipPrefix} Rank computed over the ${p.top10.length} top-10 positions with valid emission data; per-epoch SNAPSHOT (Yuma 72min tempo) so rank reads "this epoch", not sustained.`}
+                              >
+                                {' · '}{label}
                               </span>
                             );
                           })()}
