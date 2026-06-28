@@ -2450,6 +2450,44 @@ export default function Report({ data, showSubscribeNudge = true }) {
                                     {rowVerdict.verdict.replace(/_/g, ' ')}
                                   </span>
                                 )}
+                                {(() => {
+                                  // iter 245: position-vs-subnet-median APY chip.
+                                  // subnetMedianApy already on perPosition row
+                                  // (lib/report.js:2123 via iter 192 plumbing).
+                                  // Compares this row's effective apy vs the
+                                  // subnet's median across its validator field.
+                                  // Tier: |Δ|/median < 5% → at median; else
+                                  // above / below. Skips fallback rows (apy
+                                  // IS the median), thin fields (<2 vals), and
+                                  // missing data. Render-only continuation of
+                                  // the "data already computed, never as
+                                  // chip" pattern (iter 193 / 196 / 199 / 200
+                                  // / 201 / 238 / 241 / 242 / 243 / 244). NO
+                                  // green/red — §0 narrative still owns
+                                  // severity; tints only.
+                                  if (p.apyIsFallback) return null;
+                                  if (p.apy == null || p.subnetMedianApy == null) return null;
+                                  if (!(p.subnetMedianApy > 0)) return null;
+                                  if (!(p.subnetValidatorCount >= 2)) return null;
+                                  const rel = (p.apy - p.subnetMedianApy) / p.subnetMedianApy;
+                                  const tier = Math.abs(rel) < 0.05 ? 'at' : rel > 0 ? 'above' : 'below';
+                                  const label = tier === 'at' ? 'at median' : tier === 'above' ? 'above median' : 'below median';
+                                  const deltaPp = (p.apy - p.subnetMedianApy) * 100;
+                                  const mvmTitle =
+                                    `Position APY ${(p.apy * 100).toFixed(2)}% vs subnet median ` +
+                                    `${(p.subnetMedianApy * 100).toFixed(2)}% across ${p.subnetValidatorCount} validators — ` +
+                                    `Δ ${deltaPp >= 0 ? '+' : ''}${deltaPp.toFixed(2)}pp ` +
+                                    `(${rel >= 0 ? '+' : ''}${(rel * 100).toFixed(1)}% relative). ` +
+                                    `"At median" band = within 5% relative.`;
+                                  return (
+                                    <span
+                                      className={`apy-vs-median-chip apy-vs-median-${tier}`}
+                                      title={mvmTitle}
+                                    >
+                                      {' · '}{label}
+                                    </span>
+                                  );
+                                })()}
                               </>
                             );
                           })()}

@@ -995,6 +995,26 @@ a:hover { text-decoration: underline; }
   vertical-align: middle;
   white-space: nowrap;
 }
+/* iter 245: per-row position-vs-subnet-median APY chip. Sits inside the §3
+   yield-table APY cell after iter 130 quartet + iter 242 apyTrendVerdict
+   chip — third opacity-tier chip on the same cell. Reads "is THIS position
+   pulling above / at / below its subnet's typical validator yield?" —
+   orthogonal axis to iter 192 median+field-val under the "Subnet best"
+   cell (which anchors Δ-to-best context). Tints only — never green/red;
+   §0 narrative owns severity. Above = accent-orange (matches iter 241
+   trim-anchor + iter 243 rank-top "this is a workhorse" accent semantics).
+   Below = dim italic (matches iter 243 rank-bottom). At = neutral dim. */
+.apy-vs-median-chip {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+.apy-vs-median-chip.apy-vs-median-above { color: var(--accent, #f5a05a); font-weight: 500; }
+.apy-vs-median-chip.apy-vs-median-below { color: var(--dim); opacity: 0.75; font-style: italic; }
+.apy-vs-median-chip.apy-vs-median-at { color: var(--muted, #8a93a3); opacity: 0.8; }
 .deleg-ops {
   list-style: none;
   padding: 0;
