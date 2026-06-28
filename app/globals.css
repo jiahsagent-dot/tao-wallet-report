@@ -3176,6 +3176,28 @@ pre.copy-block-body {
   border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line));
 }
 
+.row-30d-change {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: default;
+}
+.row-30d-up {
+  background: color-mix(in srgb, var(--green) 14%, var(--bg));
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+}
+.row-30d-down {
+  background: color-mix(in srgb, var(--red) 14%, var(--bg));
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 40%, var(--line));
+}
+
 .market-context-block {
   display: flex;
   flex-direction: column;

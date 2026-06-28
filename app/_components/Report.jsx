@@ -874,6 +874,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
           const maxPort = Math.max(...p.top10.map((x) => x.pctOfPortfolio || 0));
           const maxAbs1d = Math.max(...p.top10.map((x) => Math.abs(x.pct1d || 0)));
           const maxAbs7d = Math.max(...p.top10.map((x) => Math.abs(x.pct7d || 0)));
+          const maxAbs1m = Math.max(...p.top10.map((x) => Math.abs(x.pct1m || 0)));
           const perSubnetMap = new Map((pnl?.perSubnet || []).map((s) => [s.netuid, s]));
           // Build a per-netuid APY map by alpha-weighting yield.perPosition rows
           // across hotkeys on the same subnet (mirrors the §3 weighting logic so
@@ -979,12 +980,14 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     <th className="num">% port</th>
                     <th className="num">24h</th>
                     <th className="num">7d</th>
+                    <th className="num">30d</th>
                   </tr>
                 </thead>
                 <tbody>
                   {p.top10.map((pos) => {
                     const rgb1d = (pos.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                     const rgb7d = (pos.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
+                    const rgb1m = (pos.pct1m || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                     return (
                       <tr key={pos.netuid}>
                         <td>{pos.netuid}</td>
@@ -1174,6 +1177,27 @@ export default function Report({ data, showSubscribeNudge = true }) {
                             );
                           })()}
                         </td>
+                        <td className={`num heat ${cls(pos.pct1m)}`} style={heatBg(pos.pct1m, maxAbs1m, rgb1m)}>
+                          {fmtPct(pos.pct1m)}
+                          {(() => {
+                            if (pos.pct1m == null || !Number.isFinite(pos.pct1m)) return null;
+                            if (!(pos.taoValue > 0)) return null;
+                            const denom = 1 + pos.pct1m / 100;
+                            if (!(denom > 0)) return null;
+                            const change30dTao = pos.taoValue - pos.taoValue / denom;
+                            if (!Number.isFinite(change30dTao) || Math.abs(change30dTao) < 0.001) return null;
+                            const sign = change30dTao >= 0 ? '+' : '−';
+                            const tier = change30dTao >= 0 ? 'up' : 'down';
+                            return (
+                              <span
+                                className={`row-30d-change row-30d-${tier}`}
+                                title={`30d τ change on sn${pos.netuid}: ${sign}${Math.abs(change30dTao).toFixed(4)} τ (current ${pos.taoValue.toFixed(4)} τ vs 30d-ago ${(pos.taoValue / denom).toFixed(4)} τ at ${pos.pct1m >= 0 ? '+' : ''}${pos.pct1m.toFixed(2)}%)`}
+                              >
+                                {' '}{sign}{Math.abs(change30dTao).toFixed(2)} τ
+                              </span>
+                            );
+                          })()}
+                        </td>
                       </tr>
                     );
                   })}
@@ -1197,6 +1221,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                     </td>
                     <td className="num">{fmt(totalValueTao)}</td>
                     <td className="num">{fmt(totalPctPort, 1)}%</td>
+                    <td className="num"></td>
                     <td className="num"></td>
                     <td className="num"></td>
                   </tr>
