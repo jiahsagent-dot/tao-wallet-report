@@ -321,11 +321,12 @@ function Section({ title, n, children }) {
   );
 }
 
-function Stat({ label, value, cls: c, title }) {
+function Stat({ label, value, cls: c, title, subtitle }) {
   return (
     <div className="stat" title={title || undefined}>
       <div className="lbl">{label}</div>
       <div className={`val ${c || ''}`}>{value}</div>
+      {subtitle ? <div className="sub">{subtitle}</div> : null}
     </div>
   );
 }
@@ -514,11 +515,25 @@ export default function Report({ data, showSubscribeNudge = true }) {
             const ratioLine = Number.isFinite(ratio)
               ? `${ratio >= 1 ? `${ratio.toFixed(2)}× fair share` : `${ratio.toFixed(2)}× fair share (under-weighted)`}`
               : '';
+            // iter 239 — position-count subtitle alongside the iter 238
+            // TAO-weighted share metric. Shares vs counts are orthogonal
+            // structural reads: 60% of TAO in high-emission across 2 positions
+            // (concentrated bet) is materially different from 60% across 9
+            // positions (broad coverage) — same verdict, different risk shape.
+            const highCount = ea.highEmissionPositionCount;
+            const zeroCount = ea.zeroEmissionPositionCount;
+            const totalCount = ea.emissionPositionCount;
+            const countSubtitle = Number.isFinite(totalCount) && totalCount > 0
+              ? `${highCount}/${totalCount} ≥1.0% · ${zeroCount}/${totalCount} off-epoch`
+              : null;
             const tip = [
               `Wallet emission exposure — TAO-weighted average network emission share across your positions.`,
               `Formula: Σ (taoValue × emissionPct) / totalTao = ${ea.weightedEmissionPct.toFixed(4)}%.`,
               `Effective emission absorption: Σ (taoValue × emissionPct/100) = ${ea.effectiveEmissionAbsorption.toFixed(4)} τ-emission-share units (size × alignment composite).`,
               `Verdict: ${verdictLabel}. High-emission share (subnets ≥ 1.0%): ${ea.highEmissionShare.toFixed(1)}% of portfolio. Off-epoch share (subnets at 0%): ${ea.zeroEmissionShare.toFixed(1)}%.`,
+              Number.isFinite(totalCount) && totalCount > 0
+                ? `Position counts (iter 239): ${highCount}/${totalCount} positions in high-emission subnets (≥ 1.0%), ${zeroCount}/${totalCount} in off-epoch subnets (== 0% this snapshot). Shares vs counts are orthogonal — same wallet can read 60% TAO-share across 2 positions (concentrated) vs across 9 positions (broad coverage), same verdict, different structural risk shape.`
+                : null,
               ratioLine,
               `Fair share at 128 subnets ≈ 0.78% per subnet. tao.app screener emission_pct is a per-epoch SNAPSHOT (Yuma consensus rotates validator weight per ~72min tempo; ~90/128 subnets show 0 at any instant) — read this as "this epoch", not sustained.`,
             ].filter(Boolean).join('\n\n');
@@ -528,6 +543,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                 value={`${ea.weightedEmissionPct.toFixed(2)}% (${verdictLabel})`}
                 cls={`emit-stat ${verdictCls}`}
                 title={tip}
+                subtitle={countSubtitle}
               />
             );
           })()}

@@ -747,6 +747,17 @@ a:hover { text-decoration: underline; }
 .stat .val.emit-stat.emit-partial { color: #8fd9b6; }
 .stat .val.emit-stat.emit-mixed { color: var(--muted, #8a93a3); }
 .stat .val.emit-stat.emit-starved { color: #e58a8a; }
+/* iter 239: position-count subtitle slot on the Stat component. Quiet, muted,
+   tabular-nums for clean count alignment. Only renders when subtitle prop is
+   non-null (other Stats unchanged). Surfaces the orthogonal count axis
+   (concentration vs spread) below the iter 238 TAO-weighted share verdict. */
+.stat .sub {
+  font-size: 0.78em;
+  color: var(--muted, #8a93a3);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
 /* iter 196: quiet drawdown-verdict token chip next to the §2 "Drawdown &
    recovery" header. Same "data already computed, never rendered" pattern as
    iter 193 emission chip — drawdownVerdict has shipped to §0 AI Insights
