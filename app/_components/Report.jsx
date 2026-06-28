@@ -174,6 +174,51 @@ function buildBroaderMarketCsv(broader) {
   return lines.join('\r\n') + '\r\n';
 }
 
+// iter 242: per-row APY trend verdict classifier. Mirrors lib/report.js
+// apyTrendVerdict (line 714, iter 201) verbatim — same 0.5pp threshold, same
+// 8 verdict labels, same reason-text branches — but applied to the per-row
+// apy30d/apy7d/apy1d triple instead of the wallet-level weightedApySeries.
+// Surfaces the same vocabulary the wallet-level chip uses (consistent UX) at
+// per-position granularity. Render-only; classifier is a pure function so
+// the existing iter 130 coarse 7d/30d ratio chip on the 7d cell stays intact
+// as well — readers get both the planning-window direction and the richer
+// 30d×7d×1d shape. Returns null when fewer than two windows are populated
+// (single-point trend isn't a trend, identical lib/report.js:729 gate).
+function perRowApyVerdict(a30d, a7d, a1d) {
+  const present = [a30d, a7d, a1d].filter((v) => v != null && Number.isFinite(v)).length;
+  if (present < 2) return null;
+  const THRESH_PP = 0.5;
+  const g7_30 = a30d != null && a7d != null ? (a7d - a30d) * 100 : null;
+  const g1_7 = a7d != null && a1d != null ? (a1d - a7d) * 100 : null;
+  const g1_30 = a30d != null && a1d != null ? (a1d - a30d) * 100 : null;
+  if (a30d != null && a7d != null && a1d != null) {
+    const up7 = g7_30 > THRESH_PP;
+    const dn7 = g7_30 < -THRESH_PP;
+    const up1 = g1_7 > THRESH_PP;
+    const dn1 = g1_7 < -THRESH_PP;
+    if (up7 && up1) return { verdict: 'accelerating_climb', reason: 'both 7d-vs-30d and 1d-vs-7d positive — yield momentum still building' };
+    if (dn7 && dn1) return { verdict: 'accelerating_fade', reason: 'both 7d-vs-30d and 1d-vs-7d negative — yield deteriorating across both horizons' };
+    if (up7 && dn1) return { verdict: 'peaking', reason: '7d above 30d but 1d already pulling back — climb may be topping out' };
+    if (dn7 && up1) return { verdict: 'recovering', reason: '7d below 30d but 1d above 7d — fade reversing recently' };
+    if (up7) return { verdict: 'climbing', reason: '7d above 30d with 1d holding the new level — sustained step-up' };
+    if (dn7) return { verdict: 'fading', reason: '7d below 30d with 1d holding the new level — sustained step-down' };
+    if (up1) return { verdict: 'recent_lift', reason: '30d and 7d roughly equal but 1d above both — fresh uptick, may or may not hold' };
+    if (dn1) return { verdict: 'recent_dip', reason: '30d and 7d roughly equal but 1d below both — fresh dip, may or may not hold' };
+    return { verdict: 'stable', reason: 'all three windows within ±0.5pp — yield is flat' };
+  }
+  if (g7_30 != null) {
+    if (g7_30 > THRESH_PP) return { verdict: 'climbing', reason: '7d above 30d (1d data unavailable) — uptrend visible at week scale' };
+    if (g7_30 < -THRESH_PP) return { verdict: 'fading', reason: '7d below 30d (1d data unavailable) — downtrend visible at week scale' };
+    return { verdict: 'stable', reason: '7d within ±0.5pp of 30d (1d data unavailable) — yield is flat' };
+  }
+  if (g1_30 != null) {
+    if (g1_30 > 1.0) return { verdict: 'climbing', reason: '1d above 30d by >1pp (7d data unavailable) — recent uptick relative to monthly baseline' };
+    if (g1_30 < -1.0) return { verdict: 'fading', reason: '1d below 30d by >1pp (7d data unavailable) — recent dip relative to monthly baseline' };
+    return { verdict: 'stable', reason: '1d within 1pp of 30d (7d data unavailable) — yield roughly tracking baseline' };
+  }
+  return null;
+}
+
 function buildYieldCsv(perPosition) {
   const header = ['Netuid', 'Subnet', 'Validator', 'Hotkey', 'Alpha held', 'APY %', 'APY is fallback', 'Subnet best APY %', 'Δ to best (pp)', 'Subnet validator count'];
   const lines = [header.map(csvEscape).join(',')];
@@ -2301,25 +2346,51 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               `7d = planning window, 30d = durability check. ` +
                               `Direction: ${dirLbl}. ` +
                               `Greyed windows are stray-epoch sampling artefacts (KB iter 128) — ignore.`;
+                            // iter 242: per-row APY trend verdict — same 8-label
+                            // vocabulary as the wallet-level chip (iter 201) but
+                            // applied to this position's apy30d/apy7d/apy1d
+                            // instead of the wallet weightedApySeries. Sidesteps
+                            // the iter 130 coarse 7d/30d ratio chip on the 7d
+                            // cell — both stay, so readers get both the
+                            // planning-window direction class AND the richer
+                            // 30d×7d×1d shape. Reuses the iter 201 chip CSS
+                            // family (.apyt-verdict-chip + .apyt-verdict-*)
+                            // for opacity-tier consistency (stable italic 0.7,
+                            // fading/peaking/recent_dip/accelerating_fade
+                            // 500-weight 0.95, climbing/recovering/recent_lift/
+                            // accelerating_climb base 0.85). NO green/red — §0
+                            // narrative owns severity.
+                            const rowVerdict = perRowApyVerdict(a30d, a7d, a1d);
                             return (
-                              <div className="apy-quartet" title={title}>
-                                <span className={`qw ${stray1h ? 'qw-stray' : ''}`}>
-                                  <span className="qw-lbl">1h</span>
-                                  <span className="qw-val">{fmtPct(a1h)}</span>
-                                </span>
-                                <span className={`qw ${stray1d ? 'qw-stray' : ''}`}>
-                                  <span className="qw-lbl">1d</span>
-                                  <span className="qw-val">{fmtPct(a1d)}</span>
-                                </span>
-                                <span className={`qw ${dirCls}`}>
-                                  <span className="qw-lbl">7d</span>
-                                  <span className="qw-val">{fmtPct(a7d)}</span>
-                                </span>
-                                <span className="qw">
-                                  <span className="qw-lbl">30d</span>
-                                  <span className="qw-val">{fmtPct(a30d)}</span>
-                                </span>
-                              </div>
+                              <>
+                                <div className="apy-quartet" title={title}>
+                                  <span className={`qw ${stray1h ? 'qw-stray' : ''}`}>
+                                    <span className="qw-lbl">1h</span>
+                                    <span className="qw-val">{fmtPct(a1h)}</span>
+                                  </span>
+                                  <span className={`qw ${stray1d ? 'qw-stray' : ''}`}>
+                                    <span className="qw-lbl">1d</span>
+                                    <span className="qw-val">{fmtPct(a1d)}</span>
+                                  </span>
+                                  <span className={`qw ${dirCls}`}>
+                                    <span className="qw-lbl">7d</span>
+                                    <span className="qw-val">{fmtPct(a7d)}</span>
+                                  </span>
+                                  <span className="qw">
+                                    <span className="qw-lbl">30d</span>
+                                    <span className="qw-val">{fmtPct(a30d)}</span>
+                                  </span>
+                                </div>
+                                {rowVerdict && rowVerdict.verdict && (
+                                  <span
+                                    className={`apyt-verdict-chip apyt-verdict-${rowVerdict.verdict.replace(/_/g, '-')} apyt-row`}
+                                    title={rowVerdict.reason}
+                                  >
+                                    {' · '}
+                                    {rowVerdict.verdict.replace(/_/g, ' ')}
+                                  </span>
+                                )}
+                              </>
                             );
                           })()}
                         </td>

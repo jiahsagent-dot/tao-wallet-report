@@ -967,6 +967,18 @@ a:hover { text-decoration: underline; }
   opacity: 0.95;
   font-weight: 500;
 }
+/* iter 242: per-row variant of the wallet-level apyt-verdict-chip — sits
+   inside the §3 yield-table APY cell next to the iter 130 quartet, so it
+   needs a tighter font + zero left-margin (the leading " · " separator
+   handles spacing). Same opacity tiers above still apply via the base
+   .apyt-verdict-chip + .apyt-verdict-* selectors. NO new color rules —
+   §0 narrative owns severity per iter 201 discipline. */
+.apyt-verdict-chip.apyt-row {
+  font-size: 10.5px;
+  margin-left: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
 .deleg-ops {
   list-style: none;
   padding: 0;
