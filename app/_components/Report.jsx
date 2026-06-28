@@ -1099,7 +1099,27 @@ export default function Report({ data, showSubscribeNudge = true }) {
                         </td>
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>
                         <td className="num heat" style={heatBg(pos.pctOfPortfolio, maxPort, HEAT_ORANGE)}>{fmt(pos.pctOfPortfolio, 1)}%</td>
-                        <td className={`num heat ${cls(pos.pct1d)}`} style={heatBg(pos.pct1d, maxAbs1d, rgb1d)}>{fmtPct(pos.pct1d)}</td>
+                        <td className={`num heat ${cls(pos.pct1d)}`} style={heatBg(pos.pct1d, maxAbs1d, rgb1d)}>
+                          {fmtPct(pos.pct1d)}
+                          {(() => {
+                            if (pos.pct1d == null || !Number.isFinite(pos.pct1d)) return null;
+                            if (!(pos.taoValue > 0)) return null;
+                            const denom = 1 + pos.pct1d / 100;
+                            if (!(denom > 0)) return null;
+                            const change1dTao = pos.taoValue - pos.taoValue / denom;
+                            if (!Number.isFinite(change1dTao) || Math.abs(change1dTao) < 0.001) return null;
+                            const sign = change1dTao >= 0 ? '+' : '−';
+                            const tier = change1dTao >= 0 ? 'up' : 'down';
+                            return (
+                              <span
+                                className={`row-1d-change row-1d-${tier}`}
+                                title={`24h τ change on sn${pos.netuid}: ${sign}${Math.abs(change1dTao).toFixed(4)} τ (current ${pos.taoValue.toFixed(4)} τ vs 24h-ago ${(pos.taoValue / denom).toFixed(4)} τ at ${pos.pct1d >= 0 ? '+' : ''}${pos.pct1d.toFixed(2)}%)`}
+                              >
+                                {' '}{sign}{Math.abs(change1dTao).toFixed(2)} τ
+                              </span>
+                            );
+                          })()}
+                        </td>
                         <td className={`num heat ${cls(pos.pct7d)}`} style={heatBg(pos.pct7d, maxAbs7d, rgb7d)}>
                           {fmtPct(pos.pct7d)}
                           {(() => {
