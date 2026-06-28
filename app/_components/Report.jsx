@@ -1056,7 +1056,7 @@ export default function Report({ data, showSubscribeNudge = true }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {p.top10.map((pos) => {
+                  {p.top10.map((pos, idx) => {
                     const rgb1d = (pos.pct1d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                     const rgb7d = (pos.pct7d || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
                     const rgb1m = (pos.pct1m || 0) >= 0 ? HEAT_GREEN : HEAT_RED;
@@ -1203,6 +1203,35 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               >
                                 <span className="vol-lbl">vol</span>{' '}
                                 <span className="vol-val">{display}</span>
+                              </div>
+                            );
+                          })()}
+                          {(() => {
+                            // iter 252 — cross-chip composite warning. First composite
+                            // read on §1 top10. Fires ONLY when BOTH conditions hold:
+                            //   (a) liquidity tier ∈ {low, thin} (vol < 100 τ/24h), AND
+                            //   (b) row is in top-3 by portfolio share (idx < 3 — top10
+                            //       is sorted desc by taoValue at lib/report.js:90, and
+                            //       pctOfPortfolio is proportional to taoValue within a
+                            //       wallet, so idx < 3 == top-3 by share).
+                            // Thin liquidity on a tail position is noise; on a top-3
+                            // concentrated position it's a real exit-friction concern
+                            // (sizing down quickly will move the book or stagger over
+                            // multiple fills). Most rows render nothing — rare alert.
+                            if (idx >= 3) return null;
+                            if (pos.volTao24h == null || !Number.isFinite(pos.volTao24h) || pos.volTao24h <= 0) return null;
+                            const v = pos.volTao24h;
+                            if (v >= 100) return null;
+                            const tier = v >= 10 ? 'low' : 'thin';
+                            const pct = Number.isFinite(pos.pctOfPortfolio) ? pos.pctOfPortfolio : null;
+                            const pctTxt = pct != null ? `${pct.toFixed(1)}%` : '—';
+                            return (
+                              <div
+                                className={`exit-friction-warn xfw-${tier}`}
+                                title={`Exit-friction concern on sn${pos.netuid}: position is rank #${idx + 1} by portfolio share (${pctTxt}) AND 24h subnet trade volume is only ${v.toFixed(2)} τ (${tier} liquidity tier, <100 τ). On a top-3 concentrated position, ${tier} liquidity means sizing down quickly will move the book or stagger across multiple fills with slippage. Composite warning fires only when BOTH conditions hold — thin/low liquidity on a tail position is noise; on a concentrated position it's a sizing problem worth flagging.`}
+                              >
+                                <span className="xfw-lbl">EXIT</span>{' '}
+                                <span className="xfw-val">{tier} × top {idx + 1}</span>
                               </div>
                             );
                           })()}
