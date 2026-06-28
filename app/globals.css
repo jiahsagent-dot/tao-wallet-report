@@ -1287,6 +1287,52 @@ a:hover { text-decoration: underline; }
   font-size: 10px;
   opacity: 0.85;
 }
+/* iter 251 — 24h subnet trade-volume chip on §1 top10 alphaPriceTao cell.
+   Sits below cost-basis-chip + apy-chip in the same cell, sharing the
+   margin-top 2px stack rhythm. 4-tier liquidity ladder: -deep accent (good
+   exits), -mid neutral muted (typical), -low italic muted (size moves book),
+   -thin italic warning (exit-friction concern). Tints + weights only — never
+   solid red/green; severity is contextual on position size. */
+.vol-chip {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: help;
+}
+.vol-chip .vol-lbl {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.vol-chip .vol-val {
+  color: var(--fg);
+  font-weight: 500;
+}
+.vol-chip.vol-deep .vol-val {
+  color: color-mix(in srgb, var(--green) 70%, var(--fg));
+  font-weight: 600;
+}
+.vol-chip.vol-mid .vol-val {
+  color: var(--fg);
+  font-weight: 500;
+}
+.vol-chip.vol-low {
+  font-style: italic;
+}
+.vol-chip.vol-low .vol-val {
+  color: var(--muted);
+  opacity: 0.9;
+}
+.vol-chip.vol-thin {
+  font-style: italic;
+  opacity: 0.95;
+}
+.vol-chip.vol-thin .vol-val {
+  color: color-mix(in srgb, #d97b6c 60%, var(--muted));
+  font-weight: 500;
+}
 tfoot tr.tfoot-totals td {
   border-top: 2px solid var(--line);
   padding-top: 8px;

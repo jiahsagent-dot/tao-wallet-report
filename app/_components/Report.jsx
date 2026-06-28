@@ -1171,6 +1171,41 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               </div>
                             );
                           })()}
+                          {(() => {
+                            // iter 251 — 24h subnet trade-volume liquidity chip.
+                            // tao.app screener total_volume_tao_1d threaded onto the
+                            // position map this iter. Read as exit-friction proxy:
+                            // thin = high slippage on size, deep = smooth fills.
+                            // Bands tuned against typical alpha-subnet 24h volume
+                            // distribution (broader §6 movers screen filters at
+                            // >1 τ for "tradeable"; deep market is in the hundreds-
+                            // to-thousands of τ band for the most-traded subnets).
+                            if (pos.volTao24h == null || !Number.isFinite(pos.volTao24h) || pos.volTao24h <= 0) return null;
+                            const v = pos.volTao24h;
+                            const tier =
+                              v >= 1000 ? 'deep'
+                              : v >= 100 ? 'mid'
+                              : v >= 10 ? 'low'
+                              : 'thin';
+                            const tierLabel =
+                              tier === 'deep' ? 'deep liquidity — large fills clear with minimal slippage'
+                              : tier === 'mid' ? 'mid liquidity — moderate fills clear with manageable slippage'
+                              : tier === 'low' ? 'low liquidity — size moves the book, exits stagger over multiple fills'
+                              : 'thin liquidity — high slippage on any size, exit-friction concern';
+                            const display =
+                              v >= 1000 ? `${(v / 1000).toFixed(2)}k τ/24h`
+                              : v >= 10 ? `${v.toFixed(0)} τ/24h`
+                              : `${v.toFixed(1)} τ/24h`;
+                            return (
+                              <div
+                                className={`vol-chip vol-${tier}`}
+                                title={`24h subnet trade volume on sn${pos.netuid}: ${v.toFixed(2)} τ — ${tierLabel} (bands: ≥1000 τ deep, 100–1000 τ mid, 10–100 τ low, <10 τ thin). Source: tao.app screener total_volume_tao_1d. Gross 24h subnet volume (not net buy/sell pressure); read as liquidity / exit-friction proxy, not as flow direction.`}
+                              >
+                                <span className="vol-lbl">vol</span>{' '}
+                                <span className="vol-val">{display}</span>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="num heat" style={heatBg(pos.taoValue, maxValue, HEAT_ORANGE)}>{fmt(pos.taoValue)}</td>
                         <td className="num heat" style={heatBg(pos.pctOfPortfolio, maxPort, HEAT_ORANGE)}>{fmt(pos.pctOfPortfolio, 1)}%</td>
