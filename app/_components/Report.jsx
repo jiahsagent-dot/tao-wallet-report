@@ -321,9 +321,9 @@ function Section({ title, n, children }) {
   );
 }
 
-function Stat({ label, value, cls: c }) {
+function Stat({ label, value, cls: c, title }) {
   return (
-    <div className="stat">
+    <div className="stat" title={title || undefined}>
       <div className="lbl">{label}</div>
       <div className={`val ${c || ''}`}>{value}</div>
     </div>
@@ -488,6 +488,49 @@ export default function Report({ data, showSubscribeNudge = true }) {
           <Stat label="USD" value={`$${fmt(p.totalUsd)}`} />
           <Stat label="AUD" value={`A$${fmt(p.totalAud)}`} />
           <Stat label="Positions" value={p.positionCount} />
+          {p.emissionAlignment?.available && Number.isFinite(p.emissionAlignment.weightedEmissionPct) && (() => {
+            // iter 238 — surface the already-computed emissionAlignment as a §1
+            // headline. Same "data already computed, never rendered" pattern as
+            // iter 193 emission chip; emissionAlignment has shipped to §0 AI
+            // Insights since iter 186 but the headline metric has only been
+            // visible in the §0 narrative. Renders weighted-avg network emission
+            // share (Σ taoValue × emissionPct / totalTao) as the user-facing
+            // single-number wallet emission exposure, with verdict-colored
+            // chip and tooltip naming the absorption-units composite
+            // (Σ taoValue × emissionPct / 100, units: τ-emission-share).
+            const ea = p.emissionAlignment;
+            const verdictCls =
+              ea.verdict === 'aligned_with_emission' ? 'emit-aligned'
+              : ea.verdict === 'partially_aligned' ? 'emit-partial'
+              : ea.verdict === 'starved_subnet_heavy' ? 'emit-starved'
+              : 'emit-mixed';
+            const verdictLabel =
+              ea.verdict === 'aligned_with_emission' ? 'aligned'
+              : ea.verdict === 'partially_aligned' ? 'partial'
+              : ea.verdict === 'starved_subnet_heavy' ? 'starved'
+              : 'mixed';
+            const FAIR_SHARE = 0.78;
+            const ratio = ea.weightedEmissionPct / FAIR_SHARE;
+            const ratioLine = Number.isFinite(ratio)
+              ? `${ratio >= 1 ? `${ratio.toFixed(2)}× fair share` : `${ratio.toFixed(2)}× fair share (under-weighted)`}`
+              : '';
+            const tip = [
+              `Wallet emission exposure — TAO-weighted average network emission share across your positions.`,
+              `Formula: Σ (taoValue × emissionPct) / totalTao = ${ea.weightedEmissionPct.toFixed(4)}%.`,
+              `Effective emission absorption: Σ (taoValue × emissionPct/100) = ${ea.effectiveEmissionAbsorption.toFixed(4)} τ-emission-share units (size × alignment composite).`,
+              `Verdict: ${verdictLabel}. High-emission share (subnets ≥ 1.0%): ${ea.highEmissionShare.toFixed(1)}% of portfolio. Off-epoch share (subnets at 0%): ${ea.zeroEmissionShare.toFixed(1)}%.`,
+              ratioLine,
+              `Fair share at 128 subnets ≈ 0.78% per subnet. tao.app screener emission_pct is a per-epoch SNAPSHOT (Yuma consensus rotates validator weight per ~72min tempo; ~90/128 subnets show 0 at any instant) — read this as "this epoch", not sustained.`,
+            ].filter(Boolean).join('\n\n');
+            return (
+              <Stat
+                label="Emission exposure"
+                value={`${ea.weightedEmissionPct.toFixed(2)}% (${verdictLabel})`}
+                cls={`emit-stat ${verdictCls}`}
+                title={tip}
+              />
+            );
+          })()}
         </div>
         {p.canonicalSource === 'free-api-fallback' && Number.isFinite(p.canonicalTao) && (
           <p

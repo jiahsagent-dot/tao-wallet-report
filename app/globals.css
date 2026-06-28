@@ -737,6 +737,16 @@ a:hover { text-decoration: underline; }
    snapshot ("this epoch") not a permanent state — Yuma consensus rotates
    validator weight per ~72min tempo; ~90/128 subnets show 0 at any instant. */
 .subnet-emit-chip.emit-off-epoch { opacity: 0.7; font-style: italic; }
+/* iter 238 — §1 Portfolio strip wallet emission-exposure headline (Stat val
+   chip). Verdict-colored: aligned green, partial soft-green, mixed neutral,
+   starved muted-red. Tints only — never punch-bright; the §0 narrative still
+   owns the recommendation surface. Pattern mirrors iter 196 drawdown-verdict
+   token chip "data already computed, never rendered" surfacing. */
+.stat .val.emit-stat { font-size: 0.86em; font-variant-numeric: tabular-nums; }
+.stat .val.emit-stat.emit-aligned { color: #3ecf8e; }
+.stat .val.emit-stat.emit-partial { color: #8fd9b6; }
+.stat .val.emit-stat.emit-mixed { color: var(--muted, #8a93a3); }
+.stat .val.emit-stat.emit-starved { color: #e58a8a; }
 /* iter 196: quiet drawdown-verdict token chip next to the §2 "Drawdown &
    recovery" header. Same "data already computed, never rendered" pattern as
    iter 193 emission chip — drawdownVerdict has shipped to §0 AI Insights
