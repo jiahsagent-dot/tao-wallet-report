@@ -1369,10 +1369,16 @@ a:hover { text-decoration: underline; }
   font-weight: 600;
 }
 /* iter 253 — 7d vs 30d momentum-divergence chip on §1 top10 pct1m cell.
-   Text-only, dim italic (same visual weight as iter 246 dd-stretch chip
-   family) — divergence is context, not an alert. Two variants:
-   .mom-div-easing = 7d up while 30d still red (bleed easing, green tint),
-   .mom-div-fading = 7d down after 30d up (gain fading, red tint). */
+   iter 254 — same base class reused for 1d-vs-30d divergence chip on
+   pct1d cell (completes the pairwise-divergence trio: 1d-vs-7d = iter 92,
+   7d-vs-30d = iter 253, 1d-vs-30d = iter 254). Size-agnostic: same visual
+   weight regardless of which window pair fires. Text-only, dim italic
+   (matches iter 246 dd-stretch chip family) — divergence is context,
+   not an alert. Two variants:
+   .mom-div-easing = shorter window up while longer still red
+     (bleed easing, green tint),
+   .mom-div-fading = shorter window down after longer up
+     (gain fading, red tint). */
 .mom-div-chip {
   font-size: 10.5px;
   font-style: italic;

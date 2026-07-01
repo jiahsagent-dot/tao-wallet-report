@@ -1258,6 +1258,39 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               </span>
                             );
                           })()}
+                          {(() => {
+                            // iter 254 — 1d vs 30d momentum-divergence chip,
+                            // completing the pairwise-divergence trio: iter 92
+                            // (1d vs 7d trend-hint) + iter 253 (7d vs 30d) +
+                            // this (1d vs 30d). Fires only when 1d and 30d
+                            // signs disagree AND both windows are non-trivial
+                            // (|1d|≥1.5%, |30d|≥10%) — divergence on a small
+                            // 24h move is noise; divergence with real magnitude
+                            // on both sides is a genuine "monthly gain fading
+                            // (24h)" or "monthly bleed easing (24h)" cross.
+                            // Text-only, no emoji. Reuses the .mom-div-chip
+                            // base class with easing/fading colour variants
+                            // (size-agnostic). Render-only, no lib touch —
+                            // uses pct1d + pct1m already on position map.
+                            if (pos.pct1d == null || pos.pct1m == null) return null;
+                            if (!Number.isFinite(pos.pct1d) || !Number.isFinite(pos.pct1m)) return null;
+                            if (Math.abs(pos.pct1d) < 1.5) return null;
+                            if (Math.abs(pos.pct1m) < 10) return null;
+                            const oppSign =
+                              (pos.pct1d > 0 && pos.pct1m < 0) ||
+                              (pos.pct1d < 0 && pos.pct1m > 0);
+                            if (!oppSign) return null;
+                            const tier = pos.pct1d > 0 ? 'easing' : 'fading';
+                            const label = tier === 'easing' ? 'monthly bleed easing (24h)' : 'monthly gain fading (24h)';
+                            return (
+                              <span
+                                className={`mom-div-chip mom-div-${tier}`}
+                                title={`1d vs 30d momentum divergence on sn${pos.netuid}: ${label} (24h ${pos.pct1d >= 0 ? '+' : ''}${pos.pct1d.toFixed(2)}% / 30d ${pos.pct1m >= 0 ? '+' : ''}${pos.pct1m.toFixed(2)}%). Fires only when 1d and 30d disagree AND both are non-trivial (|1d|≥1.5%, |30d|≥10%) — divergence on small 24h moves is noise.`}
+                              >
+                                {' · '}{label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className={`num heat ${cls(pos.pct7d)}`} style={heatBg(pos.pct7d, maxAbs7d, rgb7d)}>
                           {fmtPct(pos.pct7d)}
