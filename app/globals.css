@@ -1368,6 +1368,24 @@ a:hover { text-decoration: underline; }
   color: color-mix(in srgb, #d97b6c 85%, var(--fg));
   font-weight: 600;
 }
+/* iter 253 — 7d vs 30d momentum-divergence chip on §1 top10 pct1m cell.
+   Text-only, dim italic (same visual weight as iter 246 dd-stretch chip
+   family) — divergence is context, not an alert. Two variants:
+   .mom-div-easing = 7d up while 30d still red (bleed easing, green tint),
+   .mom-div-fading = 7d down after 30d up (gain fading, red tint). */
+.mom-div-chip {
+  font-size: 10.5px;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: help;
+}
+.mom-div-chip.mom-div-easing {
+  color: color-mix(in srgb, #4a8f5a 65%, var(--muted));
+}
+.mom-div-chip.mom-div-fading {
+  color: color-mix(in srgb, #b8635a 65%, var(--muted));
+}
 tfoot tr.tfoot-totals td {
   border-top: 2px solid var(--line);
   padding-top: 8px;

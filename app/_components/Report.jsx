@@ -1333,6 +1333,38 @@ export default function Report({ data, showSubscribeNudge = true }) {
                               </span>
                             );
                           })()}
+                          {(() => {
+                            // iter 253 — 7d vs 30d momentum-divergence chip.
+                            // Same-family classifier as the existing iter-92
+                            // trend-hint-chip (1d vs 7d), extended to the next
+                            // window. Fires ONLY when 7d and 30d have opposite
+                            // signs AND both windows are non-trivial (|7d|≥3%,
+                            // |30d|≥10%) — divergence on a tiny move is noise;
+                            // divergence with real magnitude on both sides is
+                            // a genuine "monthly gain fading / bleed easing"
+                            // read. Text labels, no emoji (per Jai preference).
+                            // Render-only, no lib touch, uses only pct7d +
+                            // pct1m already on position map. iter 239 IIFE
+                            // ReferenceError class doesn't apply by construction.
+                            if (pos.pct7d == null || pos.pct1m == null) return null;
+                            if (!Number.isFinite(pos.pct7d) || !Number.isFinite(pos.pct1m)) return null;
+                            if (Math.abs(pos.pct7d) < 3) return null;
+                            if (Math.abs(pos.pct1m) < 10) return null;
+                            const oppSign =
+                              (pos.pct7d > 0 && pos.pct1m < 0) ||
+                              (pos.pct7d < 0 && pos.pct1m > 0);
+                            if (!oppSign) return null;
+                            const tier = pos.pct7d > 0 ? 'easing' : 'fading';
+                            const label = tier === 'easing' ? 'monthly bleed easing' : 'monthly gain fading';
+                            return (
+                              <span
+                                className={`mom-div-chip mom-div-${tier}`}
+                                title={`7d vs 30d momentum divergence on sn${pos.netuid}: ${label} (7d ${pos.pct7d >= 0 ? '+' : ''}${pos.pct7d.toFixed(2)}% / 30d ${pos.pct1m >= 0 ? '+' : ''}${pos.pct1m.toFixed(2)}%). Fires only when 7d and 30d disagree AND both are non-trivial (|7d|≥3%, |30d|≥10%) — divergence on small moves is noise.`}
+                              >
+                                {' · '}{label}
+                              </span>
+                            );
+                          })()}
                         </td>
                       </tr>
                     );
