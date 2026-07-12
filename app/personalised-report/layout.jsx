@@ -31,14 +31,39 @@ export default function PersonalisedReportLayout({ children }) {
           </Link>
         </div>
         <nav className="app-nav">
+          <span className="app-nav-item app-nav-disabled" aria-disabled="true">
+            <span className="app-nav-icon" aria-hidden="true">▦</span>
+            <span className="app-nav-label">Dashboard</span>
+            <span className="app-nav-soon">soon</span>
+          </span>
           <Link
             href="/personalised-report"
             className="app-nav-item active"
             aria-current="page"
           >
-            <span className="app-nav-icon" aria-hidden="true">📄</span>
+            <span className="app-nav-icon" aria-hidden="true">▤</span>
             <span className="app-nav-label">Personalised Report</span>
           </Link>
+          <span className="app-nav-item app-nav-disabled" aria-disabled="true">
+            <span className="app-nav-icon" aria-hidden="true">⇄</span>
+            <span className="app-nav-label">Transactions</span>
+            <span className="app-nav-soon">soon</span>
+          </span>
+          <span className="app-nav-item app-nav-disabled" aria-disabled="true">
+            <span className="app-nav-icon" aria-hidden="true">◔</span>
+            <span className="app-nav-label">Portfolio</span>
+            <span className="app-nav-soon">soon</span>
+          </span>
+          <span className="app-nav-item app-nav-disabled" aria-disabled="true">
+            <span className="app-nav-icon" aria-hidden="true">◈</span>
+            <span className="app-nav-label">Performance</span>
+            <span className="app-nav-soon">soon</span>
+          </span>
+          <span className="app-nav-item app-nav-disabled" aria-disabled="true">
+            <span className="app-nav-icon" aria-hidden="true">⚙</span>
+            <span className="app-nav-label">Settings</span>
+            <span className="app-nav-soon">soon</span>
+          </span>
         </nav>
       </aside>
       <div className="app-main">{children}</div>
