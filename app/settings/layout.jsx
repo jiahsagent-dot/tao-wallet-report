@@ -1,26 +1,16 @@
 import Link from 'next/link';
-import { headers } from 'next/headers';
 
 export const metadata = {
-  title: 'Personalised Report — Tao app',
+  title: 'Settings — Tao app',
   description:
-    'Generate a personalised Bittensor report for any coldkey: portfolio, PnL, yield, flags, AI insights. Free, public data only.',
+    'Manage your Bittensor coldkey wallet list, appearance, and preferences for the Tao app.',
 };
 
-// Iter 203 (BACKLOG iter 166): when this page is rendered inside an <iframe>
-// (e.g. as the "Generate Personalised Report" tab inside bittensor-tracker),
-// strip the sidebar+brand chrome so the embed doesn't render "tracker chrome
-// wrapping report chrome" — two h1s, two nav surfaces, scroll-in-scroll. The
-// browser-supplied `Sec-Fetch-Dest: iframe` header is the reliable server-side
-// signal; the page itself also honours `?embed=1` (set by the tracker iframe
-// src) for the same reason. Either signal independently strips chrome.
-export default function PersonalisedReportLayout({ children }) {
-  const isIframe = headers().get('sec-fetch-dest') === 'iframe';
-
-  if (isIframe) {
-    return <div className="app-main app-main-embed">{children}</div>;
-  }
-
+// Iter 380: Settings page owns the multi-wallet CRUD surface (coming online in
+// a later iter). For now this layout just renders the same app-shell sidebar
+// as /personalised-report but with Settings marked active — so the nav slot
+// added in iter 379 is now a real destination, not a "soon" pill.
+export default function SettingsLayout({ children }) {
   return (
     <div className="app-shell">
       <aside className="app-sidebar" aria-label="Primary navigation">
@@ -36,11 +26,7 @@ export default function PersonalisedReportLayout({ children }) {
             <span className="app-nav-label">Dashboard</span>
             <span className="app-nav-soon">soon</span>
           </span>
-          <Link
-            href="/personalised-report"
-            className="app-nav-item active"
-            aria-current="page"
-          >
+          <Link href="/personalised-report" className="app-nav-item">
             <span className="app-nav-icon" aria-hidden="true">▤</span>
             <span className="app-nav-label">Personalised Report</span>
           </Link>
@@ -59,7 +45,11 @@ export default function PersonalisedReportLayout({ children }) {
             <span className="app-nav-label">Performance</span>
             <span className="app-nav-soon">soon</span>
           </span>
-          <Link href="/settings" className="app-nav-item">
+          <Link
+            href="/settings"
+            className="app-nav-item active"
+            aria-current="page"
+          >
             <span className="app-nav-icon" aria-hidden="true">⚙</span>
             <span className="app-nav-label">Settings</span>
           </Link>
