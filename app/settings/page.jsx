@@ -1,7 +1,7 @@
-// Iter 380: Settings skeleton — container + heading + one empty-state card per
-// coming subsection (wallets, appearance). No state yet; the wallet-list CRUD
-// (localStorage-backed) is the next iter's work. Ships the destination so the
-// sidebar link out of iter 379 has somewhere to land.
+import WalletManager from './WalletManager';
+
+// Iter 380: Settings skeleton. Iter 381: the Wallets card now hosts the
+// localStorage-backed WalletManager (add/remove/rename + active-wallet marker).
 export default function SettingsPage() {
   return (
     <div className="wrap">
@@ -14,11 +14,12 @@ export default function SettingsPage() {
 
       <section className="card" aria-labelledby="settings-wallets-h">
         <h2 id="settings-wallets-h">Wallets</h2>
-        <p style={{ color: 'var(--dim)', marginBottom: 0, fontSize: 14 }}>
-          You'll be able to add, rename, and remove Bittensor coldkeys here.
-          The active wallet will drive Dashboard, Transactions, Portfolio, and
-          Performance across the app. Coming in the next iter.
+        <p style={{ color: 'var(--dim)', marginTop: 0, marginBottom: 16, fontSize: 14 }}>
+          Add the Bittensor coldkeys you track. The active wallet drives Dashboard,
+          Transactions, Portfolio, and Performance across the app. Stored only on
+          this device.
         </p>
+        <WalletManager />
       </section>
 
       <section className="card" aria-labelledby="settings-appearance-h">
